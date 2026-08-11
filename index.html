@@ -1,0 +1,722 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>NFL Picks League — Live Standings</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+  
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  
+  body {
+    font-family: 'Inter', Arial, sans-serif;
+    background: #0d1117;
+    color: #e6edf3;
+    min-height: 100vh;
+  }
+
+  /* ── Setup Banner ── */
+  .setup-banner {
+    background: #1c2128;
+    border-bottom: 1px solid #30363d;
+    padding: 16px 24px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .setup-banner.hidden { display: none; }
+  .setup-banner label {
+    font-size: 13px;
+    font-weight: 600;
+    color: #8b949e;
+  }
+  .setup-banner input {
+    flex: 1;
+    min-width: 300px;
+    padding: 8px 12px;
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 6px;
+    color: #e6edf3;
+    font-size: 13px;
+    font-family: monospace;
+  }
+  .setup-banner button, .file-btn {
+    padding: 8px 16px;
+    background: #238636;
+    border: none;
+    border-radius: 6px;
+    color: #fff;
+    font-weight: 600;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .setup-banner button:hover, .file-btn:hover { background: #2ea043; }
+  .toggle-setup {
+    position: fixed;
+    top: 12px;
+    right: 12px;
+    z-index: 100;
+    background: #30363d;
+    border: none;
+    color: #8b949e;
+    padding: 6px 10px;
+    border-radius: 6px;
+    cursor: pointer;
+    font-size: 11px;
+  }
+
+  /* ── Or / File Upload ── */
+  .or-divider {
+    color: #484f58;
+    font-size: 12px;
+    font-weight: 600;
+  }
+  .file-input { display: none; }
+
+  /* ── Header ── */
+  .header {
+    text-align: center;
+    padding: 32px 24px 16px;
+  }
+  .header h1 {
+    font-size: 32px;
+    font-weight: 900;
+    text-transform: uppercase;
+    letter-spacing: -1px;
+    background: linear-gradient(135deg, #58a6ff, #3fb950);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  .header .subtitle {
+    font-size: 13px;
+    color: #8b949e;
+    margin-top: 4px;
+  }
+  .last-updated {
+    font-size: 11px;
+    color: #484f58;
+    margin-top: 8px;
+  }
+
+  /* ── Tab Navigation ── */
+  .tabs {
+    display: flex;
+    justify-content: center;
+    gap: 4px;
+    padding: 0 24px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+  .tab {
+    padding: 8px 18px;
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    color: #8b949e;
+    font-size: 13px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+  }
+  .tab:hover { border-color: #58a6ff; color: #e6edf3; }
+  .tab.active { background: #58a6ff; color: #0d1117; border-color: #58a6ff; }
+
+  /* ── Content Panels ── */
+  .panel { display: none; max-width: 900px; margin: 0 auto; padding: 0 24px 40px; }
+  .panel.active { display: block; }
+
+  /* ── Standings Table ── */
+  .standings-card {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    overflow: hidden;
+    margin-bottom: 20px;
+  }
+  .standings-card h2 {
+    padding: 12px 16px;
+    font-size: 14px;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+  .seg1-header { background: linear-gradient(135deg, #1a3a5c, #1f4068); }
+  .seg2-header { background: linear-gradient(135deg, #3d1e5c, #5a2d82); }
+  .seg3-header { background: linear-gradient(135deg, #4a3020, #6b4226); }
+  .overall-header { background: linear-gradient(135deg, #1a1a2e, #2a2a4e); }
+  .playoff-header { background: linear-gradient(135deg, #1a4a1e, #2d6a2f); }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  th {
+    padding: 8px 12px;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #8b949e;
+    font-weight: 600;
+    text-align: center;
+    border-bottom: 1px solid #30363d;
+    background: #1c2128;
+  }
+  td {
+    padding: 10px 12px;
+    font-size: 13px;
+    text-align: center;
+    border-bottom: 1px solid #21262d;
+  }
+  tr:last-child td { border-bottom: none; }
+  .rank-cell {
+    font-weight: 800;
+    width: 44px;
+    font-size: 14px;
+  }
+  .rank-1 { color: #FFD700; }
+  .rank-2 { color: #C0C0C0; }
+  .rank-3 { color: #CD7F32; }
+  .name-cell {
+    text-align: left;
+    font-weight: 600;
+    color: #e6edf3;
+  }
+  .total-cell {
+    font-weight: 800;
+    color: #3fb950;
+    font-size: 15px;
+  }
+  .week-cell { color: #8b949e; font-size: 12px; }
+  .wl-win { color: #3fb950; font-weight: 600; }
+  .wl-loss { color: #f85149; font-weight: 600; }
+  .wl-tie { color: #d29922; font-weight: 600; }
+
+  /* ── Division Label ── */
+  .div-label {
+    padding: 8px 16px;
+    font-size: 12px;
+    font-weight: 700;
+    color: #f0883e;
+    background: #1c2128;
+    border-bottom: 1px solid #30363d;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  /* ── Playoff Qualifier Cards ── */
+  .qual-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .qual-card {
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    padding: 14px 16px;
+    border-left: 3px solid #58a6ff;
+  }
+  .qual-card .label {
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+    color: #8b949e;
+    font-weight: 600;
+  }
+  .qual-card .name {
+    font-size: 18px;
+    font-weight: 800;
+    margin-top: 4px;
+  }
+  .qual-card .detail {
+    font-size: 12px;
+    color: #8b949e;
+    margin-top: 2px;
+  }
+  .qual-card.wildcard { border-left-color: #d29922; }
+  .qual-card .prize {
+    display: inline-block;
+    background: #2d6a4f;
+    color: #fff;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 700;
+    margin-top: 6px;
+  }
+
+  /* ── Earnings ── */
+  .earnings-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #21262d; }
+  .earnings-row:last-child { border-bottom: none; }
+  .earnings-name { font-weight: 600; font-size: 14px; }
+  .earnings-amt { font-weight: 800; color: #3fb950; font-size: 16px; }
+
+  /* ── Loading / Empty ── */
+  .loading {
+    text-align: center;
+    padding: 60px 24px;
+    color: #8b949e;
+    font-size: 15px;
+  }
+  .loading .spinner {
+    width: 32px; height: 32px;
+    border: 3px solid #30363d;
+    border-top-color: #58a6ff;
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 16px;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  /* ── Responsive ── */
+  @media (max-width: 640px) {
+    .header h1 { font-size: 24px; }
+    .qual-grid { grid-template-columns: 1fr; }
+    td, th { padding: 6px 8px; font-size: 11px; }
+    .tab { padding: 6px 12px; font-size: 11px; }
+    .setup-banner input { min-width: 200px; }
+  }
+</style>
+</head>
+<body>
+
+<button class="toggle-setup" onclick="toggleSetup()">⚙ Settings</button>
+
+<!-- Setup Bar -->
+<div class="setup-banner hidden" id="setupBar">
+  <label>OneDrive Share Link:</label>
+  <input type="text" id="shareUrl" placeholder="Paste your OneDrive share link here..." value="https://1drv.ms/x/c/a42f043149d7619d/IQBudhc-7rrsT544IEGkWYB-AQcEjiw_oSxBYPEkyKG7xSw?e=W2q8he">
+  <button onclick="loadFromOneDrive()">Connect</button>
+  <span class="or-divider">— OR —</span>
+  <label class="file-btn" for="fileInput">Upload .xlsx</label>
+  <input type="file" id="fileInput" class="file-input" accept=".xlsx,.xls" onchange="loadFromFile(event)">
+  <button onclick="loadDemo()" style="background:#30363d;">Load Demo</button>
+</div>
+
+<!-- Header -->
+<div class="header">
+  <h1>NFL Picks League</h1>
+  <div class="subtitle">2026–27 Season — Live Standings</div>
+  <div class="last-updated" id="lastUpdated"></div>
+</div>
+
+<!-- Tabs -->
+<div class="tabs">
+  <div class="tab active" onclick="showPanel('seg1', this)">Weeks 1-6</div>
+  <div class="tab" onclick="showPanel('seg2', this)">Weeks 7-12</div>
+  <div class="tab" onclick="showPanel('seg3', this)">Weeks 13-18</div>
+  <div class="tab" onclick="showPanel('overall', this)">Overall</div>
+  <div class="tab" onclick="showPanel('playoffs', this)">Playoffs</div>
+</div>
+
+<!-- Panels -->
+<div class="panel active" id="seg1">
+  <div class="loading" id="loading1"><div class="spinner"></div>Waiting for data...</div>
+</div>
+<div class="panel" id="seg2">
+  <div class="loading">Waiting for data...</div>
+</div>
+<div class="panel" id="seg3">
+  <div class="loading">Waiting for data...</div>
+</div>
+<div class="panel" id="overall">
+  <div class="loading">Waiting for data...</div>
+</div>
+<div class="panel" id="playoffs">
+  <div class="loading">Waiting for data...</div>
+</div>
+
+<script>
+// ══════════════════════════════════
+// DATA PARSING & RENDERING
+// ══════════════════════════════════
+
+let refreshInterval = null;
+
+// Auto-load from repo (synced from OneDrive via GitHub Actions)
+window.addEventListener('DOMContentLoaded', () => {
+  loadFromRepo();
+});
+
+async function loadFromRepo() {
+  try {
+    // Fetch Excel from same repo (no CORS issues)
+    const resp = await fetch('./NFL_Picks_League_Tracker.xlsx?t=' + Date.now());
+    if (!resp.ok) throw new Error('File not found in repo');
+    const buf = await resp.arrayBuffer();
+    
+    // Verify xlsx
+    const header = new Uint8Array(buf.slice(0, 2));
+    if (header[0] !== 0x50 || header[1] !== 0x4B) throw new Error('Not valid xlsx');
+    
+    parseWorkbook(buf);
+    
+    // Re-check every 5 minutes for updates
+    if (refreshInterval) clearInterval(refreshInterval);
+    refreshInterval = setInterval(() => loadFromRepo(), 300000);
+    
+  } catch (e) {
+    console.log('Repo load failed:', e.message);
+    // Show drag-and-drop fallback
+    document.getElementById('setupBar').classList.remove('hidden');
+    document.querySelectorAll('.loading').forEach(el => {
+      el.innerHTML = `<div style="border:2px dashed #30363d; border-radius:12px; padding:40px 24px; text-align:center; cursor:pointer;" 
+        ondragover="event.preventDefault(); this.style.borderColor='#58a6ff';" 
+        ondragleave="this.style.borderColor='#30363d';"
+        ondrop="event.preventDefault(); this.style.borderColor='#30363d'; loadDroppedFile(event.dataTransfer.files[0]);"
+        onclick="document.getElementById('fileInput').click();">
+        <div style="font-size:32px; margin-bottom:8px;">📂</div>
+        <div style="font-size:15px; font-weight:600; color:#e6edf3;">Drop your Excel tracker here</div>
+        <div style="font-size:12px; color:#8b949e; margin-top:4px;">or click to browse — syncing starts once GitHub Actions runs</div>
+      </div>`;
+    });
+  }
+}
+
+const ONEDRIVE_SHARE_URL = "https://1drv.ms/x/c/a42f043149d7619d/IQBudhc-7rrsT544IEGkWYB-AQcEjiw_oSxBYPEkyKG7xSw";
+
+function toggleSetup() {
+  const bar = document.getElementById('setupBar');
+  bar.classList.toggle('hidden');
+}
+
+function showPanel(id, tab) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  if (tab) tab.classList.add('active');
+}
+
+function loadFromOneDrive() {
+  const shareUrl = document.getElementById('shareUrl').value.trim() || ONEDRIVE_SHARE_URL;
+  
+  // Convert share link to OneDrive API download URL
+  const encoded = btoa(shareUrl).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+  const apiUrl = `https://api.onedrive.com/v1.0/shares/u!${encoded}/root/content`;
+  
+  // Try each CORS proxy until one works
+  tryProxies(apiUrl, 0);
+}
+
+async function tryProxies(apiUrl, index) {
+  if (index >= CORS_PROXIES.length) {
+    // All proxies failed — show drag-and-drop fallback
+    document.getElementById('setupBar').classList.remove('hidden');
+    document.querySelectorAll('.loading').forEach(el => {
+      el.innerHTML = `<div style="border:2px dashed #30363d; border-radius:12px; padding:40px 24px; text-align:center; cursor:pointer;" 
+        ondragover="event.preventDefault(); this.style.borderColor='#58a6ff';" 
+        ondragleave="this.style.borderColor='#30363d';"
+        ondrop="event.preventDefault(); this.style.borderColor='#30363d'; loadDroppedFile(event.dataTransfer.files[0]);"
+        onclick="document.getElementById('fileInput').click();">
+        <div style="font-size:32px; margin-bottom:8px;">📂</div>
+        <div style="font-size:15px; font-weight:600; color:#e6edf3;">Drop your Excel tracker here</div>
+        <div style="font-size:12px; color:#8b949e; margin-top:4px;">or click to browse</div>
+      </div>`;
+    });
+    return;
+  }
+  
+  const proxyUrl = CORS_PROXIES[index](apiUrl);
+  
+  try {
+    const resp = await fetch(proxyUrl);
+    if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+    const buf = await resp.arrayBuffer();
+    
+    // Verify it's actually an xlsx (starts with PK zip header)
+    const header = new Uint8Array(buf.slice(0, 2));
+    if (header[0] !== 0x50 || header[1] !== 0x4B) throw new Error('Not a valid xlsx file');
+    
+    parseWorkbook(buf);
+    
+    // Auto-refresh every 5 minutes
+    if (refreshInterval) clearInterval(refreshInterval);
+    refreshInterval = setInterval(() => {
+      tryProxies(apiUrl, 0);
+    }, 300000);
+    
+  } catch (e) {
+    console.log(`Proxy ${index} failed:`, e.message);
+    tryProxies(apiUrl, index + 1);
+  }
+}
+
+async function fetchAndParse(url) {
+  try {
+    const resp = await fetch(url);
+    if (!resp.ok) throw new Error('Could not fetch file. Make sure sharing is set to "Anyone with the link can view".');
+    const buf = await resp.arrayBuffer();
+    parseWorkbook(buf);
+  } catch (e) {
+    alert('Error: ' + e.message);
+  }
+}
+
+function loadDroppedFile(file) {
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => parseWorkbook(e.target.result);
+  reader.readAsArrayBuffer(file);
+}
+
+function loadFromFile(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = (e) => parseWorkbook(e.target.result);
+  reader.readAsArrayBuffer(file);
+}
+
+function loadDemo() {
+  // Generate demo data
+  const players = [];
+  for (let i = 1; i <= 16; i++) {
+    const p = { num: i, name: `Player ${i}`, s1Weeks: [], s2Weeks: [], s3Results: [], s1Total: 0, s2Total: 0, s1H2H: 0, s2H2H: 0, s3Wins: 0, s3Losses: 0, s3Picks: 0 };
+    for (let w = 0; w < 6; w++) {
+      const v1 = Math.floor(Math.random() * 16) + 6;
+      const v2 = Math.floor(Math.random() * 36) + 10;
+      const v3 = Math.floor(Math.random() * 16) + 1;
+      p.s1Weeks.push(v1);
+      p.s2Weeks.push(v2);
+      p.s3Results.push(Math.random() > 0.5 ? 'W' : 'L');
+    }
+    p.s1Total = p.s1Weeks.reduce((a,b) => a+b, 0);
+    p.s2Total = p.s2Weeks.reduce((a,b) => a+b, 0);
+    p.s1H2H = Math.floor(Math.random() * 5);
+    p.s2H2H = Math.floor(Math.random() * 5);
+    p.s3Wins = p.s3Results.filter(r => r === 'W').length;
+    p.s3Losses = p.s3Results.filter(r => r === 'L').length;
+    p.s3Picks = Math.floor(Math.random() * 40) + 40;
+    players.push(p);
+  }
+  renderAll(players);
+}
+
+function parseWorkbook(data) {
+  const wb = XLSX.read(data, { type: 'array' });
+  
+  // Read Helper sheet
+  const helper = wb.Sheets['Helper'];
+  if (!helper) return alert('Could not find "Helper" sheet. Make sure you\'re using the Picks League Tracker.');
+  
+  const players = [];
+  for (let i = 2; i <= 17; i++) {
+    const p = {
+      num: getCellVal(helper, `A${i}`, 0),
+      name: getCellVal(helper, `B${i}`, `Player ${i-1}`),
+      s1Weeks: [getCellVal(helper,`C${i}`,0), getCellVal(helper,`D${i}`,0), getCellVal(helper,`E${i}`,0), getCellVal(helper,`F${i}`,0), getCellVal(helper,`G${i}`,0), getCellVal(helper,`H${i}`,0)],
+      s1Total: getCellVal(helper, `I${i}`, 0),
+      s1H2H: getCellVal(helper, `J${i}`, 0),
+      s2Weeks: [getCellVal(helper,`L${i}`,0), getCellVal(helper,`M${i}`,0), getCellVal(helper,`N${i}`,0), getCellVal(helper,`O${i}`,0), getCellVal(helper,`P${i}`,0), getCellVal(helper,`Q${i}`,0)],
+      s2Total: getCellVal(helper, `R${i}`, 0),
+      s2H2H: getCellVal(helper, `S${i}`, 0),
+      s3Results: [getCellVal(helper,`U${i}`,'-'), getCellVal(helper,`V${i}`,'-'), getCellVal(helper,`W${i}`,'-'), getCellVal(helper,`X${i}`,'-'), getCellVal(helper,`Y${i}`,'-'), getCellVal(helper,`Z${i}`,'-')],
+      s3Wins: getCellVal(helper, `AA${i}`, 0),
+      s3Losses: getCellVal(helper, `AB${i}`, 0),
+      s3Picks: getCellVal(helper, `AC${i}`, 0),
+    };
+    players.push(p);
+  }
+  
+  renderAll(players);
+  document.getElementById('lastUpdated').textContent = 'Last updated: ' + new Date().toLocaleString();
+  document.getElementById('setupBar').classList.add('hidden');
+}
+
+function getCellVal(sheet, ref, fallback) {
+  const cell = sheet[ref];
+  return cell ? cell.v : fallback;
+}
+
+// ══════════════════════════════════
+// RENDERING
+// ══════════════════════════════════
+
+function renderAll(players) {
+  renderSegment1(players);
+  renderSegment2(players);
+  renderSegment3(players);
+  renderOverall(players);
+  renderPlayoffs(players);
+}
+
+function rankClass(i) {
+  if (i === 0) return 'rank-1';
+  if (i === 1) return 'rank-2';
+  if (i === 2) return 'rank-3';
+  return '';
+}
+
+function renderSegment1(players) {
+  const sorted = [...players].sort((a, b) => b.s1Total - a.s1Total || b.s1H2H - a.s1H2H);
+  const weeks = ['Wk 1','Wk 2','Wk 3','Wk 4','Wk 5','Wk 6'];
+  let html = `<div class="standings-card"><h2 class="seg1-header">Segment 1 — Weeks 1-6 (H2H + Points)</h2>
+    <table><tr><th>Rank</th><th style="text-align:left">Player</th>`;
+  weeks.forEach(w => html += `<th>${w}</th>`);
+  html += `<th>H2H W</th><th>Best Wk</th><th>Total</th></tr>`;
+  sorted.forEach((p, i) => {
+    const best = Math.max(...p.s1Weeks);
+    html += `<tr><td class="rank-cell ${rankClass(i)}">${i+1}</td><td class="name-cell">${p.name}</td>`;
+    p.s1Weeks.forEach(v => html += `<td class="week-cell">${v}</td>`);
+    html += `<td>${p.s1H2H}</td><td>${best}</td><td class="total-cell">${p.s1Total}</td></tr>`;
+  });
+  html += `</table></div>`;
+  document.getElementById('seg1').innerHTML = html;
+}
+
+function renderSegment2(players) {
+  const sorted = [...players].sort((a, b) => b.s2Total - a.s2Total || b.s2H2H - a.s2H2H);
+  const weeks = ['Wk 7','Wk 8','Wk 9','Wk 10','Wk 11','Wk 12'];
+  let html = `<div class="standings-card"><h2 class="seg2-header">Segment 2 — Weeks 7-12 (H2H + Weighted)</h2>
+    <table><tr><th>Rank</th><th style="text-align:left">Player</th>`;
+  weeks.forEach(w => html += `<th>${w}</th>`);
+  html += `<th>H2H W</th><th>Best Wk</th><th>Total</th></tr>`;
+  sorted.forEach((p, i) => {
+    const best = Math.max(...p.s2Weeks);
+    html += `<tr><td class="rank-cell ${rankClass(i)}">${i+1}</td><td class="name-cell">${p.name}</td>`;
+    p.s2Weeks.forEach(v => html += `<td class="week-cell">${v}</td>`);
+    html += `<td>${p.s2H2H}</td><td>${best}</td><td class="total-cell">${p.s2Total}</td></tr>`;
+  });
+  html += `</table></div>`;
+  document.getElementById('seg2').innerHTML = html;
+}
+
+function renderSegment3(players) {
+  const divs = [
+    { name: 'Division A', members: players.filter(p => p.num <= 4) },
+    { name: 'Division B', members: players.filter(p => p.num >= 5 && p.num <= 8) },
+    { name: 'Division C', members: players.filter(p => p.num >= 9 && p.num <= 12) },
+    { name: 'Division D', members: players.filter(p => p.num >= 13) },
+  ];
+  const weeks = ['W13','W14','W15','W16','W17','W18'];
+  let html = `<div class="standings-card"><h2 class="seg3-header">Segment 3 — Weeks 13-18 (Divisions)</h2>`;
+  
+  divs.forEach(div => {
+    const sorted = [...div.members].sort((a, b) => b.s3Wins - a.s3Wins || b.s3Picks - a.s3Picks);
+    html += `<div class="div-label">${div.name}</div>`;
+    html += `<table><tr><th>Rank</th><th style="text-align:left">Player</th>`;
+    weeks.forEach(w => html += `<th>${w}</th>`);
+    html += `<th>Wins</th><th>Losses</th><th>Picks</th></tr>`;
+    sorted.forEach((p, i) => {
+      html += `<tr><td class="rank-cell ${rankClass(i)}">${i+1}</td><td class="name-cell">${p.name}</td>`;
+      p.s3Results.forEach(r => {
+        const cls = r === 'W' ? 'wl-win' : r === 'L' ? 'wl-loss' : r === 'T' ? 'wl-tie' : 'week-cell';
+        html += `<td class="${cls}">${r}</td>`;
+      });
+      html += `<td class="wl-win">${p.s3Wins}</td><td class="wl-loss">${p.s3Losses}</td><td>${p.s3Picks}</td></tr>`;
+    });
+    html += `</table>`;
+  });
+  html += `</div>`;
+  document.getElementById('seg3').innerHTML = html;
+}
+
+function renderOverall(players) {
+  const sorted = [...players].sort((a, b) => {
+    const aTotal = a.s1Total + a.s2Total + a.s3Picks;
+    const bTotal = b.s1Total + b.s2Total + b.s3Picks;
+    return bTotal - aTotal;
+  });
+  let html = `<div class="standings-card"><h2 class="overall-header">Overall Season Standings</h2>
+    <table><tr><th>Rank</th><th style="text-align:left">Player</th><th>Seg 1</th><th>Seg 2</th><th>Seg 3</th><th>Total</th></tr>`;
+  sorted.forEach((p, i) => {
+    const total = p.s1Total + p.s2Total + p.s3Picks;
+    html += `<tr><td class="rank-cell ${rankClass(i)}">${i+1}</td><td class="name-cell">${p.name}</td>`;
+    html += `<td class="week-cell">${p.s1Total}</td><td class="week-cell">${p.s2Total}</td><td class="week-cell">${p.s3Picks}</td>`;
+    html += `<td class="total-cell">${total}</td></tr>`;
+  });
+  html += `</table></div>`;
+  document.getElementById('overall').innerHTML = html;
+}
+
+function renderPlayoffs(players) {
+  // Determine qualifiers
+  const s1Sorted = [...players].sort((a, b) => b.s1Total - a.s1Total);
+  const s2Sorted = [...players].sort((a, b) => b.s2Total - a.s2Total);
+  
+  const divs = [
+    players.filter(p => p.num <= 4),
+    players.filter(p => p.num >= 5 && p.num <= 8),
+    players.filter(p => p.num >= 9 && p.num <= 12),
+    players.filter(p => p.num >= 13),
+  ];
+  const divWinners = divs.map(d => [...d].sort((a, b) => b.s3Wins - a.s3Wins || b.s3Picks - a.s3Picks)[0]);
+  const divNames = ['Div A', 'Div B', 'Div C', 'Div D'];
+  
+  // Build qualified list with pass-down
+  const qualified = new Set();
+  const quals = [];
+  
+  // Seg 1
+  let s1Winner = s1Sorted[0];
+  let s1Qual = s1Sorted.find(p => !qualified.has(p.num)) || s1Winner;
+  qualified.add(s1Qual.num);
+  quals.push({ label: 'Weeks 1-6 Winner', winner: s1Winner.name, qualifier: s1Qual.name, prize: '$25', pts: s1Winner.s1Total + ' pts' });
+  
+  // Seg 2
+  let s2Winner = s2Sorted[0];
+  let s2Qual = s2Sorted.find(p => !qualified.has(p.num)) || s2Winner;
+  qualified.add(s2Qual.num);
+  quals.push({ label: 'Weeks 7-12 Winner', winner: s2Winner.name, qualifier: s2Qual.name, prize: '$25', pts: s2Winner.s2Total + ' pts' });
+  
+  // Div winners
+  divWinners.forEach((dw, i) => {
+    const divSorted = [...divs[i]].sort((a, b) => b.s3Wins - a.s3Wins || b.s3Picks - a.s3Picks);
+    const qual = divSorted.find(p => !qualified.has(p.num)) || dw;
+    qualified.add(qual.num);
+    quals.push({ label: `${divNames[i]} Winner`, winner: dw.name, qualifier: qual.name, prize: '$10', pts: dw.s3Wins + 'W-' + dw.s3Losses + 'L' });
+  });
+  
+  // Wild cards
+  const overallSorted = [...players].sort((a, b) => (b.s1Total+b.s2Total+b.s3Picks) - (a.s1Total+a.s2Total+a.s3Picks));
+  const wcs = overallSorted.filter(p => !qualified.has(p.num)).slice(0, 2);
+  
+  let html = `<div class="standings-card"><h2 class="playoff-header">Playoff Picture</h2></div>`;
+  html += `<div class="qual-grid">`;
+  quals.forEach(q => {
+    const passed = q.winner !== q.qualifier;
+    html += `<div class="qual-card">
+      <div class="label">${q.label}</div>
+      <div class="name">${q.winner}</div>
+      <div class="detail">${q.pts}${passed ? ' — entry passes to ' + q.qualifier : ''}</div>
+      <span class="prize">${q.prize}</span>
+    </div>`;
+  });
+  wcs.forEach((p, i) => {
+    const total = p.s1Total + p.s2Total + p.s3Picks;
+    html += `<div class="qual-card wildcard">
+      <div class="label">Wild Card ${i+1}</div>
+      <div class="name">${p.name}</div>
+      <div class="detail">${total} season pts</div>
+    </div>`;
+  });
+  html += `</div>`;
+  
+  // Earnings
+  const earnings = players.map(p => {
+    let e = 0;
+    if (p.name === s1Winner.name) e += 25;
+    if (p.name === s2Winner.name) e += 25;
+    if (divWinners.some(dw => dw.name === p.name)) e += 10;
+    return { name: p.name, amount: e };
+  }).filter(e => e.amount > 0).sort((a, b) => b.amount - a.amount);
+  
+  if (earnings.length > 0) {
+    html += `<div class="standings-card"><h2 class="playoff-header">Season Earnings</h2>
+      <div style="padding:16px;">`;
+    earnings.forEach(e => {
+      html += `<div class="earnings-row"><span class="earnings-name">${e.name}</span><span class="earnings-amt">$${e.amount}</span></div>`;
+    });
+    html += `</div></div>`;
+  }
+  
+  document.getElementById('playoffs').innerHTML = html;
+}
+</script>
+</body>
+</html>
