@@ -53,17 +53,22 @@ tr:last-child td{border-bottom:none}
 .ea{font-weight:800;color:#3fb950;font-size:16px}
 .loading{text-align:center;padding:60px 24px;color:#8b949e;font-size:15px}
 .wsel{padding:10px 16px;background:#161b22;border:1px solid #30363d;border-radius:8px;color:#e6edf3;font-size:14px;font-weight:600;font-family:'Inter',Arial,sans-serif;cursor:pointer;min-width:260px;text-align:center;display:block;margin:0 auto 16px}
+.wk-picker{text-align:center;margin-bottom:20px}
+.wk-sel{padding:10px 40px 10px 16px;background:#161b22;border:1px solid #30363d;border-radius:8px;color:#e6edf3;font-size:16px;font-weight:700;font-family:'Inter',Arial,sans-serif;cursor:pointer;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238b949e' stroke-width='2' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+.wk-sel:focus{outline:none;border-color:#58a6ff;box-shadow:0 0 0 2px rgba(88,166,255,0.2)}
+.wk-sel option{background:#161b22;color:#e6edf3}
+.wk-seg{font-size:11px;color:#8b949e;margin-top:6px;font-weight:600}
 .mu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-bottom:8px}
 .mu{background:#161b22;border:1px solid #30363d;border-radius:8px;overflow:hidden}
 .mu-header{display:flex;border-bottom:1px solid #30363d}
-.mu-side{flex:1;padding:8px 10px;text-align:center}
+.mu-side{flex:1;padding:12px 14px;text-align:center}
 .mu-side.left{border-right:1px solid #21262d}
-.mu-name{font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mu-score{font-size:26px;font-weight:900;color:#8b949e;margin-top:2px}
+.mu-name{font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mu-score{font-size:13px;font-weight:900;color:#8b949e;margin-top:4px}
 .mu-side.mw .mu-name{color:#3fb950}.mu-side.mw .mu-score{color:#3fb950}
 .mu-side.ml .mu-name{color:#f85149;opacity:.7}.mu-side.ml .mu-score{color:#f85149;opacity:.7}
 .mu-side.mt .mu-name{color:#d29922}.mu-side.mt .mu-score{color:#d29922}
-@media(max-width:640px){.header h1{font-size:24px}.qg{grid-template-columns:1fr}td,th{padding:6px 8px;font-size:11px}.tab{padding:6px 12px;font-size:11px}.mu-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}.mu-name{font-size:10px}.mu-score{font-size:20px}}
+@media(max-width:640px){.header h1{font-size:24px}.qg{grid-template-columns:1fr}td,th{padding:6px 8px;font-size:11px}.tab{padding:6px 12px;font-size:11px}.mu-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}.mu-name{font-size:13px}.mu-score{font-size:11px}}
 </style>
 </head>
 <body>
@@ -129,7 +134,7 @@ function load() {
     readPicks(wb);
     
     render();
-    document.getElementById('status').textContent='v5 | Updated: '+new Date().toLocaleString();
+    document.getElementById('status').textContent='v7 | Updated: '+new Date().toLocaleString();
   })
   .catch(function(e){document.getElementById('status').textContent='Could not load file';});
 }
@@ -202,9 +207,14 @@ function renderSched(){
   
   var pm={};for(var i=0;i<P.length;i++)pm[P[i].num]=P[i];
   
-  var o='<select class="wsel" onchange="sw(this.value)">';
-  for(var i=0;i<sched.length;i++)o+='<option value="'+i+'">Week '+sched[i].wk+' — '+sched[i].seg+'</option>';
+  window._sched = sched;
+  
+  var o='<div class="wk-picker">';
+  o+='<select class="wk-sel" onchange="pickWk(this.value)">';
+  for(var i=0;i<sched.length;i++)o+='<option value="'+i+'">Week '+sched[i].wk+'</option>';
   o+='</select>';
+  o+='<div class="wk-seg" id="wkSeg">'+sched[0].seg+'</div>';
+  o+='</div>';
   
   for(var i=0;i<sched.length;i++){
     var s=sched[i];
@@ -239,6 +249,11 @@ function renderSched(){
   document.getElementById('sched').innerHTML=o;
 }
 function sw(i){var a=document.querySelectorAll('[id^="wk"]');for(var x=0;x<a.length;x++){if(a[x].id.indexOf('wk')===0&&a[x].id.length<=4)a[x].style.display='none';}document.getElementById('wk'+i).style.display='block';}
+function pickWk(i){
+  sw(i);
+  var s=window._sched;
+  if(s)document.getElementById('wkSeg').textContent=s[i].seg;
+}
 
 // ===== STANDINGS =====
 function renderS1(){
