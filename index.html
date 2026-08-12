@@ -19,6 +19,8 @@ body{font-family:'Inter',Arial,sans-serif;background:#0d1117;color:#e6edf3;min-h
 .panel{display:none;max-width:900px;margin:0 auto;padding:0 24px 40px}
 .panel.active{display:block}
 .card{background:#161b22;border:1px solid #30363d;border-radius:8px;overflow:hidden;margin-bottom:20px}
+.card table{min-width:600px}
+.card-scroll{overflow-x:auto;-webkit-overflow-scrolling:touch}
 .card h2{padding:12px 16px;font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:.5px}
 .hdr1{background:linear-gradient(135deg,#1a3a5c,#1f4068)}
 .hdr2{background:linear-gradient(135deg,#3d1e5c,#5a2d82)}
@@ -68,7 +70,7 @@ tr:last-child td{border-bottom:none}
 .mu-side.mw .mu-name{color:#3fb950}.mu-side.mw .mu-score{color:#3fb950}
 .mu-side.ml .mu-name{color:#f85149;opacity:.7}.mu-side.ml .mu-score{color:#f85149;opacity:.7}
 .mu-side.mt .mu-name{color:#d29922}.mu-side.mt .mu-score{color:#d29922}
-@media(max-width:640px){.header h1{font-size:24px}.qg{grid-template-columns:1fr}td,th{padding:6px 8px;font-size:11px}.tab{padding:6px 12px;font-size:11px}.mu-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}.mu-name{font-size:13px}.mu-score{font-size:15px}}
+@media(max-width:640px){.card-scroll{margin:0 -2px}.card-scroll::-webkit-scrollbar{height:4px}.card-scroll::-webkit-scrollbar-thumb{background:#30363d;border-radius:4px}.header h1{font-size:24px}.qg{grid-template-columns:1fr}td,th{padding:6px 8px;font-size:11px}.tab{padding:6px 12px;font-size:11px}.mu-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}.mu-name{font-size:13px}.mu-score{font-size:15px}}
 </style>
 </head>
 <body>
@@ -136,7 +138,7 @@ function load() {
     readPicks(wb);
     
     render();
-    document.getElementById('status').textContent='v8 | Updated: '+new Date().toLocaleString();
+    document.getElementById('status').textContent='v9 | Updated: '+new Date().toLocaleString();
   })
   .catch(function(e){document.getElementById('status').textContent='Could not load file';});
 }
@@ -268,7 +270,7 @@ function renderS1(){
   }
   var s=P.slice().sort(function(a,b){return b.t1-a.t1||b.h1-a.h1;});
   var wn=['Wk 1','Wk 2','Wk 3','Wk 4','Wk 5','Wk 6'];
-  var o='<div class="card"><h2 class="hdr1">Segment 1 — Weeks 1-6</h2><table><tr><th>#</th><th style="text-align:left">Player</th>';
+  var o='<div class="card"><h2 class="hdr1">Segment 1 — Weeks 1-6</h2><div class="card-scroll"><table><tr><th>#</th><th style="text-align:left">Player</th>';
   for(var i=0;i<6;i++)o+='<th>'+wn[i]+'</th>';
   o+='<th>H2H W</th><th>Best</th><th>Picks</th></tr>';
   for(var i=0;i<s.length;i++){
@@ -277,7 +279,7 @@ function renderS1(){
     var bw=Math.max.apply(null,s[i].rp1);
     o+='<td>'+s[i].h1+'</td><td>'+bw+'</td><td class="tot">'+s[i].rp1Total+'</td></tr>';
   }
-  o+='</table></div>';document.getElementById('s1').innerHTML=o;
+  o+='</table></div></div>';document.getElementById('s1').innerHTML=o;
 }
 function renderS2(){
   for(var i=0;i<P.length;i++){
@@ -287,7 +289,7 @@ function renderS2(){
   }
   var s=P.slice().sort(function(a,b){return b.t2-a.t2||b.h2-a.h2;});
   var wn=['Wk 7','Wk 8','Wk 9','Wk 10','Wk 11','Wk 12'];
-  var o='<div class="card"><h2 class="hdr2">Segment 2 — Weeks 7-12</h2><table><tr><th>#</th><th style="text-align:left">Player</th>';
+  var o='<div class="card"><h2 class="hdr2">Segment 2 — Weeks 7-12</h2><div class="card-scroll"><table><tr><th>#</th><th style="text-align:left">Player</th>';
   for(var i=0;i<6;i++)o+='<th>'+wn[i]+'</th>';
   o+='<th>H2H W</th><th>Best</th><th>Pts</th></tr>';
   for(var i=0;i<s.length;i++){
@@ -296,12 +298,12 @@ function renderS2(){
     var bw=Math.max.apply(null,s[i].rp2);
     o+='<td>'+s[i].h2+'</td><td>'+bw+'</td><td class="tot">'+s[i].rp2Total+'</td></tr>';
   }
-  o+='</table></div>';document.getElementById('s2').innerHTML=o;
+  o+='</table></div></div>';document.getElementById('s2').innerHTML=o;
 }
 function renderS3(){
   var divs=[{n:'Division A',p:P.filter(function(x){return x.num<=4})},{n:'Division B',p:P.filter(function(x){return x.num>=5&&x.num<=8})},{n:'Division C',p:P.filter(function(x){return x.num>=9&&x.num<=12})},{n:'Division D',p:P.filter(function(x){return x.num>=13})}];
   var wn=['W13','W14','W15','W16','W17','W18'];
-  var o='<div class="card"><h2 class="hdr3">Segment 3 — Weeks 13-18</h2>';
+  var o='<div class="card"><h2 class="hdr3">Segment 3 — Weeks 13-18</h2><div class="card-scroll">';
   for(var d=0;d<divs.length;d++){
     var s=divs[d].p.slice().sort(function(a,b){return b.w3-a.w3||b.p3-a.p3;});
     o+='<div class="dl">'+divs[d].n+'</div><table><tr><th>#</th><th style="text-align:left">Player</th>';
@@ -313,16 +315,16 @@ function renderS3(){
       o+='<td class="w">'+s[i].w3+'</td><td class="l">'+s[i].l3+'</td><td>'+s[i].p3+'</td></tr>';
     }o+='</table>';
   }
-  o+='</div>';document.getElementById('s3').innerHTML=o;
+  o+='</div></div>';document.getElementById('s3').innerHTML=o;
 }
 function renderAll(){
   var s=P.slice().sort(function(a,b){return(b.t1+b.t2+b.p3)-(a.t1+a.t2+a.p3);});
-  var o='<div class="card"><h2 class="hdr4">Overall Season Standings</h2><table><tr><th>#</th><th style="text-align:left">Player</th><th>Seg 1</th><th>Seg 2</th><th>Seg 3</th><th>Picks</th></tr>';
+  var o='<div class="card"><h2 class="hdr4">Overall Season Standings</h2><div class="card-scroll"><table><tr><th>#</th><th style="text-align:left">Player</th><th>Seg 1</th><th>Seg 2</th><th>Seg 3</th><th>Picks</th></tr>';
   for(var i=0;i<s.length;i++){
     var rp1t=s[i].rp1Total||0,rp2t=s[i].rp2Total||0,rp3=s[i].p3;
     var t=rp1t+rp2t+rp3;
     o+='<tr><td class="'+rc(i)+'">'+(i+1)+'</td><td class="nm">'+s[i].name+'</td><td class="wk">'+rp1t+'</td><td class="wk">'+rp2t+'</td><td class="wk">'+rp3+'</td><td class="tot">'+t+'</td></tr>';}
-  o+='</table></div>';document.getElementById('all').innerHTML=o;
+  o+='</table></div></div>';document.getElementById('all').innerHTML=o;
 }
 function renderPO(){
   var s1=P.slice().sort(function(a,b){return b.t1-a.t1;});
