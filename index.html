@@ -129,7 +129,7 @@ function load() {
     readPicks(wb);
     
     render();
-    document.getElementById('status').textContent='v4 | Updated: '+new Date().toLocaleString();
+    document.getElementById('status').textContent='v5 | Updated: '+new Date().toLocaleString();
   })
   .catch(function(e){document.getElementById('status').textContent='Could not load file';});
 }
@@ -208,7 +208,7 @@ function renderSched(){
   
   for(var i=0;i<sched.length;i++){
     var s=sched[i];
-    o+='<div id="wk'+i+'" style="display:'+(i===0?'block':'none')+'">';
+    o+='<div id="wk'+i+'" style="display:'+(i===0?'block':'none')+'"><div class="mu-grid">';
     for(var j=0;j<s.mu.length;j++){
       var n1=s.mu[j][0],n2=s.mu[j][1];
       var p1=pm[n1],p2=pm[n2];
@@ -221,20 +221,20 @@ function renderSched(){
       if(sc1===undefined||sc1===null)sc1=0;
       if(sc2===undefined||sc2===null)sc2=0;
       
-      var c1='mp left',c2='mp right';
+      var c1='',c2='';
       if(sc1>0||sc2>0){
-        if(sc1>sc2){c1+=' mw';c2+=' ml';}
-        else if(sc2>sc1){c2+=' mw';c1+=' ml';}
-        else{c1+=' mt';c2+=' mt';}
+        if(sc1>sc2){c1='mw';c2='ml';}
+        else if(sc2>sc1){c2='mw';c1='ml';}
+        else{c1='mt';c2='mt';}
       }
       
       o+='<div class="mu">';
-      o+='<div class="'+c1+'"><div class="mn">'+name1+'</div><div class="ms">'+sc1+'</div></div>';
-      o+='<div class="mv">VS</div>';
-      o+='<div class="'+c2+'"><div class="mn">'+name2+'</div><div class="ms">'+sc2+'</div></div>';
-      o+='</div>';
+      o+='<div class="mu-header">';
+      o+='<div class="mu-side left '+c1+'"><div class="mu-name">'+name1+'</div><div class="mu-score">'+sc1+'</div></div>';
+      o+='<div class="mu-side '+c2+'"><div class="mu-name">'+name2+'</div><div class="mu-score">'+sc2+'</div></div>';
+      o+='</div></div>';
     }
-    o+='</div>';
+    o+='</div></div>';
   }
   document.getElementById('sched').innerHTML=o;
 }
