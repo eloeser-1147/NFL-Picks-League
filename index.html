@@ -128,7 +128,8 @@
 let refreshInterval = null;
 let scheduleData = [];
 let rosterMap = {};
-let scoreData = {}; // scoreData[weekNum][playerNum] = { picks: X, total: Y }
+let allPlayers = [];
+
 
 window.addEventListener('DOMContentLoaded', () => {
   loadStandings();
@@ -184,56 +185,11 @@ function parseWorkbook(data) {
     });
   }
 
-  // Parse scores from input sheets
-  parseScores(wb);
-  
   // Parse Schedule
   parseSchedule(wb);
   
   renderAll(players);
   document.getElementById('lastUpdated').textContent = 'Last updated: ' + new Date().toLocaleString();
-}
-
-function parseScores(wb) {
-  scoreData = {};
-  const inputSheets = [
-    { name: 'Wk 1-6 Input', startWeek: 1 },
-    { name: 'Wk 7-12 Input', startWeek: 7 },
-    { name: 'Wk 13-18 Input', startWeek: 13 }
-  ];
-  const weekStarts = [6, 25, 44, 63, 82, 101];
-  
-  inputSheets.forEach(cfg => {
-    const ws = wb.Sheets[cfg.name];
-    if (!ws) return;
-    
-    for (let wkIdx = 0; wkIdx < 6; wkIdx++) {
-      const weekNum = cfg.startWeek + wkIdx;
-      scoreData[weekNum] = {};
-      const startRow = weekStarts[wkIdx];
-      
-      for (let p = 0; p < 16; p++) {
-        const excelRow = startRow + p; // 1-indexed Excel row
-        const r = excelRow - 1; // 0-indexed for gvRC
-        
-        // Read player number from column A
-        const playerNum = gvRC(ws, r, 0, 0);
-        
-        // Read picks from column C (raw input, not formula)
-        const picks = Number(gvRC(ws, r, 2, 0)) || 0;
-        
-        // Read week total from column I (formula - may need .v or .w)
-        const total = Number(gvRC(ws, r, 8, 0)) || 0;
-        
-        // Read H2H result from column F
-        const result = String(gvRC(ws, r, 5, '') || '');
-        
-        if (playerNum >= 1 && playerNum <= 16) {
-          scoreData[weekNum][playerNum] = { picks: picks, total: total, result: result };
-        }
-      }
-    }
-  });
 }
 
 function parseSchedule(wb) {
@@ -285,7 +241,7 @@ function gvRC(sheet, r, c, fallback) {
 
 function gv(s,r,f) { const c = s[r]; return c ? c.v : f; }
 
-function renderAll(p) { renderSeg1(p); renderSeg2(p); renderSeg3(p); renderOverall(p); renderPlayoffs(p); renderSchedule(); }
+function renderAll(p) { allPlayers = p; renderSeg1(p); renderSeg2(p); renderSeg3(p); renderOverall(p); renderPlayoffs(p); renderSchedule(); }
 function rc(i) { return i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''; }
 
 function renderSeg1(players) {
