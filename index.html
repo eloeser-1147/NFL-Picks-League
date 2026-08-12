@@ -53,17 +53,17 @@ tr:last-child td{border-bottom:none}
 .ea{font-weight:800;color:#3fb950;font-size:16px}
 .loading{text-align:center;padding:60px 24px;color:#8b949e;font-size:15px}
 .wsel{padding:10px 16px;background:#161b22;border:1px solid #30363d;border-radius:8px;color:#e6edf3;font-size:14px;font-weight:600;font-family:'Inter',Arial,sans-serif;cursor:pointer;min-width:260px;text-align:center;display:block;margin:0 auto 16px}
-.mu{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
-.mp{flex:1;font-weight:700}
-.mp.left{text-align:right;padding-right:20px}
-.mp.right{text-align:left;padding-left:20px}
-.mp .mn{font-size:14px}
-.mp .ms{font-size:22px;font-weight:900;margin-top:2px;color:#8b949e}
-.mp.mw .mn{color:#3fb950}.mp.mw .ms{color:#3fb950}
-.mp.ml .mn{color:#f85149;opacity:.7}.mp.ml .ms{color:#f85149;opacity:.7}
-.mp.mt .mn{color:#d29922}.mp.mt .ms{color:#d29922}
-.mv{font-size:11px;font-weight:800;color:#484f58;text-transform:uppercase;letter-spacing:1px;padding:4px 12px;background:#0d1117;border-radius:4px;min-width:40px;text-align:center}
-@media(max-width:640px){.header h1{font-size:24px}.qg{grid-template-columns:1fr}td,th{padding:6px 8px;font-size:11px}.tab{padding:6px 12px;font-size:11px}.mp .mn{font-size:12px}.mp .ms{font-size:18px}}
+.mu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-bottom:8px}
+.mu{background:#161b22;border:1px solid #30363d;border-radius:8px;overflow:hidden}
+.mu-header{display:flex;border-bottom:1px solid #30363d}
+.mu-side{flex:1;padding:8px 10px;text-align:center}
+.mu-side.left{border-right:1px solid #21262d}
+.mu-name{font-size:11px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mu-score{font-size:26px;font-weight:900;color:#8b949e;margin-top:2px}
+.mu-side.mw .mu-name{color:#3fb950}.mu-side.mw .mu-score{color:#3fb950}
+.mu-side.ml .mu-name{color:#f85149;opacity:.7}.mu-side.ml .mu-score{color:#f85149;opacity:.7}
+.mu-side.mt .mu-name{color:#d29922}.mu-side.mt .mu-score{color:#d29922}
+@media(max-width:640px){.header h1{font-size:24px}.qg{grid-template-columns:1fr}td,th{padding:6px 8px;font-size:11px}.tab{padding:6px 12px;font-size:11px}.mu-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}.mu-name{font-size:10px}.mu-score{font-size:20px}}
 </style>
 </head>
 <body>
@@ -129,7 +129,7 @@ function load() {
     readPicks(wb);
     
     render();
-    document.getElementById('status').textContent='Updated: '+new Date().toLocaleString();
+    document.getElementById('status').textContent='v4 | Updated: '+new Date().toLocaleString();
   })
   .catch(function(e){document.getElementById('status').textContent='Could not load file';});
 }
@@ -242,30 +242,41 @@ function sw(i){var a=document.querySelectorAll('[id^="wk"]');for(var x=0;x<a.len
 
 // ===== STANDINGS =====
 function renderS1(){
+  // Add raw picks to each player
+  for(var i=0;i<P.length;i++){
+    P[i].rp1=[];var rpTotal=0;
+    for(var w=1;w<=6;w++){var v=(picks[w]&&picks[w][P[i].num])||0;P[i].rp1.push(v);rpTotal+=v;}
+    P[i].rp1Total=rpTotal;
+  }
   var s=P.slice().sort(function(a,b){return b.t1-a.t1||b.h1-a.h1;});
   var wn=['Wk 1','Wk 2','Wk 3','Wk 4','Wk 5','Wk 6'];
   var o='<div class="card"><h2 class="hdr1">Segment 1 — Weeks 1-6</h2><table><tr><th>#</th><th style="text-align:left">Player</th>';
   for(var i=0;i<6;i++)o+='<th>'+wn[i]+'</th>';
-  o+='<th>H2H W</th><th>Best</th><th>Total</th></tr>';
+  o+='<th>H2H W</th><th>Best</th><th>Picks</th></tr>';
   for(var i=0;i<s.length;i++){
     o+='<tr><td class="'+rc(i)+'">'+(i+1)+'</td><td class="nm">'+s[i].name+'</td>';
-    for(var w=0;w<6;w++)o+='<td class="wk">'+s[i].w1[w]+'</td>';
-    var bw=Math.max.apply(null,s[i].w1);
-    o+='<td>'+s[i].h1+'</td><td>'+bw+'</td><td class="tot">'+s[i].t1+'</td></tr>';
+    for(var w=0;w<6;w++)o+='<td class="wk">'+s[i].rp1[w]+'</td>';
+    var bw=Math.max.apply(null,s[i].rp1);
+    o+='<td>'+s[i].h1+'</td><td>'+bw+'</td><td class="tot">'+s[i].rp1Total+'</td></tr>';
   }
   o+='</table></div>';document.getElementById('s1').innerHTML=o;
 }
 function renderS2(){
+  for(var i=0;i<P.length;i++){
+    P[i].rp2=[];var rpTotal=0;
+    for(var w=7;w<=12;w++){var v=(picks[w]&&picks[w][P[i].num])||0;P[i].rp2.push(v);rpTotal+=v;}
+    P[i].rp2Total=rpTotal;
+  }
   var s=P.slice().sort(function(a,b){return b.t2-a.t2||b.h2-a.h2;});
   var wn=['Wk 7','Wk 8','Wk 9','Wk 10','Wk 11','Wk 12'];
   var o='<div class="card"><h2 class="hdr2">Segment 2 — Weeks 7-12</h2><table><tr><th>#</th><th style="text-align:left">Player</th>';
   for(var i=0;i<6;i++)o+='<th>'+wn[i]+'</th>';
-  o+='<th>H2H W</th><th>Best</th><th>Total</th></tr>';
+  o+='<th>H2H W</th><th>Best</th><th>Pts</th></tr>';
   for(var i=0;i<s.length;i++){
     o+='<tr><td class="'+rc(i)+'">'+(i+1)+'</td><td class="nm">'+s[i].name+'</td>';
-    for(var w=0;w<6;w++)o+='<td class="wk">'+s[i].w2[w]+'</td>';
-    var bw=Math.max.apply(null,s[i].w2);
-    o+='<td>'+s[i].h2+'</td><td>'+bw+'</td><td class="tot">'+s[i].t2+'</td></tr>';
+    for(var w=0;w<6;w++)o+='<td class="wk">'+s[i].rp2[w]+'</td>';
+    var bw=Math.max.apply(null,s[i].rp2);
+    o+='<td>'+s[i].h2+'</td><td>'+bw+'</td><td class="tot">'+s[i].rp2Total+'</td></tr>';
   }
   o+='</table></div>';document.getElementById('s2').innerHTML=o;
 }
@@ -288,9 +299,11 @@ function renderS3(){
 }
 function renderAll(){
   var s=P.slice().sort(function(a,b){return(b.t1+b.t2+b.p3)-(a.t1+a.t2+a.p3);});
-  var o='<div class="card"><h2 class="hdr4">Overall Season Standings</h2><table><tr><th>#</th><th style="text-align:left">Player</th><th>Seg 1</th><th>Seg 2</th><th>Seg 3</th><th>Total</th></tr>';
-  for(var i=0;i<s.length;i++){var t=s[i].t1+s[i].t2+s[i].p3;
-    o+='<tr><td class="'+rc(i)+'">'+(i+1)+'</td><td class="nm">'+s[i].name+'</td><td class="wk">'+s[i].t1+'</td><td class="wk">'+s[i].t2+'</td><td class="wk">'+s[i].p3+'</td><td class="tot">'+t+'</td></tr>';}
+  var o='<div class="card"><h2 class="hdr4">Overall Season Standings</h2><table><tr><th>#</th><th style="text-align:left">Player</th><th>Seg 1</th><th>Seg 2</th><th>Seg 3</th><th>Picks</th></tr>';
+  for(var i=0;i<s.length;i++){
+    var rp1t=s[i].rp1Total||0,rp2t=s[i].rp2Total||0,rp3=s[i].p3;
+    var t=rp1t+rp2t+rp3;
+    o+='<tr><td class="'+rc(i)+'">'+(i+1)+'</td><td class="nm">'+s[i].name+'</td><td class="wk">'+rp1t+'</td><td class="wk">'+rp2t+'</td><td class="wk">'+rp3+'</td><td class="tot">'+t+'</td></tr>';}
   o+='</table></div>';document.getElementById('all').innerHTML=o;
 }
 function renderPO(){
