@@ -3,402 +3,317 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>NFL Picks League — Live Standings</title>
+<title>NFL Picks League</title>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
-  * { margin: 0; padding: 0; box-sizing: border-box; }
-  body { font-family: 'Inter', Arial, sans-serif; background: #0d1117; color: #e6edf3; min-height: 100vh; }
-
-  .header { text-align: center; padding: 32px 24px 16px; }
-  .header h1 { font-size: 32px; font-weight: 900; text-transform: uppercase; letter-spacing: -1px; background: linear-gradient(135deg, #58a6ff, #3fb950); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-  .header .subtitle { font-size: 13px; color: #8b949e; margin-top: 4px; }
-  .last-updated { font-size: 11px; color: #484f58; margin-top: 8px; }
-
-  .tabs { display: flex; justify-content: center; gap: 4px; padding: 0 24px; margin-bottom: 24px; flex-wrap: wrap; }
-  .tab { padding: 8px 18px; background: #161b22; border: 1px solid #30363d; border-radius: 8px; color: #8b949e; font-size: 13px; font-weight: 600; cursor: pointer; transition: all 0.2s; }
-  .tab:hover { border-color: #58a6ff; color: #e6edf3; }
-  .tab.active { background: #58a6ff; color: #0d1117; border-color: #58a6ff; }
-
-  .panel { display: none; max-width: 900px; margin: 0 auto; padding: 0 24px 40px; }
-  .panel.active { display: block; }
-
-  .standings-card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; overflow: hidden; margin-bottom: 20px; }
-  .standings-card h2 { padding: 12px 16px; font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
-  .seg1-header { background: linear-gradient(135deg, #1a3a5c, #1f4068); }
-  .seg2-header { background: linear-gradient(135deg, #3d1e5c, #5a2d82); }
-  .seg3-header { background: linear-gradient(135deg, #4a3020, #6b4226); }
-  .overall-header { background: linear-gradient(135deg, #1a1a2e, #2a2a4e); }
-  .playoff-header { background: linear-gradient(135deg, #1a4a1e, #2d6a2f); }
-  .sched-header { background: linear-gradient(135deg, #2a4a4e, #1a6a6e); }
-
-  table { width: 100%; border-collapse: collapse; }
-  th { padding: 8px 12px; font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: #8b949e; font-weight: 600; text-align: center; border-bottom: 1px solid #30363d; background: #1c2128; }
-  td { padding: 10px 12px; font-size: 13px; text-align: center; border-bottom: 1px solid #21262d; }
-  tr:last-child td { border-bottom: none; }
-  .rank-cell { font-weight: 800; width: 44px; font-size: 14px; }
-  .rank-1 { color: #FFD700; }
-  .rank-2 { color: #C0C0C0; }
-  .rank-3 { color: #CD7F32; }
-  .name-cell { text-align: left; font-weight: 600; color: #e6edf3; }
-  .total-cell { font-weight: 800; color: #3fb950; font-size: 15px; }
-  .week-cell { color: #8b949e; font-size: 12px; }
-  .wl-win { color: #3fb950; font-weight: 600; }
-  .wl-loss { color: #f85149; font-weight: 600; }
-  .wl-tie { color: #d29922; font-weight: 600; }
-  .div-label { padding: 8px 16px; font-size: 12px; font-weight: 700; color: #f0883e; background: #1c2128; border-bottom: 1px solid #30363d; text-transform: uppercase; letter-spacing: 0.5px; }
-
-  .qual-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 20px; }
-  .qual-card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 14px 16px; border-left: 3px solid #58a6ff; }
-  .qual-card .label { font-size: 10px; text-transform: uppercase; letter-spacing: 0.8px; color: #8b949e; font-weight: 600; }
-  .qual-card .name { font-size: 18px; font-weight: 800; margin-top: 4px; }
-  .qual-card .detail { font-size: 12px; color: #8b949e; margin-top: 2px; }
-  .qual-card.wildcard { border-left-color: #d29922; }
-  .qual-card .prize { display: inline-block; background: #2d6a4f; color: #fff; padding: 2px 8px; border-radius: 4px; font-size: 11px; font-weight: 700; margin-top: 6px; }
-
-  .earnings-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid #21262d; }
-  .earnings-row:last-child { border-bottom: none; }
-  .earnings-name { font-weight: 600; font-size: 14px; }
-  .earnings-amt { font-weight: 800; color: #3fb950; font-size: 16px; }
-
-  .loading { text-align: center; padding: 60px 24px; color: #8b949e; font-size: 15px; }
-  .loading .spinner { width: 32px; height: 32px; border: 3px solid #30363d; border-top-color: #58a6ff; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 0 auto 16px; }
-  @keyframes spin { to { transform: rotate(360deg); } }
-
-  /* Schedule-specific */
-  .week-picker { display: flex; justify-content: center; margin-bottom: 16px; }
-  .week-select { padding: 10px 16px; background: #161b22; border: 1px solid #30363d; border-radius: 8px; color: #e6edf3; font-size: 14px; font-weight: 600; font-family: 'Inter', Arial, sans-serif; cursor: pointer; min-width: 260px; text-align: center; appearance: none; -webkit-appearance: none; background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238b949e' stroke-width='2' fill='none'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 14px center; padding-right: 36px; }
-  .week-select:hover { border-color: #58a6ff; }
-  .week-select:focus { outline: none; border-color: #58a6ff; box-shadow: 0 0 0 2px rgba(88,166,255,0.2); }
-  .week-select option { background: #161b22; color: #e6edf3; padding: 8px; }
-  .matchup-card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px; }
-  .matchup-player { font-weight: 700; font-size: 15px; flex: 1; }
-  .matchup-player.left { text-align: right; padding-right: 16px; }
-  .matchup-player.right { text-align: left; padding-left: 16px; }
-  .matchup-name { font-size: 14px; }
-  .matchup-score { font-size: 24px; font-weight: 900; margin-top: 2px; color: #8b949e; }
-  .matchup-winner .matchup-name { color: #3fb950; }
-  .matchup-winner .matchup-score { color: #3fb950; }
-  .matchup-loser .matchup-name { color: #f85149; opacity: 0.7; }
-  .matchup-loser .matchup-score { color: #f85149; opacity: 0.7; }
-  .matchup-tie .matchup-name { color: #d29922; }
-  .matchup-tie .matchup-score { color: #d29922; }
-  .matchup-center { text-align: center; min-width: 60px; }
-  .matchup-vs { font-size: 11px; font-weight: 800; color: #484f58; text-transform: uppercase; letter-spacing: 1px; padding: 4px 12px; background: #0d1117; border-radius: 4px; }
-  .matchup-total { font-size: 9px; color: #484f58; margin-top: 4px; font-weight: 600; }
-  .seg-badge { display: inline-block; font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 10px; margin-left: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
-  .seg-badge.s1 { background: #1a3a5c; color: #58a6ff; }
-  .seg-badge.s2 { background: #3d1e5c; color: #bc8cff; }
-  .seg-badge.s3 { background: #4a3020; color: #f0883e; }
-
-  @media (max-width: 640px) {
-    .header h1 { font-size: 24px; }
-    .qual-grid { grid-template-columns: 1fr; }
-    td, th { padding: 6px 8px; font-size: 11px; }
-    .tab { padding: 6px 12px; font-size: 11px; }
-    .matchup-player { font-size: 13px; }
-    .week-btn { padding: 5px 8px; font-size: 10px; }
-  }
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Inter',Arial,sans-serif;background:#0d1117;color:#e6edf3;min-height:100vh}
+.header{text-align:center;padding:32px 24px 16px}
+.header h1{font-size:32px;font-weight:900;text-transform:uppercase;letter-spacing:-1px;background:linear-gradient(135deg,#58a6ff,#3fb950);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.status{font-size:11px;color:#484f58;margin-top:8px}
+.tabs{display:flex;justify-content:center;gap:4px;padding:0 24px;margin-bottom:24px;flex-wrap:wrap}
+.tab{padding:8px 18px;background:#161b22;border:1px solid #30363d;border-radius:8px;color:#8b949e;font-size:13px;font-weight:600;cursor:pointer}
+.tab:hover{border-color:#58a6ff;color:#e6edf3}
+.tab.active{background:#58a6ff;color:#0d1117;border-color:#58a6ff}
+.panel{display:none;max-width:900px;margin:0 auto;padding:0 24px 40px}
+.panel.active{display:block}
+.card{background:#161b22;border:1px solid #30363d;border-radius:8px;overflow:hidden;margin-bottom:20px}
+.card h2{padding:12px 16px;font-size:14px;font-weight:800;text-transform:uppercase;letter-spacing:.5px}
+.hdr1{background:linear-gradient(135deg,#1a3a5c,#1f4068)}
+.hdr2{background:linear-gradient(135deg,#3d1e5c,#5a2d82)}
+.hdr3{background:linear-gradient(135deg,#4a3020,#6b4226)}
+.hdr4{background:linear-gradient(135deg,#1a1a2e,#2a2a4e)}
+.hdr5{background:linear-gradient(135deg,#1a4a1e,#2d6a2f)}
+.hdr6{background:linear-gradient(135deg,#2a4a4e,#1a6a6e)}
+table{width:100%;border-collapse:collapse}
+th{padding:8px 12px;font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:#8b949e;font-weight:600;text-align:center;border-bottom:1px solid #30363d;background:#1c2128}
+td{padding:10px 12px;font-size:13px;text-align:center;border-bottom:1px solid #21262d}
+tr:last-child td{border-bottom:none}
+.r1{color:#FFD700;font-weight:800;font-size:14px}
+.r2{color:#C0C0C0;font-weight:800;font-size:14px}
+.r3{color:#CD7F32;font-weight:800;font-size:14px}
+.nm{text-align:left;font-weight:600}
+.tot{font-weight:800;color:#3fb950;font-size:15px}
+.wk{color:#8b949e;font-size:12px}
+.w{color:#3fb950;font-weight:600}
+.l{color:#f85149;font-weight:600}
+.t{color:#d29922;font-weight:600}
+.dl{padding:8px 16px;font-size:12px;font-weight:700;color:#f0883e;background:#1c2128;border-bottom:1px solid #30363d;text-transform:uppercase;letter-spacing:.5px}
+.qg{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:20px}
+.qc{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:14px 16px;border-left:3px solid #58a6ff}
+.qc .lb{font-size:10px;text-transform:uppercase;letter-spacing:.8px;color:#8b949e;font-weight:600}
+.qc .qn{font-size:18px;font-weight:800;margin-top:4px}
+.qc .dt{font-size:12px;color:#8b949e;margin-top:2px}
+.qc.wc{border-left-color:#d29922}
+.qc .pr{display:inline-block;background:#2d6a4f;color:#fff;padding:2px 8px;border-radius:4px;font-size:11px;font-weight:700;margin-top:6px}
+.er{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:1px solid #21262d}
+.er:last-child{border-bottom:none}
+.en{font-weight:600;font-size:14px}
+.ea{font-weight:800;color:#3fb950;font-size:16px}
+.loading{text-align:center;padding:60px 24px;color:#8b949e;font-size:15px}
+.wsel{padding:10px 16px;background:#161b22;border:1px solid #30363d;border-radius:8px;color:#e6edf3;font-size:14px;font-weight:600;font-family:'Inter',Arial,sans-serif;cursor:pointer;min-width:260px;text-align:center;display:block;margin:0 auto 16px}
+.mu{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.mp{flex:1;font-weight:700}
+.mp.left{text-align:right;padding-right:20px}
+.mp.right{text-align:left;padding-left:20px}
+.mp .mn{font-size:14px}
+.mp .ms{font-size:22px;font-weight:900;margin-top:2px;color:#8b949e}
+.mp.mw .mn{color:#3fb950}.mp.mw .ms{color:#3fb950}
+.mp.ml .mn{color:#f85149;opacity:.7}.mp.ml .ms{color:#f85149;opacity:.7}
+.mp.mt .mn{color:#d29922}.mp.mt .ms{color:#d29922}
+.mv{font-size:11px;font-weight:800;color:#484f58;text-transform:uppercase;letter-spacing:1px;padding:4px 12px;background:#0d1117;border-radius:4px;min-width:40px;text-align:center}
+@media(max-width:640px){.header h1{font-size:24px}.qg{grid-template-columns:1fr}td,th{padding:6px 8px;font-size:11px}.tab{padding:6px 12px;font-size:11px}.mp .mn{font-size:12px}.mp .ms{font-size:18px}}
 </style>
 </head>
 <body>
-
-<div class="header">
-  <h1>NFL Picks League</h1>
-  <div class="last-updated" id="lastUpdated"></div>
-</div>
-
+<div class="header"><h1>NFL Picks League</h1><div class="status" id="status">Loading...</div></div>
 <div class="tabs">
-  <div class="tab active" onclick="showPanel('schedule', this)">Schedule</div>
-  <div class="tab" onclick="showPanel('overall', this)">Overall Standings</div>
-  <div class="tab" onclick="showPanel('seg1', this)">Segment 1 Standings</div>
-  <div class="tab" onclick="showPanel('seg2', this)">Segment 2 Standings</div>
-  <div class="tab" onclick="showPanel('seg3', this)">Segment 3 Standings</div>
-  <div class="tab" onclick="showPanel('playoffs', this)">Playoffs</div>
+<div class="tab active" onclick="show('sched',this)">Schedule</div>
+<div class="tab" onclick="show('all',this)">Overall Standings</div>
+<div class="tab" onclick="show('s1',this)">Segment 1 Standings</div>
+<div class="tab" onclick="show('s2',this)">Segment 2 Standings</div>
+<div class="tab" onclick="show('s3',this)">Segment 3 Standings</div>
+<div class="tab" onclick="show('po',this)">Playoffs</div>
 </div>
-
-<div class="panel" id="seg1"><div class="loading"><div class="spinner"></div>Loading...</div></div>
-<div class="panel" id="seg2"><div class="loading"><div class="spinner"></div>Loading...</div></div>
-<div class="panel" id="seg3"><div class="loading"><div class="spinner"></div>Loading...</div></div>
-<div class="panel" id="overall"><div class="loading"><div class="spinner"></div>Loading...</div></div>
-<div class="panel" id="playoffs"><div class="loading"><div class="spinner"></div>Loading...</div></div>
-<div class="panel active" id="schedule"><div class="loading"><div class="spinner"></div>Loading...</div></div>
-
+<div class="panel active" id="sched"><div class="loading">Loading...</div></div>
+<div class="panel" id="all"><div class="loading">Loading...</div></div>
+<div class="panel" id="s1"><div class="loading">Loading...</div></div>
+<div class="panel" id="s2"><div class="loading">Loading...</div></div>
+<div class="panel" id="s3"><div class="loading">Loading...</div></div>
+<div class="panel" id="po"><div class="loading">Loading...</div></div>
 <script>
-let refreshInterval = null;
-let rosterMap = {};
-let allPlayers = [];
+var P = []; // all players
 
+window.onload = function() { load(); setInterval(load, 300000); };
 
-window.addEventListener('DOMContentLoaded', () => {
-  loadStandings();
-  refreshInterval = setInterval(() => loadStandings(), 300000);
-});
-
-async function loadStandings() {
-  try {
-    const resp = await fetch('./NFL_Picks_League_Tracker.xlsx?v=' + Date.now());
-    if (!resp.ok) throw new Error('File not found');
-    const buf = await resp.arrayBuffer();
-    const header = new Uint8Array(buf.slice(0, 2));
-    if (header[0] !== 0x50 || header[1] !== 0x4B) throw new Error('Not valid xlsx');
-    parseWorkbook(buf);
-  } catch (e) {
-    document.getElementById('lastUpdated').textContent = 'Could not load standings.';
-  }
+function show(id, el) {
+  var panels = document.querySelectorAll('.panel');
+  var tabs = document.querySelectorAll('.tab');
+  for (var i=0;i<panels.length;i++) panels[i].className='panel';
+  for (var i=0;i<tabs.length;i++) tabs[i].className='tab';
+  document.getElementById(id).className='panel active';
+  if(el) el.className='tab active';
 }
 
-function showPanel(id, tab) {
-  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
-  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-  document.getElementById(id).classList.add('active');
-  if (tab) tab.classList.add('active');
-}
-
-function parseWorkbook(data) {
-  const wb = XLSX.read(data, { type: 'array' });
-  
-  // Parse Roster
-  const roster = wb.Sheets['Roster'];
-  if (roster) {
-    for (let i = 3; i <= 18; i++) {
-      const num = gv(roster, `A${i}`, 0);
-      const name = gv(roster, `B${i}`, `Player ${num}`);
-      rosterMap[num] = name;
-    }
-  }
-
-  // Parse Helper for standings
-  const helper = wb.Sheets['Helper'];
-  if (!helper) { document.getElementById('lastUpdated').textContent = 'Error: Helper sheet not found.'; return; }
-  const players = [];
-  for (let i = 2; i <= 17; i++) {
-    players.push({
-      num: gv(helper,`A${i}`,0), name: gv(helper,`B${i}`,`Player ${i-1}`),
-      s1Weeks: [gv(helper,`C${i}`,0),gv(helper,`D${i}`,0),gv(helper,`E${i}`,0),gv(helper,`F${i}`,0),gv(helper,`G${i}`,0),gv(helper,`H${i}`,0)],
-      s1Total: gv(helper,`I${i}`,0), s1H2H: gv(helper,`J${i}`,0),
-      s2Weeks: [gv(helper,`L${i}`,0),gv(helper,`M${i}`,0),gv(helper,`N${i}`,0),gv(helper,`O${i}`,0),gv(helper,`P${i}`,0),gv(helper,`Q${i}`,0)],
-      s2Total: gv(helper,`R${i}`,0), s2H2H: gv(helper,`S${i}`,0),
-      s3Results: [gv(helper,`U${i}`,'-'),gv(helper,`V${i}`,'-'),gv(helper,`W${i}`,'-'),gv(helper,`X${i}`,'-'),gv(helper,`Y${i}`,'-'),gv(helper,`Z${i}`,'-')],
-      s3Wins: gv(helper,`AA${i}`,0), s3Losses: gv(helper,`AB${i}`,0), s3Picks: gv(helper,`AC${i}`,0),
-    });
-  }
-
-  
-  renderAll(players);
-  document.getElementById('lastUpdated').textContent = 'Last updated: ' + new Date().toLocaleString();
-}
-
-
-function gv(s,r,f) { const c = s[r]; return c ? c.v : f; }
-
-function renderAll(p) { allPlayers = p; renderSeg1(p); renderSeg2(p); renderSeg3(p); renderOverall(p); renderPlayoffs(p); renderSchedule(p); }
-function rc(i) { return i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''; }
-
-function renderSeg1(players) {
-  const sorted = [...players].sort((a,b) => b.s1Total-a.s1Total || b.s1H2H-a.s1H2H);
-  const wks = ['Wk 1','Wk 2','Wk 3','Wk 4','Wk 5','Wk 6'];
-  let h = `<div class="standings-card"><h2 class="seg1-header">Segment 1 — Weeks 1-6 (H2H + Points)</h2><table><tr><th>Rank</th><th style="text-align:left">Player</th>`;
-  wks.forEach(w => h += `<th>${w}</th>`); h += `<th>H2H W</th><th>Best Wk</th><th>Total</th></tr>`;
-  sorted.forEach((p,i) => { h += `<tr><td class="rank-cell ${rc(i)}">${i+1}</td><td class="name-cell">${p.name}</td>`;
-    p.s1Weeks.forEach(v => h += `<td class="week-cell">${v}</td>`);
-    h += `<td>${p.s1H2H}</td><td>${Math.max(...p.s1Weeks)}</td><td class="total-cell">${p.s1Total}</td></tr>`; });
-  h += `</table></div>`; document.getElementById('seg1').innerHTML = h;
-}
-
-function renderSeg2(players) {
-  const sorted = [...players].sort((a,b) => b.s2Total-a.s2Total || b.s2H2H-a.s2H2H);
-  const wks = ['Wk 7','Wk 8','Wk 9','Wk 10','Wk 11','Wk 12'];
-  let h = `<div class="standings-card"><h2 class="seg2-header">Segment 2 — Weeks 7-12 (H2H + Weighted)</h2><table><tr><th>Rank</th><th style="text-align:left">Player</th>`;
-  wks.forEach(w => h += `<th>${w}</th>`); h += `<th>H2H W</th><th>Best Wk</th><th>Total</th></tr>`;
-  sorted.forEach((p,i) => { h += `<tr><td class="rank-cell ${rc(i)}">${i+1}</td><td class="name-cell">${p.name}</td>`;
-    p.s2Weeks.forEach(v => h += `<td class="week-cell">${v}</td>`);
-    h += `<td>${p.s2H2H}</td><td>${Math.max(...p.s2Weeks)}</td><td class="total-cell">${p.s2Total}</td></tr>`; });
-  h += `</table></div>`; document.getElementById('seg2').innerHTML = h;
-}
-
-function renderSeg3(players) {
-  const divs = [{name:'Division A',m:players.filter(p=>p.num<=4)},{name:'Division B',m:players.filter(p=>p.num>=5&&p.num<=8)},{name:'Division C',m:players.filter(p=>p.num>=9&&p.num<=12)},{name:'Division D',m:players.filter(p=>p.num>=13)}];
-  const wks = ['W13','W14','W15','W16','W17','W18'];
-  let h = `<div class="standings-card"><h2 class="seg3-header">Segment 3 — Weeks 13-18 (Divisions)</h2>`;
-  divs.forEach(div => {
-    const s = [...div.m].sort((a,b) => b.s3Wins-a.s3Wins || b.s3Picks-a.s3Picks);
-    h += `<div class="div-label">${div.name}</div><table><tr><th>Rank</th><th style="text-align:left">Player</th>`;
-    wks.forEach(w => h += `<th>${w}</th>`); h += `<th>Wins</th><th>Losses</th><th>Picks</th></tr>`;
-    s.forEach((p,i) => { h += `<tr><td class="rank-cell ${rc(i)}">${i+1}</td><td class="name-cell">${p.name}</td>`;
-      p.s3Results.forEach(r => { const c = r==='W'?'wl-win':r==='L'?'wl-loss':r==='T'?'wl-tie':'week-cell'; h += `<td class="${c}">${r}</td>`; });
-      h += `<td class="wl-win">${p.s3Wins}</td><td class="wl-loss">${p.s3Losses}</td><td>${p.s3Picks}</td></tr>`; });
-    h += `</table>`; });
-  h += `</div>`; document.getElementById('seg3').innerHTML = h;
-}
-
-function renderOverall(players) {
-  const sorted = [...players].sort((a,b) => (b.s1Total+b.s2Total+b.s3Picks)-(a.s1Total+a.s2Total+a.s3Picks));
-  let h = `<div class="standings-card"><h2 class="overall-header">Overall Season Standings</h2><table><tr><th>Rank</th><th style="text-align:left">Player</th><th>Seg 1</th><th>Seg 2</th><th>Seg 3</th><th>Total</th></tr>`;
-  sorted.forEach((p,i) => { const t = p.s1Total+p.s2Total+p.s3Picks;
-    h += `<tr><td class="rank-cell ${rc(i)}">${i+1}</td><td class="name-cell">${p.name}</td><td class="week-cell">${p.s1Total}</td><td class="week-cell">${p.s2Total}</td><td class="week-cell">${p.s3Picks}</td><td class="total-cell">${t}</td></tr>`; });
-  h += `</table></div>`; document.getElementById('overall').innerHTML = h;
-}
-
-function renderPlayoffs(players) {
-  const s1S = [...players].sort((a,b) => b.s1Total-a.s1Total);
-  const s2S = [...players].sort((a,b) => b.s2Total-a.s2Total);
-  const divs = [players.filter(p=>p.num<=4),players.filter(p=>p.num>=5&&p.num<=8),players.filter(p=>p.num>=9&&p.num<=12),players.filter(p=>p.num>=13)];
-  const dw = divs.map(d => [...d].sort((a,b) => b.s3Wins-a.s3Wins||b.s3Picks-a.s3Picks)[0]);
-  const dn = ['Div A','Div B','Div C','Div D'];
-  const qual = new Set(); const qs = [];
-  let w1=s1S[0], q1=s1S.find(p=>!qual.has(p.num))||w1; qual.add(q1.num);
-  qs.push({l:'Weeks 1-6 Winner',w:w1.name,q:q1.name,pr:'$25',pt:w1.s1Total+' pts'});
-  let w2=s2S[0], q2=s2S.find(p=>!qual.has(p.num))||w2; qual.add(q2.num);
-  qs.push({l:'Weeks 7-12 Winner',w:w2.name,q:q2.name,pr:'$25',pt:w2.s2Total+' pts'});
-  dw.forEach((d,i) => { const ds=[...divs[i]].sort((a,b)=>b.s3Wins-a.s3Wins||b.s3Picks-a.s3Picks);
-    const q=ds.find(p=>!qual.has(p.num))||d; qual.add(q.num);
-    qs.push({l:`${dn[i]} Winner`,w:d.name,q:q.name,pr:'$10',pt:d.s3Wins+'W-'+d.s3Losses+'L'}); });
-  const os=[...players].sort((a,b)=>(b.s1Total+b.s2Total+b.s3Picks)-(a.s1Total+a.s2Total+a.s3Picks));
-  const wcs=os.filter(p=>!qual.has(p.num)).slice(0,2);
-  let h = `<div class="standings-card"><h2 class="playoff-header">Playoff Picture</h2></div><div class="qual-grid">`;
-  qs.forEach(q => { const ps=q.w!==q.q; h += `<div class="qual-card"><div class="label">${q.l}</div><div class="name">${q.w}</div><div class="detail">${q.pt}${ps?' — entry passes to '+q.q:''}</div><span class="prize">${q.pr}</span></div>`; });
-  wcs.forEach((p,i) => { h += `<div class="qual-card wildcard"><div class="label">Wild Card ${i+1}</div><div class="name">${p.name}</div><div class="detail">${p.s1Total+p.s2Total+p.s3Picks} season pts</div></div>`; });
-  h += `</div>`;
-  const earn=players.map(p=>{let e=0;if(p.name===w1.name)e+=25;if(p.name===w2.name)e+=25;if(dw.some(d=>d.name===p.name))e+=10;return{name:p.name,amount:e};}).filter(e=>e.amount>0).sort((a,b)=>b.amount-a.amount);
-  if(earn.length>0){h+=`<div class="standings-card"><h2 class="playoff-header">Season Earnings</h2><div style="padding:16px;">`;earn.forEach(e=>{h+=`<div class="earnings-row"><span class="earnings-name">${e.name}</span><span class="earnings-amt">$${e.amount}</span></div>`;});h+=`</div></div>`;}
-  document.getElementById('playoffs').innerHTML = h;
-}
-
-
-function renderSchedule(players) {
-  // Hardcoded schedule - same matchups as the Excel
-  var A = [1,2,3,4], B = [5,6,7,8], C = [9,10,11,12], D = [13,14,15,16];
-  
-  function makeRounds(g1, g2, g3, g4) {
-    var perms = [[0,1,2,3],[1,0,3,2],[2,3,0,1],[3,2,1,0]];
-    var rounds = [];
-    for (var p = 0; p < perms.length; p++) {
-      var matchups = [];
-      for (var i = 0; i < 4; i++) matchups.push([g1[i], g2[perms[p][i]]]);
-      for (var i = 0; i < 4; i++) matchups.push([g3[i], g4[perms[p][i]]]);
-      rounds.push(matchups);
-    }
-    return rounds;
-  }
-  
-  var p1 = makeRounds(A,B,C,D);
-  var p2 = makeRounds(A,C,B,D);
-  var p3 = makeRounds(A,D,B,C);
-  
-  var schedule = [];
-  // Weeks 1-6
-  for (var i = 0; i < 4; i++) schedule.push({week: i+1, seg: 'Seg 1', matchups: p1[i]});
-  for (var i = 0; i < 2; i++) schedule.push({week: i+5, seg: 'Seg 1', matchups: p2[i]});
-  // Weeks 7-12
-  for (var i = 2; i < 4; i++) schedule.push({week: i+5, seg: 'Seg 2', matchups: p2[i]});
-  for (var i = 0; i < 4; i++) schedule.push({week: i+9, seg: 'Seg 2', matchups: p3[i]});
-  
-  // Weeks 13-18 division play
-  function divSched(members) {
-    var m = members.slice();
-    var f = m[0], rot = m.slice(1);
-    var rr = [];
-    for (var r = 0; r < 3; r++) {
-      var cur = [f].concat(rot);
-      rr.push([[cur[0],cur[3]], [cur[1],cur[2]]]);
-      rot = [rot[rot.length-1]].concat(rot.slice(0, rot.length-1));
-    }
-    return rr.concat(rr);
-  }
-  var da = divSched(A), db = divSched(B), dc = divSched(C), dd = divSched(D);
-  for (var w = 0; w < 6; w++) {
-    schedule.push({week: w+13, seg: 'Div', matchups: da[w].concat(db[w]).concat(dc[w]).concat(dd[w])});
-  }
-  
-  // Build player lookup
-  var pMap = {};
-  for (var i = 0; i < players.length; i++) {
-    pMap[players[i].num] = players[i];
-  }
-  
-  // Build dropdown
-  var h = '<div class="week-picker"><select class="week-select" onchange="showWeek(this.value)">';
-  for (var i = 0; i < schedule.length; i++) {
-    h += '<option value="' + i + '">Week ' + schedule[i].week + ' — ' + schedule[i].seg + '</option>';
-  }
-  h += '</select></div>';
-  
-  // Build matchup cards for each week
-  for (var i = 0; i < schedule.length; i++) {
-    var wk = schedule[i];
-    var display = (i === 0) ? 'block' : 'none';
-    h += '<div class="week-matchups" id="week-' + i + '" style="display:' + display + ';">';
+function load() {
+  fetch('./NFL_Picks_League_Tracker.xlsx?t='+Date.now())
+  .then(function(r){return r.arrayBuffer()})
+  .then(function(buf){
+    var wb = XLSX.read(new Uint8Array(buf), {type:'array'});
+    var h = wb.Sheets['Helper'];
+    if(!h){document.getElementById('status').textContent='Helper sheet not found';return;}
     
-    for (var j = 0; j < wk.matchups.length; j++) {
-      var p1num = wk.matchups[j][0];
-      var p2num = wk.matchups[j][1];
-      var p1 = pMap[p1num];
-      var p2 = pMap[p2num];
-      var p1name = p1 ? p1.name : 'Player ' + p1num;
-      var p2name = p2 ? p2.name : 'Player ' + p2num;
-      
-      // Get scores - raw picks without H2H
-      var p1score = 0, p2score = 0;
-      if (p1 && p2) {
-        if (wk.week >= 1 && wk.week <= 6) {
-          // S1 weeks: subtract H2H bonus to get raw picks
-          var p1total = p1.s1Weeks[wk.week - 1];
-          var p2total = p2.s1Weeks[wk.week - 1];
-          // H2H bonus is 6 for win, 3 for tie, 0 for loss
-          // Raw picks = total - H2H bonus. But we dont know per-week H2H.
-          // Just show the total for now
-          p1score = p1total;
-          p2score = p2total;
-        } else if (wk.week >= 7 && wk.week <= 12) {
-          p1score = p1.s2Weeks[wk.week - 7];
-          p2score = p2.s2Weeks[wk.week - 7];
-        } else if (wk.week >= 13 && wk.week <= 18) {
-          p1score = p1.s3Results[wk.week - 13];
-          p2score = p2.s3Results[wk.week - 13];
-        }
-      }
-      
-      var p1class = 'matchup-player left';
-      var p2class = 'matchup-player right';
-      var isDivWeek = (wk.week >= 13);
-      
-      if (!isDivWeek) {
-        if (p1score > 0 || p2score > 0) {
-          if (p1score > p2score) { p1class += ' matchup-winner'; p2class += ' matchup-loser'; }
-          else if (p2score > p1score) { p2class += ' matchup-winner'; p1class += ' matchup-loser'; }
-          else { p1class += ' matchup-tie'; p2class += ' matchup-tie'; }
-        }
-      } else {
-        if (p1score === 'W') { p1class += ' matchup-winner'; p2class += ' matchup-loser'; }
-        else if (p1score === 'L') { p1class += ' matchup-loser'; p2class += ' matchup-winner'; }
-        else if (p1score === 'T') { p1class += ' matchup-tie'; p2class += ' matchup-tie'; }
-      }
-      
-      h += '<div class="matchup-card">';
-      h += '<div class="' + p1class + '">';
-      h += '<div class="matchup-name">' + p1name + '</div>';
-      h += '<div class="matchup-score">' + p1score + '</div>';
-      h += '</div>';
-      h += '<div class="matchup-center"><div class="matchup-vs">VS</div></div>';
-      h += '<div class="' + p2class + '">';
-      h += '<div class="matchup-name">' + p2name + '</div>';
-      h += '<div class="matchup-score">' + p2score + '</div>';
-      h += '</div>';
-      h += '</div>';
+    // Read roster
+    var roster = wb.Sheets['Roster'];
+    var names = {};
+    if(roster){for(var i=3;i<=18;i++){var c=roster['B'+i];names[i-2]=c?c.v:'Player '+(i-2);}}
+    
+    // Read helper data
+    P = [];
+    for(var i=2;i<=17;i++){
+      var pn = i-1;
+      P.push({
+        num: pn,
+        name: names[pn]||'Player '+pn,
+        w1:[v(h,'C'+i),v(h,'D'+i),v(h,'E'+i),v(h,'F'+i),v(h,'G'+i),v(h,'H'+i)],
+        t1:v(h,'I'+i), h1:v(h,'J'+i),
+        w2:[v(h,'L'+i),v(h,'M'+i),v(h,'N'+i),v(h,'O'+i),v(h,'P'+i),v(h,'Q'+i)],
+        t2:v(h,'R'+i), h2:v(h,'S'+i),
+        r3:[v3(h,'U'+i),v3(h,'V'+i),v3(h,'W'+i),v3(h,'X'+i),v3(h,'Y'+i),v3(h,'Z'+i)],
+        w3:v(h,'AA'+i), l3:v(h,'AB'+i), p3:v(h,'AC'+i)
+      });
     }
-    h += '</div>';
+    
+    // Read raw picks from input sheets
+    readPicks(wb);
+    
+    render();
+    document.getElementById('status').textContent='Updated: '+new Date().toLocaleString();
+  })
+  .catch(function(e){document.getElementById('status').textContent='Could not load file';});
+}
+
+function v(s,r){var c=s[r];return c&&typeof c.v==='number'?c.v:0;}
+function v3(s,r){var c=s[r];return c?String(c.v):'-';}
+
+// Raw picks storage: picks[weekNumber][playerNumber] = correct picks
+var picks = {};
+
+function readPicks(wb) {
+  picks = {};
+  var sheets = ['Wk 1-6 Input','Wk 7-12 Input','Wk 13-18 Input'];
+  for (var s = 0; s < sheets.length; s++) {
+    var ws = wb.Sheets[sheets[s]];
+    if (!ws) continue;
+    var ref = ws['!ref'];
+    if (!ref) continue;
+    var range = XLSX.utils.decode_range(ref);
+    var curWeek = 0;
+    for (var r = range.s.r; r <= range.e.r; r++) {
+      var a = ws[XLSX.utils.encode_cell({r:r,c:0})];
+      if (!a) continue;
+      var av = a.v;
+      // Detect week header
+      if (typeof av === 'string' && av.toUpperCase().indexOf('WEEK ') === 0) {
+        curWeek = parseInt(av.replace(/\D/g,''));
+        if (!picks[curWeek]) picks[curWeek] = {};
+        continue;
+      }
+      // Detect player row
+      if (curWeek > 0 && typeof av === 'number' && av >= 1 && av <= 16) {
+        var cc = ws[XLSX.utils.encode_cell({r:r,c:2})];
+        var val = 0;
+        if (cc) {
+          if (typeof cc.v === 'number') val = cc.v;
+          else if (typeof cc.v === 'string') val = parseInt(cc.v) || 0;
+        }
+        picks[curWeek][av] = val;
+      }
+    }
   }
+}
+
+function rc(i){return i===0?'r1':i===1?'r2':i===2?'r3':'';}
+
+function render(){
+  renderSched();
+  renderS1();renderS2();renderS3();renderAll();renderPO();
+}
+
+// ===== SCHEDULE =====
+function renderSched(){
+  var A=[1,2,3,4],B=[5,6,7,8],C=[9,10,11,12],D=[13,14,15,16];
+  function mr(g1,g2,g3,g4){
+    var pm=[[0,1,2,3],[1,0,3,2],[2,3,0,1],[3,2,1,0]],out=[];
+    for(var p=0;p<4;p++){var m=[];for(var i=0;i<4;i++)m.push([g1[i],g2[pm[p][i]]]);for(var i=0;i<4;i++)m.push([g3[i],g4[pm[p][i]]]);out.push(m);}
+    return out;
+  }
+  var r1=mr(A,B,C,D),r2=mr(A,C,B,D),r3=mr(A,D,B,C);
+  function ds(m){var f=m[0],ro=m.slice(1),rr=[];for(var i=0;i<3;i++){var c=[f].concat(ro);rr.push([[c[0],c[3]],[c[1],c[2]]]);ro=[ro[ro.length-1]].concat(ro.slice(0,ro.length-1));}return rr.concat(rr);}
+  var da=ds(A),db=ds(B),dc=ds(C),dd=ds(D);
   
-  document.getElementById('schedule').innerHTML = h;
+  var sched=[];
+  for(var i=0;i<4;i++)sched.push({wk:i+1,seg:'Seg 1',mu:r1[i]});
+  for(var i=0;i<2;i++)sched.push({wk:i+5,seg:'Seg 1',mu:r2[i]});
+  for(var i=2;i<4;i++)sched.push({wk:i+5,seg:'Seg 2',mu:r2[i]});
+  for(var i=0;i<4;i++)sched.push({wk:i+9,seg:'Seg 2',mu:r3[i]});
+  for(var i=0;i<6;i++)sched.push({wk:i+13,seg:'Division',mu:da[i].concat(db[i]).concat(dc[i]).concat(dd[i])});
+  
+  var pm={};for(var i=0;i<P.length;i++)pm[P[i].num]=P[i];
+  
+  var o='<select class="wsel" onchange="sw(this.value)">';
+  for(var i=0;i<sched.length;i++)o+='<option value="'+i+'">Week '+sched[i].wk+' — '+sched[i].seg+'</option>';
+  o+='</select>';
+  
+  for(var i=0;i<sched.length;i++){
+    var s=sched[i];
+    o+='<div id="wk'+i+'" style="display:'+(i===0?'block':'none')+'">';
+    for(var j=0;j<s.mu.length;j++){
+      var n1=s.mu[j][0],n2=s.mu[j][1];
+      var p1=pm[n1],p2=pm[n2];
+      var name1=p1?p1.name:'Player '+n1;
+      var name2=p2?p2.name:'Player '+n2;
+      
+      // Get raw picks for this week
+      var sc1=picks[s.wk]?picks[s.wk][n1]:'';
+      var sc2=picks[s.wk]?picks[s.wk][n2]:'';
+      if(sc1===undefined||sc1===null)sc1=0;
+      if(sc2===undefined||sc2===null)sc2=0;
+      
+      var c1='mp left',c2='mp right';
+      if(sc1>0||sc2>0){
+        if(sc1>sc2){c1+=' mw';c2+=' ml';}
+        else if(sc2>sc1){c2+=' mw';c1+=' ml';}
+        else{c1+=' mt';c2+=' mt';}
+      }
+      
+      o+='<div class="mu">';
+      o+='<div class="'+c1+'"><div class="mn">'+name1+'</div><div class="ms">'+sc1+'</div></div>';
+      o+='<div class="mv">VS</div>';
+      o+='<div class="'+c2+'"><div class="mn">'+name2+'</div><div class="ms">'+sc2+'</div></div>';
+      o+='</div>';
+    }
+    o+='</div>';
+  }
+  document.getElementById('sched').innerHTML=o;
 }
+function sw(i){var a=document.querySelectorAll('[id^="wk"]');for(var x=0;x<a.length;x++){if(a[x].id.indexOf('wk')===0&&a[x].id.length<=4)a[x].style.display='none';}document.getElementById('wk'+i).style.display='block';}
 
-function showWeek(index) {
-  var all = document.querySelectorAll('.week-matchups');
-  for (var i = 0; i < all.length; i++) all[i].style.display = 'none';
-  document.getElementById('week-' + index).style.display = 'block';
+// ===== STANDINGS =====
+function renderS1(){
+  var s=P.slice().sort(function(a,b){return b.t1-a.t1||b.h1-a.h1;});
+  var wn=['Wk 1','Wk 2','Wk 3','Wk 4','Wk 5','Wk 6'];
+  var o='<div class="card"><h2 class="hdr1">Segment 1 — Weeks 1-6</h2><table><tr><th>#</th><th style="text-align:left">Player</th>';
+  for(var i=0;i<6;i++)o+='<th>'+wn[i]+'</th>';
+  o+='<th>H2H W</th><th>Best</th><th>Total</th></tr>';
+  for(var i=0;i<s.length;i++){
+    o+='<tr><td class="'+rc(i)+'">'+(i+1)+'</td><td class="nm">'+s[i].name+'</td>';
+    for(var w=0;w<6;w++)o+='<td class="wk">'+s[i].w1[w]+'</td>';
+    var bw=Math.max.apply(null,s[i].w1);
+    o+='<td>'+s[i].h1+'</td><td>'+bw+'</td><td class="tot">'+s[i].t1+'</td></tr>';
+  }
+  o+='</table></div>';document.getElementById('s1').innerHTML=o;
 }
-
+function renderS2(){
+  var s=P.slice().sort(function(a,b){return b.t2-a.t2||b.h2-a.h2;});
+  var wn=['Wk 7','Wk 8','Wk 9','Wk 10','Wk 11','Wk 12'];
+  var o='<div class="card"><h2 class="hdr2">Segment 2 — Weeks 7-12</h2><table><tr><th>#</th><th style="text-align:left">Player</th>';
+  for(var i=0;i<6;i++)o+='<th>'+wn[i]+'</th>';
+  o+='<th>H2H W</th><th>Best</th><th>Total</th></tr>';
+  for(var i=0;i<s.length;i++){
+    o+='<tr><td class="'+rc(i)+'">'+(i+1)+'</td><td class="nm">'+s[i].name+'</td>';
+    for(var w=0;w<6;w++)o+='<td class="wk">'+s[i].w2[w]+'</td>';
+    var bw=Math.max.apply(null,s[i].w2);
+    o+='<td>'+s[i].h2+'</td><td>'+bw+'</td><td class="tot">'+s[i].t2+'</td></tr>';
+  }
+  o+='</table></div>';document.getElementById('s2').innerHTML=o;
+}
+function renderS3(){
+  var divs=[{n:'Division A',p:P.filter(function(x){return x.num<=4})},{n:'Division B',p:P.filter(function(x){return x.num>=5&&x.num<=8})},{n:'Division C',p:P.filter(function(x){return x.num>=9&&x.num<=12})},{n:'Division D',p:P.filter(function(x){return x.num>=13})}];
+  var wn=['W13','W14','W15','W16','W17','W18'];
+  var o='<div class="card"><h2 class="hdr3">Segment 3 — Weeks 13-18</h2>';
+  for(var d=0;d<divs.length;d++){
+    var s=divs[d].p.slice().sort(function(a,b){return b.w3-a.w3||b.p3-a.p3;});
+    o+='<div class="dl">'+divs[d].n+'</div><table><tr><th>#</th><th style="text-align:left">Player</th>';
+    for(var i=0;i<6;i++)o+='<th>'+wn[i]+'</th>';
+    o+='<th>W</th><th>L</th><th>Picks</th></tr>';
+    for(var i=0;i<s.length;i++){
+      o+='<tr><td class="'+rc(i)+'">'+(i+1)+'</td><td class="nm">'+s[i].name+'</td>';
+      for(var w=0;w<6;w++){var r=s[i].r3[w];var cl=r==='W'?'w':r==='L'?'l':r==='T'?'t':'wk';o+='<td class="'+cl+'">'+r+'</td>';}
+      o+='<td class="w">'+s[i].w3+'</td><td class="l">'+s[i].l3+'</td><td>'+s[i].p3+'</td></tr>';
+    }o+='</table>';
+  }
+  o+='</div>';document.getElementById('s3').innerHTML=o;
+}
+function renderAll(){
+  var s=P.slice().sort(function(a,b){return(b.t1+b.t2+b.p3)-(a.t1+a.t2+a.p3);});
+  var o='<div class="card"><h2 class="hdr4">Overall Season Standings</h2><table><tr><th>#</th><th style="text-align:left">Player</th><th>Seg 1</th><th>Seg 2</th><th>Seg 3</th><th>Total</th></tr>';
+  for(var i=0;i<s.length;i++){var t=s[i].t1+s[i].t2+s[i].p3;
+    o+='<tr><td class="'+rc(i)+'">'+(i+1)+'</td><td class="nm">'+s[i].name+'</td><td class="wk">'+s[i].t1+'</td><td class="wk">'+s[i].t2+'</td><td class="wk">'+s[i].p3+'</td><td class="tot">'+t+'</td></tr>';}
+  o+='</table></div>';document.getElementById('all').innerHTML=o;
+}
+function renderPO(){
+  var s1=P.slice().sort(function(a,b){return b.t1-a.t1;});
+  var s2=P.slice().sort(function(a,b){return b.t2-a.t2;});
+  var dv=[P.filter(function(x){return x.num<=4}),P.filter(function(x){return x.num>=5&&x.num<=8}),P.filter(function(x){return x.num>=9&&x.num<=12}),P.filter(function(x){return x.num>=13})];
+  var dw=dv.map(function(d){return d.slice().sort(function(a,b){return b.w3-a.w3||b.p3-a.p3;})[0];});
+  var dn=['Div A','Div B','Div C','Div D'];
+  var q=new Set(),qs=[];
+  function addQ(label,winner,pool,prize,stat){var qual=pool.find(function(p){return!q.has(p.num);})||winner;q.add(qual.num);qs.push({l:label,w:winner.name,q:qual.name,pr:prize,pt:stat});}
+  addQ('Weeks 1-6 Winner',s1[0],s1,'$25',s1[0].t1+' pts');
+  addQ('Weeks 7-12 Winner',s2[0],s2,'$25',s2[0].t2+' pts');
+  for(var i=0;i<4;i++){var ds=dv[i].slice().sort(function(a,b){return b.w3-a.w3||b.p3-a.p3;});addQ(dn[i]+' Winner',dw[i],ds,'$10',dw[i].w3+'W-'+dw[i].l3+'L');}
+  var os=P.slice().sort(function(a,b){return(b.t1+b.t2+b.p3)-(a.t1+a.t2+a.p3);});
+  var wcs=os.filter(function(p){return!q.has(p.num);}).slice(0,2);
+  var o='<div class="card"><h2 class="hdr5">Playoff Picture</h2></div><div class="qg">';
+  for(var i=0;i<qs.length;i++){var x=qs[i];var ps=x.w!==x.q;o+='<div class="qc"><div class="lb">'+x.l+'</div><div class="qn">'+x.w+'</div><div class="dt">'+x.pt+(ps?' — entry passes to '+x.q:'')+'</div><span class="pr">'+x.pr+'</span></div>';}
+  for(var i=0;i<wcs.length;i++){var p=wcs[i];o+='<div class="qc wc"><div class="lb">Wild Card '+(i+1)+'</div><div class="qn">'+p.name+'</div><div class="dt">'+(p.t1+p.t2+p.p3)+' season pts</div></div>';}
+  o+='</div>';
+  var earn=P.map(function(p){var e=0;if(p.name===s1[0].name)e+=25;if(p.name===s2[0].name)e+=25;if(dw.some(function(d){return d.name===p.name;}))e+=10;return{name:p.name,amount:e};}).filter(function(x){return x.amount>0;}).sort(function(a,b){return b.amount-a.amount;});
+  if(earn.length>0){o+='<div class="card"><h2 class="hdr5">Season Earnings</h2><div style="padding:16px">';for(var i=0;i<earn.length;i++)o+='<div class="er"><span class="en">'+earn[i].name+'</span><span class="ea">$'+earn[i].amount+'</span></div>';o+='</div></div>';}
+  document.getElementById('po').innerHTML=o;
+}
 </script>
 </body>
 </html>
