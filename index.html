@@ -213,11 +213,21 @@ function parseScores(wb) {
       const startRow = weekStarts[wkIdx];
       
       for (let p = 0; p < 16; p++) {
-        const row = startRow + p;
-        const playerNum = gvRC(ws, row - 1, 0, 0); // 0-indexed rows
-        const picks = gvRC(ws, row - 1, 2, 0); // Column C = correct picks / weighted pts
-        const total = gvRC(ws, row - 1, 8, 0); // Column I = week total
-        const result = gvRC(ws, row - 1, 5, ''); // Column F = W/L/T
+        const excelRow = startRow + p; // 1-indexed Excel row
+        const r = excelRow - 1; // 0-indexed for gvRC
+        
+        // Read player number from column A
+        const playerNum = gvRC(ws, r, 0, 0);
+        
+        // Read picks from column C (raw input, not formula)
+        const picks = Number(gvRC(ws, r, 2, 0)) || 0;
+        
+        // Read week total from column I (formula - may need .v or .w)
+        const total = Number(gvRC(ws, r, 8, 0)) || 0;
+        
+        // Read H2H result from column F
+        const result = String(gvRC(ws, r, 5, '') || '');
+        
         if (playerNum >= 1 && playerNum <= 16) {
           scoreData[weekNum][playerNum] = { picks: picks, total: total, result: result };
         }
