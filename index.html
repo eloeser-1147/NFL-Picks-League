@@ -129,6 +129,7 @@ let refreshInterval = null;
 let scheduleData = [];
 let rosterMap = {};
 let allPlayers = [];
+let rawPicks = {}; // rawPicks[weekNum][playerNum] = correct picks
 
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -185,11 +186,53 @@ function parseWorkbook(data) {
     });
   }
 
+  // Parse raw picks from input sheets
+  parseRawPicks(wb);
+
   // Parse Schedule
   parseSchedule(wb);
   
   renderAll(players);
   document.getElementById('lastUpdated').textContent = 'Last updated: ' + new Date().toLocaleString();
+}
+
+
+function parseRawPicks(wb) {
+  rawPicks = {};
+  var sheets = [
+    { name: 'Wk 1-6 Input', baseWeek: 0 },
+    { name: 'Wk 7-12 Input', baseWeek: 6 },
+    { name: 'Wk 13-18 Input', baseWeek: 12 }
+  ];
+  
+  for (var s = 0; s < sheets.length; s++) {
+    var ws = wb.Sheets[sheets[s].name];
+    if (!ws || !ws['!ref']) continue;
+    var range = XLSX.utils.decode_range(ws['!ref']);
+    var currentWeek = 0;
+    
+    for (var r = range.s.r; r <= range.e.r; r++) {
+      // Check column A for week header or player number
+      var cellA = ws[XLSX.utils.encode_cell({r:r, c:0})];
+      var valA = cellA ? cellA.v : null;
+      
+      if (valA && typeof valA === 'string' && valA.indexOf('WEEK') === 0) {
+        // Extract week number
+        var wn = parseInt(valA.replace(/[^0-9]/g, ''));
+        if (wn > 0) currentWeek = wn;
+        if (!rawPicks[currentWeek]) rawPicks[currentWeek] = {};
+        continue;
+      }
+      
+      // If valA is a player number (1-16) and we have a current week
+      if (currentWeek > 0 && typeof valA === 'number' && valA >= 1 && valA <= 16) {
+        // Read column C (index 2) for correct picks
+        var cellC = ws[XLSX.utils.encode_cell({r:r, c:2})];
+        var picks = cellC ? (typeof cellC.v === 'number' ? cellC.v : 0) : 0;
+        rawPicks[currentWeek][valA] = picks;
+      }
+    }
+  }
 }
 
 function parseSchedule(wb) {
