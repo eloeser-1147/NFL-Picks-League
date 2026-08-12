@@ -75,7 +75,17 @@
   .matchup-player { font-weight: 700; font-size: 15px; flex: 1; }
   .matchup-player.left { text-align: right; padding-right: 16px; }
   .matchup-player.right { text-align: left; padding-left: 16px; }
+  .matchup-name { font-size: 14px; }
+  .matchup-score { font-size: 24px; font-weight: 900; margin-top: 2px; color: #8b949e; }
+  .matchup-winner .matchup-name { color: #3fb950; }
+  .matchup-winner .matchup-score { color: #3fb950; }
+  .matchup-loser .matchup-name { color: #f85149; opacity: 0.7; }
+  .matchup-loser .matchup-score { color: #f85149; opacity: 0.7; }
+  .matchup-tie .matchup-name { color: #d29922; }
+  .matchup-tie .matchup-score { color: #d29922; }
+  .matchup-center { text-align: center; min-width: 60px; }
   .matchup-vs { font-size: 11px; font-weight: 800; color: #484f58; text-transform: uppercase; letter-spacing: 1px; padding: 4px 12px; background: #0d1117; border-radius: 4px; }
+  .matchup-total { font-size: 9px; color: #484f58; margin-top: 4px; font-weight: 600; }
   .seg-badge { display: inline-block; font-size: 9px; font-weight: 700; padding: 2px 8px; border-radius: 10px; margin-left: 8px; text-transform: uppercase; letter-spacing: 0.5px; }
   .seg-badge.s1 { background: #1a3a5c; color: #58a6ff; }
   .seg-badge.s2 { background: #3d1e5c; color: #bc8cff; }
@@ -118,6 +128,7 @@
 let refreshInterval = null;
 let scheduleData = [];
 let rosterMap = {};
+let scoreData = {}; // scoreData[weekNum][playerNum] = { picks: X, total: Y }
 
 window.addEventListener('DOMContentLoaded', () => {
   loadStandings();
@@ -173,11 +184,46 @@ function parseWorkbook(data) {
     });
   }
 
+  // Parse scores from input sheets
+  parseScores(wb);
+  
   // Parse Schedule
   parseSchedule(wb);
   
   renderAll(players);
   document.getElementById('lastUpdated').textContent = 'Last updated: ' + new Date().toLocaleString();
+}
+
+function parseScores(wb) {
+  scoreData = {};
+  const inputSheets = [
+    { name: 'Wk 1-6 Input', startWeek: 1 },
+    { name: 'Wk 7-12 Input', startWeek: 7 },
+    { name: 'Wk 13-18 Input', startWeek: 13 }
+  ];
+  const weekStarts = [6, 25, 44, 63, 82, 101];
+  
+  inputSheets.forEach(cfg => {
+    const ws = wb.Sheets[cfg.name];
+    if (!ws) return;
+    
+    for (let wkIdx = 0; wkIdx < 6; wkIdx++) {
+      const weekNum = cfg.startWeek + wkIdx;
+      scoreData[weekNum] = {};
+      const startRow = weekStarts[wkIdx];
+      
+      for (let p = 0; p < 16; p++) {
+        const row = startRow + p;
+        const playerNum = gvRC(ws, row - 1, 0, 0); // 0-indexed rows
+        const picks = gvRC(ws, row - 1, 2, 0); // Column C = correct picks / weighted pts
+        const total = gvRC(ws, row - 1, 8, 0); // Column I = week total
+        const result = gvRC(ws, row - 1, 5, ''); // Column F = W/L/T
+        if (playerNum >= 1 && playerNum <= 16) {
+          scoreData[weekNum][playerNum] = { picks: picks, total: total, result: result };
+        }
+      }
+    }
+  });
 }
 
 function parseSchedule(wb) {
