@@ -126,10 +126,8 @@
 
 <script>
 let refreshInterval = null;
-let scheduleData = [];
 let rosterMap = {};
 let allPlayers = [];
-let rawPicks = {}; // rawPicks[weekNum][playerNum] = correct picks
 
 
 window.addEventListener('DOMContentLoaded', () => {
@@ -186,105 +184,15 @@ function parseWorkbook(data) {
     });
   }
 
-  // Parse raw picks from input sheets
-  parseRawPicks(wb);
-
-  // Parse Schedule
-  parseSchedule(wb);
   
   renderAll(players);
   document.getElementById('lastUpdated').textContent = 'Last updated: ' + new Date().toLocaleString();
 }
 
 
-function parseRawPicks(wb) {
-  rawPicks = {};
-  var sheets = [
-    { name: 'Wk 1-6 Input', baseWeek: 0 },
-    { name: 'Wk 7-12 Input', baseWeek: 6 },
-    { name: 'Wk 13-18 Input', baseWeek: 12 }
-  ];
-  
-  for (var s = 0; s < sheets.length; s++) {
-    var ws = wb.Sheets[sheets[s].name];
-    if (!ws || !ws['!ref']) continue;
-    var range = XLSX.utils.decode_range(ws['!ref']);
-    var currentWeek = 0;
-    
-    for (var r = range.s.r; r <= range.e.r; r++) {
-      // Check column A for week header or player number
-      var cellA = ws[XLSX.utils.encode_cell({r:r, c:0})];
-      var valA = cellA ? cellA.v : null;
-      
-      if (valA && typeof valA === 'string' && valA.indexOf('WEEK') === 0) {
-        // Extract week number
-        var wn = parseInt(valA.replace(/[^0-9]/g, ''));
-        if (wn > 0) currentWeek = wn;
-        if (!rawPicks[currentWeek]) rawPicks[currentWeek] = {};
-        continue;
-      }
-      
-      // If valA is a player number (1-16) and we have a current week
-      if (currentWeek > 0 && typeof valA === 'number' && valA >= 1 && valA <= 16) {
-        // Read column C (index 2) for correct picks
-        var cellC = ws[XLSX.utils.encode_cell({r:r, c:2})];
-        var picks = cellC ? (typeof cellC.v === 'number' ? cellC.v : 0) : 0;
-        rawPicks[currentWeek][valA] = picks;
-      }
-    }
-  }
-}
-
-function parseSchedule(wb) {
-  const sched = wb.Sheets['Schedule'];
-  if (!sched) return;
-  
-  scheduleData = [];
-  const range = XLSX.utils.decode_range(sched['!ref']);
-  let currentWeek = null;
-  let currentSegment = '';
-  
-  for (let r = range.s.r; r <= range.e.r; r++) {
-    const colA = gvRC(sched, r, 0, '');
-    const colB = gvRC(sched, r, 1, '');
-    const colE = gvRC(sched, r, 4, '');
-    
-    const aStr = String(colA);
-    
-    if (aStr.includes('WEEKS 1-6') || aStr.includes('1-6')) { currentSegment = 's1'; continue; }
-    if (aStr.includes('WEEKS 7-12') || aStr.includes('7-12')) { currentSegment = 's2'; continue; }
-    if (aStr.includes('WEEKS 13-18') || aStr.includes('13-18')) { currentSegment = 's3'; continue; }
-    
-    if (aStr.startsWith('Week ') || aStr.startsWith('week ')) {
-      currentWeek = { label: aStr, segment: currentSegment, matchups: [] };
-      scheduleData.push(currentWeek);
-      continue;
-    }
-    
-    if (aStr === 'Match' || aStr === '#' || aStr === 'Match #') continue;
-    
-    if (currentWeek && colB && colE && typeof colB === 'number' && typeof colE === 'number') {
-      const p1 = Number(colB);
-      const p2 = Number(colE);
-      if (p1 >= 1 && p1 <= 16 && p2 >= 1 && p2 <= 16) {
-        currentWeek.matchups.push({
-          p1num: p1, p1name: rosterMap[p1] || `Player ${p1}`,
-          p2num: p2, p2name: rosterMap[p2] || `Player ${p2}`
-        });
-      }
-    }
-  }
-}
-
-function gvRC(sheet, r, c, fallback) {
-  const addr = XLSX.utils.encode_cell({r: r, c: c});
-  const cell = sheet[addr];
-  return cell ? cell.v : fallback;
-}
-
 function gv(s,r,f) { const c = s[r]; return c ? c.v : f; }
 
-function renderAll(p) { allPlayers = p; renderSeg1(p); renderSeg2(p); renderSeg3(p); renderOverall(p); renderPlayoffs(p); renderSchedule(); }
+function renderAll(p) { allPlayers = p; renderSeg1(p); renderSeg2(p); renderSeg3(p); renderOverall(p); renderPlayoffs(p); renderSchedule(p); }
 function rc(i) { return i===0?'rank-1':i===1?'rank-2':i===2?'rank-3':''; }
 
 function renderSeg1(players) {
@@ -357,44 +265,140 @@ function renderPlayoffs(players) {
   document.getElementById('playoffs').innerHTML = h;
 }
 
-function renderSchedule() {
-  if (!scheduleData.length) {
-    document.getElementById('schedule').innerHTML = '<div class="loading">No schedule data found.</div>';
-    return;
+
+function renderSchedule(players) {
+  // Hardcoded schedule - same matchups as the Excel
+  var A = [1,2,3,4], B = [5,6,7,8], C = [9,10,11,12], D = [13,14,15,16];
+  
+  function makeRounds(g1, g2, g3, g4) {
+    var perms = [[0,1,2,3],[1,0,3,2],[2,3,0,1],[3,2,1,0]];
+    var rounds = [];
+    for (var p = 0; p < perms.length; p++) {
+      var matchups = [];
+      for (var i = 0; i < 4; i++) matchups.push([g1[i], g2[perms[p][i]]]);
+      for (var i = 0; i < 4; i++) matchups.push([g3[i], g4[perms[p][i]]]);
+      rounds.push(matchups);
+    }
+    return rounds;
   }
   
-  // Week dropdown
-  let h = `<div class="week-picker"><select class="week-select" onchange="showWeek(this.value)">`;
-  scheduleData.forEach((wk, i) => {
-    const seg = wk.segment === 's1' ? 'Seg 1' : wk.segment === 's2' ? 'Seg 2' : 'Division';
-    h += `<option value="${i}">${wk.label} — ${seg}</option>`;
-  });
-  h += `</select></div>`;
+  var p1 = makeRounds(A,B,C,D);
+  var p2 = makeRounds(A,C,B,D);
+  var p3 = makeRounds(A,D,B,C);
   
-  // Matchup containers for each week
-  scheduleData.forEach((wk, i) => {
-    h += `<div class="week-matchups" id="week-${i}" style="display:${i===0?'block':'none'};">`;
-    h += `<div class="standings-card"><h2 class="sched-header">${wk.label}`;
-    if (wk.segment === 's3') h += ` — Division Play`;
-    h += `</h2></div>`;
+  var schedule = [];
+  // Weeks 1-6
+  for (var i = 0; i < 4; i++) schedule.push({week: i+1, seg: 'Seg 1', matchups: p1[i]});
+  for (var i = 0; i < 2; i++) schedule.push({week: i+5, seg: 'Seg 1', matchups: p2[i]});
+  // Weeks 7-12
+  for (var i = 2; i < 4; i++) schedule.push({week: i+5, seg: 'Seg 2', matchups: p2[i]});
+  for (var i = 0; i < 4; i++) schedule.push({week: i+9, seg: 'Seg 2', matchups: p3[i]});
+  
+  // Weeks 13-18 division play
+  function divSched(members) {
+    var m = members.slice();
+    var f = m[0], rot = m.slice(1);
+    var rr = [];
+    for (var r = 0; r < 3; r++) {
+      var cur = [f].concat(rot);
+      rr.push([[cur[0],cur[3]], [cur[1],cur[2]]]);
+      rot = [rot[rot.length-1]].concat(rot.slice(0, rot.length-1));
+    }
+    return rr.concat(rr);
+  }
+  var da = divSched(A), db = divSched(B), dc = divSched(C), dd = divSched(D);
+  for (var w = 0; w < 6; w++) {
+    schedule.push({week: w+13, seg: 'Div', matchups: da[w].concat(db[w]).concat(dc[w]).concat(dd[w])});
+  }
+  
+  // Build player lookup
+  var pMap = {};
+  for (var i = 0; i < players.length; i++) {
+    pMap[players[i].num] = players[i];
+  }
+  
+  // Build dropdown
+  var h = '<div class="week-picker"><select class="week-select" onchange="showWeek(this.value)">';
+  for (var i = 0; i < schedule.length; i++) {
+    h += '<option value="' + i + '">Week ' + schedule[i].week + ' — ' + schedule[i].seg + '</option>';
+  }
+  h += '</select></div>';
+  
+  // Build matchup cards for each week
+  for (var i = 0; i < schedule.length; i++) {
+    var wk = schedule[i];
+    var display = (i === 0) ? 'block' : 'none';
+    h += '<div class="week-matchups" id="week-' + i + '" style="display:' + display + ';">';
     
-    wk.matchups.forEach(m => {
-      h += `<div class="matchup-card">
-        <div class="matchup-player left">${m.p1name}</div>
-        <div class="matchup-vs">VS</div>
-        <div class="matchup-player right">${m.p2name}</div>
-      </div>`;
-    });
-    h += `</div>`;
-  });
+    for (var j = 0; j < wk.matchups.length; j++) {
+      var p1num = wk.matchups[j][0];
+      var p2num = wk.matchups[j][1];
+      var p1 = pMap[p1num];
+      var p2 = pMap[p2num];
+      var p1name = p1 ? p1.name : 'Player ' + p1num;
+      var p2name = p2 ? p2.name : 'Player ' + p2num;
+      
+      // Get scores - raw picks without H2H
+      var p1score = 0, p2score = 0;
+      if (p1 && p2) {
+        if (wk.week >= 1 && wk.week <= 6) {
+          // S1 weeks: subtract H2H bonus to get raw picks
+          var p1total = p1.s1Weeks[wk.week - 1];
+          var p2total = p2.s1Weeks[wk.week - 1];
+          // H2H bonus is 6 for win, 3 for tie, 0 for loss
+          // Raw picks = total - H2H bonus. But we dont know per-week H2H.
+          // Just show the total for now
+          p1score = p1total;
+          p2score = p2total;
+        } else if (wk.week >= 7 && wk.week <= 12) {
+          p1score = p1.s2Weeks[wk.week - 7];
+          p2score = p2.s2Weeks[wk.week - 7];
+        } else if (wk.week >= 13 && wk.week <= 18) {
+          p1score = p1.s3Results[wk.week - 13];
+          p2score = p2.s3Results[wk.week - 13];
+        }
+      }
+      
+      var p1class = 'matchup-player left';
+      var p2class = 'matchup-player right';
+      var isDivWeek = (wk.week >= 13);
+      
+      if (!isDivWeek) {
+        if (p1score > 0 || p2score > 0) {
+          if (p1score > p2score) { p1class += ' matchup-winner'; p2class += ' matchup-loser'; }
+          else if (p2score > p1score) { p2class += ' matchup-winner'; p1class += ' matchup-loser'; }
+          else { p1class += ' matchup-tie'; p2class += ' matchup-tie'; }
+        }
+      } else {
+        if (p1score === 'W') { p1class += ' matchup-winner'; p2class += ' matchup-loser'; }
+        else if (p1score === 'L') { p1class += ' matchup-loser'; p2class += ' matchup-winner'; }
+        else if (p1score === 'T') { p1class += ' matchup-tie'; p2class += ' matchup-tie'; }
+      }
+      
+      h += '<div class="matchup-card">';
+      h += '<div class="' + p1class + '">';
+      h += '<div class="matchup-name">' + p1name + '</div>';
+      h += '<div class="matchup-score">' + p1score + '</div>';
+      h += '</div>';
+      h += '<div class="matchup-center"><div class="matchup-vs">VS</div></div>';
+      h += '<div class="' + p2class + '">';
+      h += '<div class="matchup-name">' + p2name + '</div>';
+      h += '<div class="matchup-score">' + p2score + '</div>';
+      h += '</div>';
+      h += '</div>';
+    }
+    h += '</div>';
+  }
   
   document.getElementById('schedule').innerHTML = h;
 }
 
 function showWeek(index) {
-  document.querySelectorAll('.week-matchups').forEach(el => el.style.display = 'none');
+  var all = document.querySelectorAll('.week-matchups');
+  for (var i = 0; i < all.length; i++) all[i].style.display = 'none';
   document.getElementById('week-' + index).style.display = 'block';
 }
+
 </script>
 </body>
 </html>
