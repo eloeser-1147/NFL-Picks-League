@@ -340,7 +340,7 @@ function load() {
     readPlayoffs(wb);
     
     render();
-    document.getElementById('status').textContent='v16 | Updated: '+new Date().toLocaleString();
+    document.getElementById('status').textContent='v17 | Updated: '+new Date().toLocaleString();
   })
   .catch(function(e){document.getElementById('status').textContent='Could not load file';});
 }
@@ -656,7 +656,20 @@ function renderPS() {
     var dns = ['Div A','Div B','Div C','Div D'];
     for(var i=0;i<4;i++) earn.push({name:dw[i].name, src:dns[i]+' Winner', amount:10});
   }
-  // TODO: playoff payouts from finals results
+  // Playoff payouts from Finals results
+  // Read from playoffData.finals - find top 3 by total
+  var finalists = [];
+  for (var name in playoffData.finals) {
+    var f = playoffData.finals[name];
+    if (f.total > 0) finalists.push({name: name, total: f.total});
+  }
+  finalists.sort(function(a,b){return b.total - a.total;});
+  var payoutAmounts = [200, 75, 35];
+  for (var i = 0; i < Math.min(finalists.length, 3); i++) {
+    if (finalists[i].total > 0) {
+      earn.push({name: finalists[i].name, src: 'Playoff ' + (i===0?'1st':i===1?'2nd':'3rd') + ' Place', amount: payoutAmounts[i]});
+    }
+  }
   
   if (earn.length > 0) {
     o += '<div class="card" style="margin-top:16px;"><h2 class="hdr5">Season Earnings</h2>';
