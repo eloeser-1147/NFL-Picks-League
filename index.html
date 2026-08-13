@@ -340,7 +340,7 @@ function load() {
     readPlayoffs(wb);
     
     render();
-    document.getElementById('status').textContent='v17 | Updated: '+new Date().toLocaleString();
+    document.getElementById('status').textContent='v18 | Updated: '+new Date().toLocaleString();
   })
   .catch(function(e){document.getElementById('status').textContent='Could not load file';});
 }
@@ -674,23 +674,23 @@ function renderPS() {
   if (earn.length > 0) {
     o += '<div class="card" style="margin-top:16px;"><h2 class="hdr5">Season Earnings</h2>';
     o += '<div class="card-scroll"><table><tr><th style="text-align:left">Player</th><th>Source</th><th>Amount</th></tr>';
-    // Merge by player
+    // Merge by player - one row each
     var merged = {};
     earn.forEach(function(e) {
-      if (!merged[e.name]) merged[e.name] = {items:[], total:0};
-      merged[e.name].items.push(e);
+      if (!merged[e.name]) merged[e.name] = {sources:[], total:0};
+      merged[e.name].sources.push(e.src);
       merged[e.name].total += e.amount;
     });
-    for (var name in merged) {
-      var m = merged[name];
-      for (var j = 0; j < m.items.length; j++) {
-        o += '<tr>';
-        if (j === 0) o += '<td class="nm" rowspan="'+m.items.length+'" style="vertical-align:top;">'+name+'</td>';
-        o += '<td class="wk">'+m.items[j].src+'</td>';
-        o += '<td style="color:#3fb950;font-weight:700;">$'+m.items[j].amount+'</td>';
-        o += '</tr>';
-      }
-      o += '<tr style="border-top:2px solid #30363d;"><td class="nm" colspan="2" style="text-align:right;font-weight:700;">Total</td><td class="tot">$'+m.total+'</td></tr>';
+    var earnList = [];
+    for (var name in merged) earnList.push({name:name, sources:merged[name].sources, total:merged[name].total});
+    earnList.sort(function(a,b){return b.total - a.total;});
+    for (var i = 0; i < earnList.length; i++) {
+      var e = earnList[i];
+      o += '<tr>';
+      o += '<td class="nm">'+e.name+'</td>';
+      o += '<td class="wk" style="font-size:11px;color:#8b949e;">'+e.sources.join(', ')+'</td>';
+      o += '<td class="tot">$'+e.total+'</td>';
+      o += '</tr>';
     }
     o += '</table></div></div>';
   }
