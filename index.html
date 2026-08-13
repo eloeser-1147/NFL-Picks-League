@@ -67,7 +67,7 @@ tr:last-child td{border-bottom:none}
 .r1{color:#FFD700;font-weight:800;font-size:14px}
 .r2{color:#C0C0C0;font-weight:800;font-size:14px}
 .r3{color:#CD7F32;font-weight:800;font-size:14px}
-.nm{text-align:left;font-weight:600}
+.nm{text-align:left;font-weight:600;white-space:nowrap}
 .tot{font-weight:800;color:#3fb950;font-size:15px}
 .wk{color:#8b949e;font-size:12px}
 .w{color:#3fb950;font-weight:600}
@@ -358,7 +358,7 @@ function load() {
     readPlayoffs(wb);
     
     render();
-    document.getElementById('status').textContent='v23 | Updated: '+new Date().toLocaleString();
+    document.getElementById('status').textContent='v24 | Updated: '+new Date().toLocaleString();
   })
   .catch(function(e){document.getElementById('status').textContent='Could not load file';});
 }
@@ -612,7 +612,7 @@ function renderAll(){
 function renderPS() {
   var cw = currentWeek;
   var o = '<div class="card"><h2 class="hdr5">Playoff Standings</h2><div class="card-scroll"><table>';
-  o += '<tr><th>#</th><th style="text-align:left">Player</th><th>Qualified Via</th><th>WC Pts</th><th>Div Pts</th><th>Champ Pts</th><th>SB Pts</th><th>Total</th></tr>';
+  o += '<tr><th style="text-align:left">Player</th><th>WC Pts</th><th>Div Pts</th><th>Champ Pts</th><th>SB Pts</th><th>Total</th></tr>';
   
   // Build qualifier list based on current week
   var s1 = P.slice().sort(function(a,b){return b.t1-a.t1;});
@@ -656,7 +656,7 @@ function renderPS() {
   }
   
   if (qualified.length === 0) {
-    o += '<tr><td colspan="8" style="padding:30px;color:#484f58;text-align:center;font-size:13px;">No players have qualified yet.<br>Qualifiers will appear as segments are completed.</td></tr>';
+    o += '<tr><td colspan="6" style="padding:30px;color:#484f58;text-align:center;font-size:13px;">No players have qualified yet.<br>Qualifiers will appear as segments are completed.</td></tr>';
   } else {
     for (var i = 0; i < qualified.length; i++) {
       var q = qualified[i];
@@ -668,9 +668,7 @@ function renderPS() {
       var total = fin ? fin.total : wcPts;
       
       o += '<tr>';
-      o += '<td class="' + rc(i) + '">' + (i+1) + '</td>';
       o += '<td class="nm">' + q.name + '</td>';
-      o += '<td class="wk">' + q.via + '</td>';
       o += '<td class="wk">' + wcPts + '</td>';
       o += '<td class="wk">' + divPts + '</td>';
       o += '<td class="wk">' + champPts + '</td>';
