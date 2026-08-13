@@ -270,7 +270,8 @@ tr:last-child td{border-bottom:none}
 <script>
 var P = []; // all players
 var currentWeek = 1;
-var playoffData = {}; // WC and Finals scores from Excel
+var playoffData = {};
+var weekPlayed = {}; // WC and Finals scores from Excel
 
 window.onload = function() { load(); setInterval(load, 300000); };
 
@@ -340,7 +341,7 @@ function load() {
     readPlayoffs(wb);
     
     render();
-    document.getElementById('status').textContent='v19 | Updated: '+new Date().toLocaleString();
+    document.getElementById('status').textContent='v20 | Updated: '+new Date().toLocaleString();
   })
   .catch(function(e){document.getElementById('status').textContent='Could not load file';});
 }
@@ -429,6 +430,16 @@ function readPlayoffs(wb) {
 function rc(i){return i===0?'r1':i===1?'r2':i===2?'r3':'';}
 
 function render(){
+  // Calculate which weeks have been played globally
+  weekPlayed = {};
+  for (var w = 1; w <= 18; w++) {
+    weekPlayed[w] = false;
+    if (picks[w]) {
+      for (var pn in picks[w]) {
+        if (picks[w].hasOwnProperty(pn) && picks[w][pn] > 0) { weekPlayed[w] = true; break; }
+      }
+    }
+  }
   renderSched();
   renderS1();renderS2();renderS3();renderAll();renderPS();renderPlayerSched();
 }
@@ -506,10 +517,14 @@ function pickWk(i){
 
 // ===== STANDINGS =====
 function renderS1(){
-  // Add raw picks to each player
   for(var i=0;i<P.length;i++){
     P[i].rp1=[];var rpTotal=0;
-    for(var w=1;w<=6;w++){var v=(picks[w]&&picks[w][P[i].num])||0;P[i].rp1.push(v);rpTotal+=v;}
+    for(var w=1;w<=6;w++){
+      var played=weekPlayed[w];
+      var v=played?((picks[w]&&picks[w][P[i].num])||0):0;
+      P[i].rp1.push(played?v:'-');
+      if(played)rpTotal+=v;
+    }
     P[i].rp1Total=rpTotal;
   }
   var s=P.slice().sort(function(a,b){return b.t1-a.t1||b.h1-a.h1;});
@@ -519,8 +534,9 @@ function renderS1(){
   o+='<th>H2H W</th><th>Best</th><th>Picks</th></tr>';
   for(var i=0;i<s.length;i++){
     o+='<tr><td class="'+rc(i)+'">'+(i+1)+'</td><td class="nm">'+s[i].name+'</td>';
-    for(var w=0;w<6;w++)o+='<td class="wk">'+s[i].rp1[w]+'</td>';
-    var bw=Math.max.apply(null,s[i].rp1);
+    for(var w=0;w<6;w++){var val=s[i].rp1[w];o+='<td class="wk">'+(val==='-'?'-':val)+'</td>';}
+    var nums=s[i].rp1.filter(function(x){return typeof x==='number';});
+    var bw=nums.length>0?Math.max.apply(null,nums):'-';
     o+='<td>'+s[i].h1+'</td><td>'+bw+'</td><td class="tot">'+s[i].rp1Total+'</td></tr>';
   }
   o+='</table></div></div>';document.getElementById('s1').innerHTML=o;
@@ -528,7 +544,12 @@ function renderS1(){
 function renderS2(){
   for(var i=0;i<P.length;i++){
     P[i].rp2=[];var rpTotal=0;
-    for(var w=7;w<=12;w++){var v=(picks[w]&&picks[w][P[i].num])||0;P[i].rp2.push(v);rpTotal+=v;}
+    for(var w=7;w<=12;w++){
+      var played=weekPlayed[w];
+      var v=played?((picks[w]&&picks[w][P[i].num])||0):0;
+      P[i].rp2.push(played?v:'-');
+      if(played)rpTotal+=v;
+    }
     P[i].rp2Total=rpTotal;
   }
   var s=P.slice().sort(function(a,b){return b.t2-a.t2||b.h2-a.h2;});
@@ -538,8 +559,9 @@ function renderS2(){
   o+='<th>H2H W</th><th>Best</th><th>Pts</th></tr>';
   for(var i=0;i<s.length;i++){
     o+='<tr><td class="'+rc(i)+'">'+(i+1)+'</td><td class="nm">'+s[i].name+'</td>';
-    for(var w=0;w<6;w++)o+='<td class="wk">'+s[i].rp2[w]+'</td>';
-    var bw=Math.max.apply(null,s[i].rp2);
+    for(var w=0;w<6;w++){var val=s[i].rp2[w];o+='<td class="wk">'+(val==='-'?'-':val)+'</td>';}
+    var nums=s[i].rp2.filter(function(x){return typeof x==='number';});
+    var bw=nums.length>0?Math.max.apply(null,nums):'-';
     o+='<td>'+s[i].h2+'</td><td>'+bw+'</td><td class="tot">'+s[i].rp2Total+'</td></tr>';
   }
   o+='</table></div></div>';document.getElementById('s2').innerHTML=o;
