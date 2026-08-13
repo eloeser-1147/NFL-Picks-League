@@ -40,6 +40,13 @@ body{font-family:'Inter',Arial,sans-serif;background:#0d1117;color:#e6edf3;min-h
 .seg-tab:hover{color:#e6edf3;border-bottom-color:#30363d}
 .seg-tab.active{color:#e6edf3;border-bottom-color:#58a6ff}
 .seg-panel{display:none}
+.ps-select{padding:10px 40px 10px 16px;background:#161b22;border:1px solid #30363d;border-radius:8px;color:#e6edf3;font-size:14px;font-weight:700;font-family:'Inter',Arial,sans-serif;cursor:pointer;width:100%;max-width:340px;display:block;margin:0 auto 16px;appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%238b949e' stroke-width='2' fill='none'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center}
+.ps-select:focus{outline:none;border-color:#58a6ff}
+.ps-table{width:100%}
+.ps-table th{font-size:10px;text-transform:uppercase;letter-spacing:.8px}
+.ps-table td{font-size:12px}
+.ps-week{font-weight:700;color:#58a6ff}
+.ps-seg{font-size:10px;color:#484f58;font-weight:600}
 .seg-panel.active{display:block}
 .panel{display:none;max-width:900px;margin:0 auto;padding:0 24px 40px}
 .panel.active{display:block}
@@ -105,14 +112,14 @@ tr:last-child td{border-bottom:none}
   <div class="hamburger" onclick="toggleMenu()">
     <span></span><span></span><span></span>
   </div>
-  <div class="menu-title" id="menuTitle">Schedule / Scores</div>
+  <div class="menu-title" id="menuTitle">Scoreboard</div>
 </div>
 <div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
 <div class="menu-drawer" id="menuDrawer">
   <div class="menu-header">NFL Picks League</div>
-  <div class="menu-item" onclick="navTo('sched','Schedule / Scores')">Schedule / Scores</div>
+  <div class="menu-item" onclick="navTo('sched','Scoreboard')">Scoreboard</div>
+  <div class="menu-item" onclick="navTo('playersched','Schedule')">Schedule</div>
   <div class="menu-item" onclick="navTo('standings','Standings')">Standings</div>
-  <div class="menu-item" onclick="navTo('po','Playoff Picture')">Playoff Picture</div>
   <div class="menu-parent" onclick="toggleSub(this)">
     <span>League Info</span><span class="menu-arrow">&#9656;</span>
     <div class="menu-subs">
@@ -122,6 +129,7 @@ tr:last-child td{border-bottom:none}
   </div>
 </div>
 <div class="panel active" id="sched"><div class="loading">Loading...</div></div>
+<div class="panel" id="playersched"><div class="loading">Loading...</div></div>
 <div class="panel" id="standings">
   <div class="seg-tabs">
     <div class="seg-tab active" onclick="showSeg('all',this)">Overall</div>
@@ -136,7 +144,7 @@ tr:last-child td{border-bottom:none}
   <div class="seg-panel" id="s3"><div class="loading">Loading...</div></div>
   <div class="seg-panel" id="poststand"><div class="loading">Loading...</div></div>
 </div>
-<div class="panel" id="po"><div class="loading">Loading...</div></div>
+
 
 <div class="panel" id="rules">
 
@@ -332,7 +340,7 @@ function load() {
     readPlayoffs(wb);
     
     render();
-    document.getElementById('status').textContent='v14 | Updated: '+new Date().toLocaleString();
+    document.getElementById('status').textContent='v15 | Updated: '+new Date().toLocaleString();
   })
   .catch(function(e){document.getElementById('status').textContent='Could not load file';});
 }
@@ -422,7 +430,7 @@ function rc(i){return i===0?'r1':i===1?'r2':i===2?'r3':'';}
 
 function render(){
   renderSched();
-  renderS1();renderS2();renderS3();renderAll();renderPO();renderPS();
+  renderS1();renderS2();renderS3();renderAll();renderPS();renderPlayerSched();
 }
 
 // ===== SCHEDULE =====
@@ -561,27 +569,6 @@ function renderAll(){
     o+='<tr><td class="'+rc(i)+'">'+(i+1)+'</td><td class="nm">'+s[i].name+'</td><td class="wk">'+rp1t+'</td><td class="wk">'+rp2t+'</td><td class="wk">'+rp3+'</td><td class="tot">'+t+'</td></tr>';}
   o+='</table></div></div>';document.getElementById('all').innerHTML=o;
 }
-function renderPO(){
-  var s1=P.slice().sort(function(a,b){return b.t1-a.t1;});
-  var s2=P.slice().sort(function(a,b){return b.t2-a.t2;});
-  var dv=[P.filter(function(x){return x.num<=4}),P.filter(function(x){return x.num>=5&&x.num<=8}),P.filter(function(x){return x.num>=9&&x.num<=12}),P.filter(function(x){return x.num>=13})];
-  var dw=dv.map(function(d){return d.slice().sort(function(a,b){return b.w3-a.w3||b.p3-a.p3;})[0];});
-  var dn=['Div A','Div B','Div C','Div D'];
-  var q=new Set(),qs=[];
-  function addQ(label,winner,pool,prize,stat){var qual=pool.find(function(p){return!q.has(p.num);})||winner;q.add(qual.num);qs.push({l:label,w:winner.name,q:qual.name,pr:prize,pt:stat});}
-  addQ('Weeks 1-6 Winner',s1[0],s1,'$25',s1[0].t1+' pts');
-  addQ('Weeks 7-12 Winner',s2[0],s2,'$25',s2[0].t2+' pts');
-  for(var i=0;i<4;i++){var ds=dv[i].slice().sort(function(a,b){return b.w3-a.w3||b.p3-a.p3;});addQ(dn[i]+' Winner',dw[i],ds,'$10',dw[i].w3+'W-'+dw[i].l3+'L');}
-  var os=P.slice().sort(function(a,b){return(b.t1+b.t2+b.p3)-(a.t1+a.t2+a.p3);});
-  var wcs=os.filter(function(p){return!q.has(p.num);}).slice(0,2);
-  var o='<div class="card"><h2 class="hdr5">Playoff Picture</h2></div><div class="qg">';
-  for(var i=0;i<qs.length;i++){var x=qs[i];var ps=x.w!==x.q;o+='<div class="qc"><div class="lb">'+x.l+'</div><div class="qn">'+x.w+'</div><div class="dt">'+x.pt+(ps?' — entry passes to '+x.q:'')+'</div><span class="pr">'+x.pr+'</span></div>';}
-  for(var i=0;i<wcs.length;i++){var p=wcs[i];o+='<div class="qc wc"><div class="lb">Wild Card '+(i+1)+'</div><div class="qn">'+p.name+'</div><div class="dt">'+(p.t1+p.t2+p.p3)+' season pts</div></div>';}
-  o+='</div>';
-  var earn=P.map(function(p){var e=0;if(p.name===s1[0].name)e+=25;if(p.name===s2[0].name)e+=25;if(dw.some(function(d){return d.name===p.name;}))e+=10;return{name:p.name,amount:e};}).filter(function(x){return x.amount>0;}).sort(function(a,b){return b.amount-a.amount;});
-  if(earn.length>0){o+='<div class="card"><h2 class="hdr5">Season Earnings</h2><div style="padding:16px">';for(var i=0;i<earn.length;i++)o+='<div class="er"><span class="en">'+earn[i].name+'</span><span class="ea">$'+earn[i].amount+'</span></div>';o+='</div></div>';}
-  document.getElementById('po').innerHTML=o;
-}
 function renderPS() {
   var cw = currentWeek;
   var o = '<div class="card"><h2 class="hdr5">Playoff Standings</h2><div class="card-scroll"><table>';
@@ -654,7 +641,135 @@ function renderPS() {
   }
   
   o += '</table></div></div>';
+  
+  // Earnings table
+  var s1 = P.slice().sort(function(a,b){return b.t1-a.t1;});
+  var s2 = P.slice().sort(function(a,b){return b.t2-a.t2;});
+  var dv = [P.filter(function(x){return x.num<=4}),P.filter(function(x){return x.num>=5&&x.num<=8}),P.filter(function(x){return x.num>=9&&x.num<=12}),P.filter(function(x){return x.num>=13})];
+  var dw = dv.map(function(d){return d.slice().sort(function(a,b){return b.w3-a.w3||b.p3-a.p3;})[0];});
+  
+  var earn = [];
+  if (cw > 6) earn.push({name:s1[0].name, src:'Weeks 1-6 Winner', amount:25});
+  if (cw > 12) earn.push({name:s2[0].name, src:'Weeks 7-12 Winner', amount:25});
+  if (cw > 18) {
+    var dns = ['Div A','Div B','Div C','Div D'];
+    for(var i=0;i<4;i++) earn.push({name:dw[i].name, src:dns[i]+' Winner', amount:10});
+  }
+  // TODO: playoff payouts from finals results
+  
+  if (earn.length > 0) {
+    o += '<div class="card" style="margin-top:16px;"><h2 class="hdr5">Season Earnings</h2>';
+    o += '<div class="card-scroll"><table><tr><th style="text-align:left">Player</th><th>Source</th><th>Amount</th></tr>';
+    // Merge by player
+    var merged = {};
+    earn.forEach(function(e) {
+      if (!merged[e.name]) merged[e.name] = {items:[], total:0};
+      merged[e.name].items.push(e);
+      merged[e.name].total += e.amount;
+    });
+    for (var name in merged) {
+      var m = merged[name];
+      for (var j = 0; j < m.items.length; j++) {
+        o += '<tr>';
+        if (j === 0) o += '<td class="nm" rowspan="'+m.items.length+'" style="vertical-align:top;">'+name+'</td>';
+        o += '<td class="wk">'+m.items[j].src+'</td>';
+        o += '<td style="color:#3fb950;font-weight:700;">$'+m.items[j].amount+'</td>';
+        o += '</tr>';
+      }
+      o += '<tr style="border-top:2px solid #30363d;"><td class="nm" colspan="2" style="text-align:right;font-weight:700;">Total</td><td class="tot">$'+m.total+'</td></tr>';
+    }
+    o += '</table></div></div>';
+  }
+  
   document.getElementById('poststand').innerHTML = o;
+}
+
+function renderPlayerSched() {
+  // Build the same schedule data
+  var A=[1,2,3,4],B=[5,6,7,8],C=[9,10,11,12],D=[13,14,15,16];
+  function mr(g1,g2,g3,g4){
+    var pm=[[0,1,2,3],[1,0,3,2],[2,3,0,1],[3,2,1,0]],out=[];
+    for(var p=0;p<4;p++){var m=[];for(var i=0;i<4;i++)m.push([g1[i],g2[pm[p][i]]]);for(var i=0;i<4;i++)m.push([g3[i],g4[pm[p][i]]]);out.push(m);}
+    return out;
+  }
+  var r1=mr(A,B,C,D),r2=mr(A,C,B,D),r3=mr(A,D,B,C);
+  function ds(m){var f=m[0],ro=m.slice(1),rr=[];for(var i=0;i<3;i++){var c=[f].concat(ro);rr.push([[c[0],c[3]],[c[1],c[2]]]);ro=[ro[ro.length-1]].concat(ro.slice(0,ro.length-1));}return rr.concat(rr);}
+  var da=ds(A),db=ds(B),dc=ds(C),dd=ds(D);
+  
+  var sched=[];
+  for(var i=0;i<4;i++)sched.push({wk:i+1,seg:'Seg 1',mu:r1[i]});
+  for(var i=0;i<2;i++)sched.push({wk:i+5,seg:'Seg 1',mu:r2[i]});
+  for(var i=2;i<4;i++)sched.push({wk:i+5,seg:'Seg 2',mu:r2[i]});
+  for(var i=0;i<4;i++)sched.push({wk:i+9,seg:'Seg 2',mu:r3[i]});
+  for(var i=0;i<6;i++)sched.push({wk:i+13,seg:'Division',mu:da[i].concat(db[i]).concat(dc[i]).concat(dd[i])});
+  
+  // Player lookup
+  var pm={};for(var i=0;i<P.length;i++)pm[P[i].num]=P[i];
+  
+  // Build dropdown
+  var o = '<select class="ps-select" onchange="showPlayerSched(this.value)">';
+  o += '<option value="">Select a Player</option>';
+  for (var i = 0; i < P.length; i++) {
+    o += '<option value="'+P[i].num+'">'+P[i].name+'</option>';
+  }
+  o += '</select>';
+  o += '<div id="playerSchedTable"></div>';
+  
+  // Store schedule globally for player lookup
+  window._fullSched = sched;
+  window._pm = pm;
+  
+  document.getElementById('playersched').innerHTML = o;
+}
+
+function showPlayerSched(playerNum) {
+  if (!playerNum) { document.getElementById('playerSchedTable').innerHTML = ''; return; }
+  playerNum = parseInt(playerNum);
+  var sched = window._fullSched;
+  var pm = window._pm;
+  var player = pm[playerNum];
+  if (!player) return;
+  
+  var o = '<div class="card"><h2 class="hdr6">'+player.name+' — Full Schedule</h2>';
+  o += '<div class="card-scroll"><table class="ps-table">';
+  o += '<tr><th>Week</th><th>Segment</th><th style="text-align:left">Opponent</th><th>My Picks</th><th>Opp Picks</th><th>Result</th></tr>';
+  
+  for (var i = 0; i < sched.length; i++) {
+    var wk = sched[i];
+    var oppNum = null;
+    for (var j = 0; j < wk.mu.length; j++) {
+      if (wk.mu[j][0] === playerNum) { oppNum = wk.mu[j][1]; break; }
+      if (wk.mu[j][1] === playerNum) { oppNum = wk.mu[j][0]; break; }
+    }
+    if (!oppNum) continue;
+    
+    var opp = pm[oppNum];
+    var oppName = opp ? opp.name : 'Player '+oppNum;
+    
+    // Get scores
+    var myPicks = (picks[wk.wk] && picks[wk.wk][playerNum]) || 0;
+    var oppPicks = (picks[wk.wk] && picks[wk.wk][oppNum]) || 0;
+    
+    var result = '-';
+    var resultClass = 'wk';
+    if (myPicks > 0 || oppPicks > 0) {
+      if (myPicks > oppPicks) { result = 'W'; resultClass = 'w'; }
+      else if (oppPicks > myPicks) { result = 'L'; resultClass = 'l'; }
+      else { result = 'T'; resultClass = 't'; }
+    }
+    
+    o += '<tr>';
+    o += '<td class="ps-week">'+wk.wk+'</td>';
+    o += '<td class="ps-seg">'+wk.seg+'</td>';
+    o += '<td class="nm">'+oppName+'</td>';
+    o += '<td class="wk">'+myPicks+'</td>';
+    o += '<td class="wk">'+oppPicks+'</td>';
+    o += '<td class="'+resultClass+'">'+result+'</td>';
+    o += '</tr>';
+  }
+  
+  o += '</table></div></div>';
+  document.getElementById('playerSchedTable').innerHTML = o;
 }
 
 </script>
