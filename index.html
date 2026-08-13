@@ -340,7 +340,7 @@ function load() {
     readPlayoffs(wb);
     
     render();
-    document.getElementById('status').textContent='v15 | Updated: '+new Date().toLocaleString();
+    document.getElementById('status').textContent='v16 | Updated: '+new Date().toLocaleString();
   })
   .catch(function(e){document.getElementById('status').textContent='Could not load file';});
 }
@@ -495,6 +495,7 @@ function renderSched(){
     o+='</div></div>';
   }
   document.getElementById('sched').innerHTML=o;
+  sw(defaultIdx);
 }
 function sw(i){var a=document.querySelectorAll('[id^="wk"]');for(var x=0;x<a.length;x++){if(a[x].id.indexOf('wk')===0&&a[x].id.length<=4)a[x].style.display='none';}document.getElementById('wk'+i).style.display='block';}
 function pickWk(i){
