@@ -110,7 +110,7 @@ tr:last-child td{border-bottom:none}
   .card-scroll { overflow-x: visible; }
   table { min-width: 0 !important; }
   td, th { padding: 6px 6px; font-size: 11px; }
-  .nm { max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .nm { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 8px; }
   .tot { font-size: 13px; }
   .mu-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
   .mu-side { padding: 10px 8px; }
@@ -360,7 +360,7 @@ function load() {
     readPlayoffs(wb);
     
     render();
-    document.getElementById('status').textContent='v25 | Updated: '+new Date().toLocaleString();
+    document.getElementById('status').textContent='v26 | Updated: '+new Date().toLocaleString();
   })
   .catch(function(e){document.getElementById('status').textContent='Could not load file';});
 }
@@ -592,7 +592,7 @@ function renderS3(){
   for(var d=0;d<divs.length;d++){
     var s=divs[d].p.slice().sort(function(a,b){return b.w3-a.w3||b.p3-a.p3;});
     o+='<div class="dl">'+divs[d].n+'</div><table><tr><th>#</th><th style="text-align:left">Player</th>';
-    for(var i=0;i<6;i++)o+='<th class="wk-col">'+wn[i]+'</th>';
+    for(var i=0;i<6;i++)o+='<th>'+wn[i]+'</th>';
     o+='<th>W</th><th>L</th><th>Picks</th></tr>';
     for(var i=0;i<s.length;i++){
       o+='<tr><td class="'+rc(i)+'">'+(i+1)+'</td><td class="nm">'+s[i].name+'</td>';
@@ -714,7 +714,7 @@ function renderPS() {
   
   if (earn.length > 0) {
     o += '<div class="card" style="margin-top:16px;"><h2 class="hdr5">Season Earnings</h2>';
-    o += '<div class="card-scroll"><table><tr><th style="text-align:left">Player</th><th>Source</th><th>Amount</th></tr>';
+    o += '<div class="card-scroll"><table><tr><th style="text-align:left">Player</th><th class="ps-extra">Source</th><th>Amount</th></tr>';
     // Merge by player - one row each
     var merged = {};
     earn.forEach(function(e) {
