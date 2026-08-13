@@ -134,17 +134,7 @@ tr:last-child td{border-bottom:none}
   <div class="seg-panel" id="s1"><div class="loading">Loading...</div></div>
   <div class="seg-panel" id="s2"><div class="loading">Loading...</div></div>
   <div class="seg-panel" id="s3"><div class="loading">Loading...</div></div>
-  <div class="seg-panel" id="poststand">
-    <div class="card">
-      <h2 class="hdr5">Playoff Standings</h2>
-      <div class="card-scroll">
-        <table>
-          <tr><th>#</th><th style="text-align:left">Player</th><th>WC Pts</th><th>Div Pts</th><th>Champ Pts</th><th>SB Pts</th><th>Total</th></tr>
-          <tr><td colspan="7" style="padding:30px;color:#484f58;text-align:center;font-size:13px;">Postseason has not started yet.<br>Check back after Week 18.</td></tr>
-        </table>
-      </div>
-    </div>
-  </div>
+  <div class="seg-panel" id="poststand"><div class="loading">Loading...</div></div>
 </div>
 <div class="panel" id="po"><div class="loading">Loading...</div></div>
 
@@ -272,6 +262,7 @@ tr:last-child td{border-bottom:none}
 <script>
 var P = []; // all players
 var currentWeek = 1;
+var playoffData = {}; // WC and Finals scores from Excel
 
 window.onload = function() { load(); setInterval(load, 300000); };
 
@@ -338,9 +329,10 @@ function load() {
     
     // Read raw picks from input sheets
     readPicks(wb);
+    readPlayoffs(wb);
     
     render();
-    document.getElementById('status').textContent='v13 | Updated: '+new Date().toLocaleString();
+    document.getElementById('status').textContent='v14 | Updated: '+new Date().toLocaleString();
   })
   .catch(function(e){document.getElementById('status').textContent='Could not load file';});
 }
@@ -385,11 +377,52 @@ function readPicks(wb) {
   }
 }
 
+function readPlayoffs(wb) {
+  playoffData = {wc:{}, finals:{}};
+  
+  // Read Playoff Wild Card sheet
+  var wc = wb.Sheets['Playoff Wild Card'];
+  if (wc) {
+    // Input rows 5-12: col A=#, col B=Player name, col C=Weighted Pts
+    for (var r = 4; r < 12; r++) {
+      var name = '';
+      var nameCell = wc[XLSX.utils.encode_cell({r:r, c:1})];
+      if (nameCell) name = String(nameCell.v || '');
+      var ptsCell = wc[XLSX.utils.encode_cell({r:r, c:2})];
+      var pts = ptsCell && typeof ptsCell.v === 'number' ? ptsCell.v : 0;
+      if (name) playoffData.wc[name] = pts;
+    }
+  }
+  
+  // Read Playoff Finals sheet
+  var fin = wb.Sheets['Playoff Finals'];
+  if (fin) {
+    // Input rows 6-9: col A=Player, col B=WC Pts, col D=Div Pts, col F=Champ Pts, col H=SB Pts, col I=Total
+    for (var r = 5; r < 9; r++) {
+      var nameCell = fin[XLSX.utils.encode_cell({r:r, c:0})];
+      var name = nameCell ? String(nameCell.v || '') : '';
+      if (!name) continue;
+      var wcPts = fin[XLSX.utils.encode_cell({r:r, c:1})];
+      var divPts = fin[XLSX.utils.encode_cell({r:r, c:3})];
+      var champPts = fin[XLSX.utils.encode_cell({r:r, c:5})];
+      var sbPts = fin[XLSX.utils.encode_cell({r:r, c:7})];
+      var total = fin[XLSX.utils.encode_cell({r:r, c:8})];
+      playoffData.finals[name] = {
+        wc: wcPts && typeof wcPts.v === 'number' ? wcPts.v : 0,
+        div: divPts && typeof divPts.v === 'number' ? divPts.v : 0,
+        champ: champPts && typeof champPts.v === 'number' ? champPts.v : 0,
+        sb: sbPts && typeof sbPts.v === 'number' ? sbPts.v : 0,
+        total: total && typeof total.v === 'number' ? total.v : 0
+      };
+    }
+  }
+}
+
 function rc(i){return i===0?'r1':i===1?'r2':i===2?'r3':'';}
 
 function render(){
   renderSched();
-  renderS1();renderS2();renderS3();renderAll();renderPO();
+  renderS1();renderS2();renderS3();renderAll();renderPO();renderPS();
 }
 
 // ===== SCHEDULE =====
@@ -549,6 +582,81 @@ function renderPO(){
   if(earn.length>0){o+='<div class="card"><h2 class="hdr5">Season Earnings</h2><div style="padding:16px">';for(var i=0;i<earn.length;i++)o+='<div class="er"><span class="en">'+earn[i].name+'</span><span class="ea">$'+earn[i].amount+'</span></div>';o+='</div></div>';}
   document.getElementById('po').innerHTML=o;
 }
+function renderPS() {
+  var cw = currentWeek;
+  var o = '<div class="card"><h2 class="hdr5">Playoff Standings</h2><div class="card-scroll"><table>';
+  o += '<tr><th>#</th><th style="text-align:left">Player</th><th>Qualified Via</th><th>WC Pts</th><th>Div Pts</th><th>Champ Pts</th><th>SB Pts</th><th>Total</th></tr>';
+  
+  // Build qualifier list based on current week
+  var s1 = P.slice().sort(function(a,b){return b.t1-a.t1;});
+  var s2 = P.slice().sort(function(a,b){return b.t2-a.t2;});
+  var dv = [P.filter(function(x){return x.num<=4}),P.filter(function(x){return x.num>=5&&x.num<=8}),P.filter(function(x){return x.num>=9&&x.num<=12}),P.filter(function(x){return x.num>=13})];
+  var dn = ['Div A','Div B','Div C','Div D'];
+  
+  var qualified = [];
+  var qualSet = new Set();
+  
+  // Seg 1
+  if (cw > 6) {
+    var q = s1.find(function(p){return !qualSet.has(p.num);}) || s1[0];
+    qualSet.add(q.num);
+    qualified.push({name: q.name, via: 'Weeks 1-6'});
+  }
+  
+  // Seg 2
+  if (cw > 12) {
+    var q = s2.find(function(p){return !qualSet.has(p.num);}) || s2[0];
+    qualSet.add(q.num);
+    qualified.push({name: q.name, via: 'Weeks 7-12'});
+  }
+  
+  // Divisions
+  if (cw > 18) {
+    for (var i = 0; i < 4; i++) {
+      var ds = dv[i].slice().sort(function(a,b){return b.w3-a.w3||b.p3-a.p3;});
+      var q = ds.find(function(p){return !qualSet.has(p.num);}) || ds[0];
+      qualSet.add(q.num);
+      qualified.push({name: q.name, via: dn[i]});
+    }
+    
+    // Wild cards
+    var os = P.slice().sort(function(a,b){return(b.t1+b.t2+b.p3)-(a.t1+a.t2+a.p3);});
+    var wcs = os.filter(function(p){return !qualSet.has(p.num);}).slice(0, 2);
+    wcs.forEach(function(p, i) {
+      qualSet.add(p.num);
+      qualified.push({name: p.name, via: 'Wild Card'});
+    });
+  }
+  
+  if (qualified.length === 0) {
+    o += '<tr><td colspan="8" style="padding:30px;color:#484f58;text-align:center;font-size:13px;">No players have qualified yet.<br>Qualifiers will appear as segments are completed.</td></tr>';
+  } else {
+    for (var i = 0; i < qualified.length; i++) {
+      var q = qualified[i];
+      var wcPts = playoffData.wc[q.name] || 0;
+      var fin = playoffData.finals[q.name];
+      var divPts = fin ? fin.div : 0;
+      var champPts = fin ? fin.champ : 0;
+      var sbPts = fin ? fin.sb : 0;
+      var total = fin ? fin.total : wcPts;
+      
+      o += '<tr>';
+      o += '<td class="' + rc(i) + '">' + (i+1) + '</td>';
+      o += '<td class="nm">' + q.name + '</td>';
+      o += '<td class="wk">' + q.via + '</td>';
+      o += '<td class="wk">' + wcPts + '</td>';
+      o += '<td class="wk">' + divPts + '</td>';
+      o += '<td class="wk">' + champPts + '</td>';
+      o += '<td class="wk">' + sbPts + '</td>';
+      o += '<td class="tot">' + total + '</td>';
+      o += '</tr>';
+    }
+  }
+  
+  o += '</table></div></div>';
+  document.getElementById('poststand').innerHTML = o;
+}
+
 </script>
 </body>
 </html>
