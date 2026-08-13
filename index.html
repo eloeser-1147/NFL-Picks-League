@@ -112,13 +112,7 @@ tr:last-child td{border-bottom:none}
   <div class="menu-header">NFL Picks League</div>
   <div class="menu-item" onclick="navTo('sched','Schedule / Scores')">Schedule / Scores</div>
   <div class="menu-item" onclick="navTo('standings','Standings')">Standings</div>
-  <div class="menu-parent" onclick="toggleSub(this)">
-    <span>Postseason</span><span class="menu-arrow">&#9656;</span>
-    <div class="menu-subs">
-      <div class="menu-sub" onclick="event.stopPropagation();navTo('po','Playoff Picture')">Playoff Picture</div>
-      <div class="menu-sub" onclick="event.stopPropagation();navTo('poststand','Playoff Standings')">Playoff Standings</div>
-    </div>
-  </div>
+  <div class="menu-item" onclick="navTo('po','Playoff Picture')">Playoff Picture</div>
   <div class="menu-parent" onclick="toggleSub(this)">
     <span>League Info</span><span class="menu-arrow">&#9656;</span>
     <div class="menu-subs">
@@ -134,14 +128,26 @@ tr:last-child td{border-bottom:none}
     <div class="seg-tab" onclick="showSeg('s1',this)">Seg. 1</div>
     <div class="seg-tab" onclick="showSeg('s2',this)">Seg. 2</div>
     <div class="seg-tab" onclick="showSeg('s3',this)">Seg. 3</div>
+    <div class="seg-tab" onclick="showSeg('poststand',this)">Playoffs</div>
   </div>
   <div class="seg-panel active" id="all"><div class="loading">Loading...</div></div>
   <div class="seg-panel" id="s1"><div class="loading">Loading...</div></div>
   <div class="seg-panel" id="s2"><div class="loading">Loading...</div></div>
   <div class="seg-panel" id="s3"><div class="loading">Loading...</div></div>
+  <div class="seg-panel" id="poststand">
+    <div class="card">
+      <h2 class="hdr5">Playoff Standings</h2>
+      <div class="card-scroll">
+        <table>
+          <tr><th>#</th><th style="text-align:left">Player</th><th>WC Pts</th><th>Div Pts</th><th>Champ Pts</th><th>SB Pts</th><th>Total</th></tr>
+          <tr><td colspan="7" style="padding:30px;color:#484f58;text-align:center;font-size:13px;">Postseason has not started yet.<br>Check back after Week 18.</td></tr>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
 <div class="panel" id="po"><div class="loading">Loading...</div></div>
-<div class="panel" id="poststand"><div class="card"><h2 class="hdr5" style="text-align:center;padding:40px 16px;font-size:18px;">Coming Soon</h2></div></div>
+
 <div class="panel" id="rules">
 
   <!-- Segment 1 -->
@@ -334,7 +340,7 @@ function load() {
     readPicks(wb);
     
     render();
-    document.getElementById('status').textContent='v12 | Updated: '+new Date().toLocaleString();
+    document.getElementById('status').textContent='v13 | Updated: '+new Date().toLocaleString();
   })
   .catch(function(e){document.getElementById('status').textContent='Could not load file';});
 }
