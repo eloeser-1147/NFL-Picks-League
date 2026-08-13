@@ -358,7 +358,7 @@ function load() {
     readPlayoffs(wb);
     
     render();
-    document.getElementById('status').textContent='v22 | Updated: '+new Date().toLocaleString();
+    document.getElementById('status').textContent='v23 | Updated: '+new Date().toLocaleString();
   })
   .catch(function(e){document.getElementById('status').textContent='Could not load file';});
 }
@@ -548,13 +548,13 @@ function renderS1(){
   var wn=['Wk 1','Wk 2','Wk 3','Wk 4','Wk 5','Wk 6'];
   var o='<div class="card"><h2 class="hdr1">Segment 1 — Weeks 1-6</h2><div class="card-scroll"><table><tr><th>#</th><th style="text-align:left">Player</th>';
   for(var i=0;i<6;i++)o+='<th class="wk-col">'+wn[i]+'</th>';
-  o+='<th>H2H W</th><th class="wk-col">Best</th><th>Picks</th></tr>';
+  o+='<th>H2H W</th><th class="wk-col">Best</th><th>Total Pts</th></tr>';
   for(var i=0;i<s.length;i++){
     o+='<tr><td class="'+rc(i)+'">'+(i+1)+'</td><td class="nm">'+s[i].name+'</td>';
     for(var w=0;w<6;w++){var val=s[i].rp1[w];o+='<td class="wk wk-col">'+(val==='-'?'-':val)+'</td>';}
     var nums=s[i].rp1.filter(function(x){return typeof x==='number';});
     var bw=nums.length>0?Math.max.apply(null,nums):'-';
-    o+='<td>'+s[i].h1+'</td><td class="wk-col">'+bw+'</td><td class="tot">'+s[i].rp1Total+'</td></tr>';
+    o+='<td>'+s[i].h1+'</td><td class="wk-col">'+bw+'</td><td class="tot">'+s[i].t1+'</td></tr>';
   }
   o+='</table></div></div>';document.getElementById('s1').innerHTML=o;
 }
@@ -573,13 +573,13 @@ function renderS2(){
   var wn=['Wk 7','Wk 8','Wk 9','Wk 10','Wk 11','Wk 12'];
   var o='<div class="card"><h2 class="hdr2">Segment 2 — Weeks 7-12</h2><div class="card-scroll"><table><tr><th>#</th><th style="text-align:left">Player</th>';
   for(var i=0;i<6;i++)o+='<th class="wk-col">'+wn[i]+'</th>';
-  o+='<th>H2H W</th><th class="wk-col">Best</th><th>Pts</th></tr>';
+  o+='<th>H2H W</th><th class="wk-col">Best</th><th>Total Pts</th></tr>';
   for(var i=0;i<s.length;i++){
     o+='<tr><td class="'+rc(i)+'">'+(i+1)+'</td><td class="nm">'+s[i].name+'</td>';
     for(var w=0;w<6;w++){var val=s[i].rp2[w];o+='<td class="wk wk-col">'+(val==='-'?'-':val)+'</td>';}
     var nums=s[i].rp2.filter(function(x){return typeof x==='number';});
     var bw=nums.length>0?Math.max.apply(null,nums):'-';
-    o+='<td>'+s[i].h2+'</td><td class="wk-col">'+bw+'</td><td class="tot">'+s[i].rp2Total+'</td></tr>';
+    o+='<td>'+s[i].h2+'</td><td class="wk-col">'+bw+'</td><td class="tot">'+s[i].t2+'</td></tr>';
   }
   o+='</table></div></div>';document.getElementById('s2').innerHTML=o;
 }
