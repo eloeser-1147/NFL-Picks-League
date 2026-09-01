@@ -107,7 +107,7 @@ tr:last-child td{border-bottom:none}
   .wk-col { display: none !important; }
   table { table-layout: auto !important; width: 100% !important; }
   .ps-extra { display: none !important; }
-  .card-scroll { overflow-x: visible; }
+    
   table { min-width: 0 !important; }
   td, th { padding: 6px 6px; font-size: 11px; }
   .nm { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 8px; }
@@ -360,7 +360,7 @@ function load() {
     readPlayoffs(wb);
     
     render();
-    document.getElementById('status').textContent='v26 | Updated: '+new Date().toLocaleString();
+    document.getElementById('status').textContent='v27 | Updated: '+new Date().toLocaleString();
   })
   .catch(function(e){document.getElementById('status').textContent='Could not load file';});
 }
@@ -588,7 +588,7 @@ function renderS2(){
 function renderS3(){
   var divs=[{n:'Division A',p:P.filter(function(x){return x.num<=4})},{n:'Division B',p:P.filter(function(x){return x.num>=5&&x.num<=8})},{n:'Division C',p:P.filter(function(x){return x.num>=9&&x.num<=12})},{n:'Division D',p:P.filter(function(x){return x.num>=13})}];
   var wn=['W13','W14','W15','W16','W17','W18'];
-  var o='<div class="card"><h2 class="hdr3">Segment 3 — Weeks 13-18</h2><div class="card-scroll">';
+  var o='<div class="card"><h2 class="hdr3">Segment 3 — Weeks 13-18</h2><div class="card-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">';
   for(var d=0;d<divs.length;d++){
     var s=divs[d].p.slice().sort(function(a,b){return b.w3-a.w3||b.p3-a.p3;});
     o+='<div class="dl">'+divs[d].n+'</div><table><tr><th>#</th><th style="text-align:left">Player</th>';
@@ -714,7 +714,7 @@ function renderPS() {
   
   if (earn.length > 0) {
     o += '<div class="card" style="margin-top:16px;"><h2 class="hdr5">Season Earnings</h2>';
-    o += '<div class="card-scroll"><table><tr><th style="text-align:left">Player</th><th class="ps-extra">Source</th><th>Amount</th></tr>';
+    o += '<div class="card-scroll"><table><tr><th style="text-align:left">Player</th><th class="ps-extra">Source</th><th style="text-align:right;">Amount</th></tr>';
     // Merge by player - one row each
     var merged = {};
     earn.forEach(function(e) {
