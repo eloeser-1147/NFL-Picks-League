@@ -76,22 +76,21 @@ tr:last-child td{border-bottom:none}
 .wk-sel:focus{outline:none;border-color:#58a6ff;box-shadow:0 0 0 2px rgba(88,166,255,0.2)}
 .wk-sel option{background:#161b22;color:#e6edf3}
 .wk-seg{font-size:11px;color:#8b949e;margin-top:6px;font-weight:600}
-.mu-grid{display:flex;flex-direction:column;gap:10px;margin-bottom:8px}
-.mu{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:14px 18px}
-.mu-row{display:flex;align-items:center;justify-content:space-between}
-.mu-left,.mu-right{flex:1}
+.mu-grid{display:flex;flex-direction:column;gap:8px;margin-bottom:8px}
+.mu{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:12px 16px}
+.mu-row{display:flex;align-items:center}
+.mu-left,.mu-right{flex:1;min-width:0}
 .mu-right{text-align:right}
-.mu-center{width:40px;text-align:center;font-size:12px;color:#30363d;font-weight:700;flex-shrink:0}
-.mu-name{font-size:16px;font-weight:800;color:#e6edf3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mu-meta{font-size:11px;color:#6e7681;margin-top:3px;font-weight:500}
-.mu-meta .mu-seed{font-weight:700;color:#8b949e}
-.mu-scores{display:flex;align-items:center;justify-content:center;margin-top:10px;padding-top:10px;border-top:1px solid #21262d}
-.mu-sc{flex:1;font-size:26px;font-weight:900;color:#8b949e;letter-spacing:-1px}
-.mu-sc.left{text-align:left;padding-left:4px}
-.mu-sc.right{text-align:right;padding-right:4px}
-.mu-sc-div{width:30px;text-align:center;font-size:14px;color:#30363d;font-weight:800}
+.mu-center{display:flex;align-items:center;justify-content:center;gap:6px;flex-shrink:0;padding:0 8px}
+.mu-sc{font-size:22px;font-weight:900;color:#8b949e;letter-spacing:-1px;min-width:28px}
+.mu-sc.l{text-align:right}.mu-sc.r{text-align:left}
+.mu-sc-div{font-size:12px;color:#30363d;font-weight:800}
 .mu-sc.mw{color:#3fb950}.mu-sc.ml{color:#f85149;opacity:.7}.mu-sc.mt{color:#d29922}
-@media(max-width:640px){.card-scroll{margin:0 -2px}.card-scroll::-webkit-scrollbar{height:4px}.card-scroll::-webkit-scrollbar-thumb{background:#30363d;border-radius:4px}.header h1{font-size:24px}.qg{grid-template-columns:1fr}td,th{padding:6px 8px;font-size:11px}.seg-tab{font-size:12px}.seg-tabs{gap:12px}.mu{padding:12px 14px}.mu-name{font-size:14px}.mu-sc{font-size:22px}.mu-meta{font-size:10px}}
+.mu-name{font-size:15px;font-weight:800;color:#e6edf3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mu-meta{font-size:10px;color:#6e7681;margin-top:2px;font-weight:500}
+.mu-meta .mu-seed{font-weight:700;color:#8b949e}
+@media(max-width:480px){.mu{padding:10px 12px}.mu-name{font-size:13px}.mu-sc{font-size:18px;min-width:22px}.mu-meta{font-size:9px}.mu-center{gap:4px;padding:0 5px}}
+@media(max-width:640px){.card-scroll{margin:0 -2px}.card-scroll::-webkit-scrollbar{height:4px}.card-scroll::-webkit-scrollbar-thumb{background:#30363d;border-radius:4px}.header h1{font-size:24px}.qg{grid-template-columns:1fr}td,th{padding:6px 8px;font-size:11px}.seg-tab{font-size:12px}.seg-tabs{gap:12px}}
 @media (max-width: 640px) {
   .wk-col { display: none !important; }
   table { table-layout: auto !important; width: 100% !important; }
@@ -546,19 +545,12 @@ function renderSched(){
       }
       
       o+='<div class="mu">';
-      // Names row
       o+='<div class="mu-row">';
       o+='<div class="mu-left"><div class="mu-name">'+name1+'</div>';
-      o+='<div class="mu-meta"><span class="mu-seed">#'+seed1+'</span> · '+rec1W+'-'+rec1L+' · ('+tp1+' pts)</div></div>';
-      o+='<div class="mu-center">vs</div>';
+      o+='<div class="mu-meta"><span class="mu-seed">#'+seed1+'</span> · '+rec1W+'-'+rec1L+' ('+tp1+')</div></div>';
+      o+='<div class="mu-center"><div class="mu-sc l '+c1+'">'+sc1+'</div><div class="mu-sc-div">—</div><div class="mu-sc r '+c2+'">'+sc2+'</div></div>';
       o+='<div class="mu-right"><div class="mu-name">'+name2+'</div>';
-      o+='<div class="mu-meta"><span class="mu-seed">#'+seed2+'</span> · '+rec2W+'-'+rec2L+' · ('+tp2+' pts)</div></div>';
-      o+='</div>';
-      // Scores row
-      o+='<div class="mu-scores">';
-      o+='<div class="mu-sc left '+c1+'">'+sc1+'</div>';
-      o+='<div class="mu-sc-div">—</div>';
-      o+='<div class="mu-sc right '+c2+'">'+sc2+'</div>';
+      o+='<div class="mu-meta"><span class="mu-seed">#'+seed2+'</span> · '+rec2W+'-'+rec2L+' ('+tp2+')</div></div>';
       o+='</div>';
       o+='</div>';
     }
