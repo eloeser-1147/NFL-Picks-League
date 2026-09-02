@@ -90,16 +90,19 @@ tr:last-child td{border-bottom:none}
 .mu-name{font-size:22px;font-weight:800;color:#e6edf3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .mu-meta{font-size:10px;color:#6e7681;margin-top:2px;font-weight:500}
 .mu-meta .mu-seed{font-weight:700;color:#8b949e}
-/* Rules accordion */
-.rule-bubble{background:#161b22;border:1px solid #30363d;border-radius:10px;margin-bottom:8px;overflow:hidden;cursor:pointer;transition:border-color .15s}
-.rule-bubble:hover{border-color:#484f58}
-.rule-head{display:flex;align-items:center;padding:14px 16px;font-size:14px;font-weight:700;color:#e6edf3;gap:10px}
-.rule-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
-.rule-arrow{margin-left:auto;font-size:12px;color:#484f58;transition:transform .2s;flex-shrink:0}
-.rule-bubble.open .rule-arrow{transform:rotate(90deg);color:#58a6ff}
-.rule-bubble.open{border-color:#30363d}
-.rule-body{display:none;padding:0;font-size:13px;line-height:1.7;color:#c9d1d9}
-.rule-bubble.open .rule-body{display:block}
+/* Rules dropdown */
+.rule-dd-wrap{position:relative;display:inline-block;margin-bottom:16px}
+.rule-dd-btn{background:none;border:none;color:#e6edf3;font-size:15px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;padding:0;display:flex;align-items:center;gap:6px}
+.rule-dd-btn:hover{color:#58a6ff}
+.rule-dd-arrow{font-size:10px;color:#58a6ff;transition:transform .2s}
+.rule-dd-wrap.open .rule-dd-arrow{transform:rotate(180deg)}
+.rule-dd-menu{display:none;position:absolute;top:100%;left:0;margin-top:6px;background:#161b22;border:1px solid #30363d;border-radius:8px;min-width:200px;z-index:50;overflow:hidden}
+.rule-dd-wrap.open .rule-dd-menu{display:block}
+.rule-dd-item{padding:10px 14px;font-size:13px;font-weight:600;color:#8b949e;cursor:pointer;border-bottom:1px solid #21262d}
+.rule-dd-item:last-child{border-bottom:none}
+.rule-dd-item:hover{background:#1c2128;color:#e6edf3}
+.rule-dd-item.active{color:#58a6ff}
+.rule-content{background:#161b22;border:1px solid #30363d;border-radius:10px;overflow:hidden}
 .rule-subtitle{padding:10px 16px;font-size:12px;font-weight:800;text-transform:uppercase;letter-spacing:.5px;color:#fff}
 .rule-sec{padding:10px 16px;border-top:1px solid #21262d}
 .rule-sec-title{font-size:10px;text-transform:uppercase;letter-spacing:.6px;font-weight:700;margin-bottom:4px}
@@ -192,93 +195,90 @@ tr:last-child td{border-bottom:none}
   </div>
   <div id="infoRules">
 
-  <div class="rule-bubble" onclick="this.classList.toggle('open')">
-    <div class="rule-head"><span class="rule-dot" style="background:#9c2020"></span>Standard Rules<span class="rule-arrow">&#9656;</span></div>
-    <div class="rule-body">
-      <div class="rule-subtitle" style="background:#9c2020">General League Rules</div>
-      <div class="rule-sec"><p>• All picks are against the spread</p></div>
-      <div class="rule-sec"><p>• Picks must be submitted before kickoff</p></div>
-      <div class="rule-sec"><p>• Missed picks count as losses</p></div>
-      <div class="rule-sec"><p>• Push counts as a correct pick (1 point)</p></div>
-      <div class="rule-sec"><p>• Spreads lock at kickoff — picks can be changed up until kickoff</p></div>
-      <div class="rule-sec"><p>• Multi-segment winners keep all cash prizes; playoff entry passes to next qualified player</p></div>
+  <div class="rule-dd-wrap" id="ruleDDWrap">
+    <button class="rule-dd-btn" onclick="document.getElementById('ruleDDWrap').classList.toggle('open')">
+      <span id="ruleDDLabel">Standard Rules</span>
+      <span class="rule-dd-arrow">&#9660;</span>
+    </button>
+    <div class="rule-dd-menu" id="ruleDDMenu">
+      <div class="rule-dd-item active" onclick="showRule('rStandard',this)">Standard Rules</div>
+      <div class="rule-dd-item" onclick="showRule('rSeg1',this)">Weeks 1–6</div>
+      <div class="rule-dd-item" onclick="showRule('rSeg2',this)">Weeks 7–12</div>
+      <div class="rule-dd-item" onclick="showRule('rSeg3',this)">Weeks 13–18</div>
+      <div class="rule-dd-item" onclick="showRule('rPlayoffs',this)">Playoffs</div>
+      <div class="rule-dd-item" onclick="showRule('rPayouts',this)">Payouts</div>
     </div>
   </div>
 
-  <div class="rule-bubble" onclick="this.classList.toggle('open')">
-    <div class="rule-head"><span class="rule-dot" style="background:#1a3a5c"></span>Weeks 1–6<span class="rule-arrow">&#9656;</span></div>
-    <div class="rule-body">
-      <div class="rule-subtitle" style="background:#1a3a5c">H2H + Points</div>
-      <div class="rule-sec"><div class="rule-sec-title" style="color:#58a6ff">Pick Format</div><p>All games against the spread. Each correct pick = <strong>1 point</strong>.</p></div>
-      <div class="rule-sec"><div class="rule-sec-title" style="color:#3fb950">Head-to-Head</div><p>H2H win = <strong>6 bonus points</strong>. Tie = <strong>3 points</strong> each.</p></div>
-      <div class="rule-sec"><div class="rule-sec-title" style="color:#d29922">Scoring</div><p>16 games (1 pt each) + H2H win (6 pts) = <strong>Max 22 pts/week</strong></p></div>
-      <div class="rule-sec"><div class="rule-sec-title" style="color:#bc8cff">Winner</div><p>Highest total points across Weeks 1–6.</p></div>
-      <div class="rule-prize">Segment winner → auto playoff entry + <span style="color:#3fb950;font-weight:800;">$25</span></div>
-      <div class="rule-tb"><div class="rule-sec-title" style="color:#8b949e">Tiebreakers</div><p>1) H2H record • 2) Best single-week score • 3) Most H2H wins</p></div>
-    </div>
+  <div class="rule-content" id="rStandard">
+    <div class="rule-subtitle" style="background:#9c2020">General League Rules</div>
+    <div class="rule-sec"><p>• All picks are against the spread</p></div>
+    <div class="rule-sec"><p>• Picks must be submitted before kickoff</p></div>
+    <div class="rule-sec"><p>• Missed picks count as losses</p></div>
+    <div class="rule-sec"><p>• Push counts as a correct pick (1 point)</p></div>
+    <div class="rule-sec"><p>• Spreads lock at kickoff — picks can be changed up until kickoff</p></div>
+    <div class="rule-sec"><p>• Multi-segment winners keep all cash prizes; playoff entry passes to next qualified player</p></div>
   </div>
 
-  <div class="rule-bubble" onclick="this.classList.toggle('open')">
-    <div class="rule-head"><span class="rule-dot" style="background:#3d1e5c"></span>Weeks 7–12<span class="rule-arrow">&#9656;</span></div>
-    <div class="rule-body">
-      <div class="rule-subtitle" style="background:#3d1e5c">H2H + Weighted Confidence</div>
-      <div class="rule-sec"><div class="rule-sec-title" style="color:#58a6ff">Pick Format</div><p>Choose <strong>8 games</strong> ATS. Rank confidence <strong>8</strong> (most) → <strong>1</strong> (least).</p></div>
-      <div class="rule-sec"><div class="rule-sec-title" style="color:#3fb950">Head-to-Head</div><p>H2H win = <strong>10 bonus points</strong>. Tie = <strong>5 points</strong> each.</p></div>
-      <div class="rule-sec"><div class="rule-sec-title" style="color:#d29922">Scoring</div><p>36 weighted + 10 H2H = <strong>Max 46 pts/week</strong></p></div>
-      <div class="rule-sec"><div class="rule-sec-title" style="color:#bc8cff">Winner</div><p>Highest total weighted points across Weeks 7–12.</p></div>
-      <div class="rule-prize">Segment winner → auto playoff entry + <span style="color:#3fb950;font-weight:800;">$25</span></div>
-      <div class="rule-tb"><div class="rule-sec-title" style="color:#8b949e">Tiebreakers</div><p>1) H2H record • 2) Best single-week score • 3) Most H2H wins</p></div>
-    </div>
+  <div class="rule-content" id="rSeg1" style="display:none">
+    <div class="rule-subtitle" style="background:#1a3a5c">H2H + Points</div>
+    <div class="rule-sec"><div class="rule-sec-title" style="color:#58a6ff">Pick Format</div><p>All games against the spread. Each correct pick = <strong>1 point</strong>.</p></div>
+    <div class="rule-sec"><div class="rule-sec-title" style="color:#3fb950">Head-to-Head</div><p>H2H win = <strong>6 bonus points</strong>. Tie = <strong>3 points</strong> each.</p></div>
+    <div class="rule-sec"><div class="rule-sec-title" style="color:#d29922">Scoring</div><p>16 games (1 pt each) + H2H win (6 pts) = <strong>Max 22 pts/week</strong></p></div>
+    <div class="rule-sec"><div class="rule-sec-title" style="color:#bc8cff">Winner</div><p>Highest total points across Weeks 1–6.</p></div>
+    <div class="rule-prize">Segment winner → auto playoff entry + <span style="color:#3fb950;font-weight:800;">$25</span></div>
+    <div class="rule-tb"><div class="rule-sec-title" style="color:#8b949e">Tiebreakers</div><p>1) H2H record • 2) Best single-week score • 3) Most H2H wins</p></div>
   </div>
 
-  <div class="rule-bubble" onclick="this.classList.toggle('open')">
-    <div class="rule-head"><span class="rule-dot" style="background:#4a3020"></span>Weeks 13–18<span class="rule-arrow">&#9656;</span></div>
-    <div class="rule-body">
-      <div class="rule-subtitle" style="background:#4a3020">Divisional Round-Robin</div>
-      <div class="rule-sec"><div class="rule-sec-title" style="color:#58a6ff">Pick Format</div><p>All games against the spread.</p></div>
-      <div class="rule-sec"><div class="rule-sec-title" style="color:#3fb950">Head-to-Head</div><p>Most correct picks wins. Tie → tiebreaker decides. Same tiebreaker = <strong>.5 W / .5 L</strong> each.</p></div>
-      <div class="rule-sec"><div class="rule-sec-title" style="color:#d29922">Divisions</div><p><strong>4 divisions of 4</strong>. Face each opponent <strong>twice</strong> over 6 weeks. Standings by <strong>record</strong>.</p></div>
-      <div class="rule-prize">4 division winners → auto playoff entry + <span style="color:#3fb950;font-weight:800;">$10 each</span></div>
-      <div class="rule-tb"><div class="rule-sec-title" style="color:#8b949e">Tiebreakers</div><p>1) H2H record vs. tied • 2) Correct picks in H2H • 3) Best week vs. tied • 4) Most picks Wks 13–18 • 5) Best single week</p></div>
-    </div>
+  <div class="rule-content" id="rSeg2" style="display:none">
+    <div class="rule-subtitle" style="background:#3d1e5c">H2H + Weighted Confidence</div>
+    <div class="rule-sec"><div class="rule-sec-title" style="color:#58a6ff">Pick Format</div><p>Choose <strong>8 games</strong> ATS. Rank confidence <strong>8</strong> (most) → <strong>1</strong> (least).</p></div>
+    <div class="rule-sec"><div class="rule-sec-title" style="color:#3fb950">Head-to-Head</div><p>H2H win = <strong>10 bonus points</strong>. Tie = <strong>5 points</strong> each.</p></div>
+    <div class="rule-sec"><div class="rule-sec-title" style="color:#d29922">Scoring</div><p>36 weighted + 10 H2H = <strong>Max 46 pts/week</strong></p></div>
+    <div class="rule-sec"><div class="rule-sec-title" style="color:#bc8cff">Winner</div><p>Highest total weighted points across Weeks 7–12.</p></div>
+    <div class="rule-prize">Segment winner → auto playoff entry + <span style="color:#3fb950;font-weight:800;">$25</span></div>
+    <div class="rule-tb"><div class="rule-sec-title" style="color:#8b949e">Tiebreakers</div><p>1) H2H record • 2) Best single-week score • 3) Most H2H wins</p></div>
   </div>
 
-  <div class="rule-bubble" onclick="this.classList.toggle('open')">
-    <div class="rule-head"><span class="rule-dot" style="background:#1a4a1e"></span>Playoffs<span class="rule-arrow">&#9656;</span></div>
-    <div class="rule-body">
-      <div class="rule-subtitle" style="background:#1a4a1e">Playoff Format — 8 Players</div>
-      <div class="rule-sec"><div class="rule-sec-title" style="color:#3fb950">Auto-Qualifiers (6)</div>
-        <p>• Weeks 1–6 segment winner</p>
-        <p>• Weeks 7–12 segment winner</p>
-        <p>• 4 division winners from Weeks 13–18</p></div>
-      <div class="rule-sec"><div class="rule-sec-title" style="color:#d29922">Wild Card (2)</div>
-        <p>• Top 2 overall season point totals among non-qualified players</p></div>
-      <div style="border-top:2px solid #30363d"></div>
-      <div class="rule-sec"><div class="rule-sec-title" style="color:#58a6ff">Wild Card Round</div>
-        <p>All 8 pick ATS, weighted <strong>1–4</strong> confidence. <strong>Top 4</strong> in weighted points advance.</p></div>
-      <div class="rule-sec"><div class="rule-sec-title" style="color:#bc8cff">Final Rounds (4 Players)</div>
-        <p>Carry Wild Card points forward through remaining playoff weeks.</p>
-        <p><strong>Divisional:</strong> 2 pts/game • <strong>Championship:</strong> 4 pts/game • <strong>Super Bowl:</strong> 8 pts</p></div>
-      <div class="rule-prize">1st: <span style="color:#3fb950;font-weight:800;">$200</span> · 2nd: <span style="color:#3fb950;font-weight:800;">$75</span> · 3rd: <span style="color:#3fb950;font-weight:800;">$35</span></div>
-      <div class="rule-tb"><div class="rule-sec-title" style="color:#8b949e">Tiebreakers</div>
-        <p><strong>Qualification:</strong> 1) H2H record 2) Best record Wks 1–18</p>
-        <p><strong>Wild Card:</strong> 1) Weekly TB 2) Pts in AFC WC 3) Pts in NFC WC</p>
-        <p><strong>Finals:</strong> 1) Super Bowl TB 2) Closest to longest SB field goal</p></div>
-    </div>
+  <div class="rule-content" id="rSeg3" style="display:none">
+    <div class="rule-subtitle" style="background:#4a3020">Divisional Round-Robin</div>
+    <div class="rule-sec"><div class="rule-sec-title" style="color:#58a6ff">Pick Format</div><p>All games against the spread.</p></div>
+    <div class="rule-sec"><div class="rule-sec-title" style="color:#3fb950">Head-to-Head</div><p>Most correct picks wins. Tie → tiebreaker decides. Same tiebreaker = <strong>.5 W / .5 L</strong> each.</p></div>
+    <div class="rule-sec"><div class="rule-sec-title" style="color:#d29922">Divisions</div><p><strong>4 divisions of 4</strong>. Face each opponent <strong>twice</strong> over 6 weeks. Standings by <strong>record</strong>.</p></div>
+    <div class="rule-prize">4 division winners → auto playoff entry + <span style="color:#3fb950;font-weight:800;">$10 each</span></div>
+    <div class="rule-tb"><div class="rule-sec-title" style="color:#8b949e">Tiebreakers</div><p>1) H2H record vs. tied • 2) Correct picks in H2H • 3) Best week vs. tied • 4) Most picks Wks 13–18 • 5) Best single week</p></div>
   </div>
 
-  <div class="rule-bubble" onclick="this.classList.toggle('open')">
-    <div class="rule-head"><span class="rule-dot" style="background:#2d6a4f"></span>Payouts<span class="rule-arrow">&#9656;</span></div>
-    <div class="rule-body">
-      <div class="rule-subtitle" style="background:#2d6a4f">Prize Pool Breakdown</div>
-      <div class="rule-sec" style="font-size:13px;line-height:2.2">
-        Weeks 1–6 Winner <span style="float:right;color:#3fb950;font-weight:700;">$25</span><br>
-        Weeks 7–12 Winner <span style="float:right;color:#3fb950;font-weight:700;">$25</span><br>
-        Division Winners (×4) <span style="float:right;color:#3fb950;font-weight:700;">$10 ea.</span><br>
-        <span style="border-top:1px solid #30363d;display:block;margin:4px 0;padding-top:4px;">Playoff 1st <span style="float:right;color:#3fb950;font-weight:700;">$200</span></span>
-        Playoff 2nd <span style="float:right;color:#3fb950;font-weight:700;">$75</span><br>
-        Playoff 3rd <span style="float:right;color:#3fb950;font-weight:700;">$35</span>
-      </div>
+  <div class="rule-content" id="rPlayoffs" style="display:none">
+    <div class="rule-subtitle" style="background:#1a4a1e">Playoff Format — 8 Players</div>
+    <div class="rule-sec"><div class="rule-sec-title" style="color:#3fb950">Auto-Qualifiers (6)</div>
+      <p>• Weeks 1–6 segment winner</p>
+      <p>• Weeks 7–12 segment winner</p>
+      <p>• 4 division winners from Weeks 13–18</p></div>
+    <div class="rule-sec"><div class="rule-sec-title" style="color:#d29922">Wild Card (2)</div>
+      <p>• Top 2 overall season point totals among non-qualified players</p></div>
+    <div style="border-top:2px solid #30363d"></div>
+    <div class="rule-sec"><div class="rule-sec-title" style="color:#58a6ff">Wild Card Round</div>
+      <p>All 8 pick ATS, weighted <strong>1–4</strong> confidence. <strong>Top 4</strong> in weighted points advance.</p></div>
+    <div class="rule-sec"><div class="rule-sec-title" style="color:#bc8cff">Final Rounds (4 Players)</div>
+      <p>Carry Wild Card points forward through remaining playoff weeks.</p>
+      <p><strong>Divisional:</strong> 2 pts/game • <strong>Championship:</strong> 4 pts/game • <strong>Super Bowl:</strong> 8 pts</p></div>
+    <div class="rule-prize">1st: <span style="color:#3fb950;font-weight:800;">$200</span> · 2nd: <span style="color:#3fb950;font-weight:800;">$75</span> · 3rd: <span style="color:#3fb950;font-weight:800;">$35</span></div>
+    <div class="rule-tb"><div class="rule-sec-title" style="color:#8b949e">Tiebreakers</div>
+      <p><strong>Qualification:</strong> 1) H2H record 2) Best record Wks 1–18</p>
+      <p><strong>Wild Card:</strong> 1) Weekly TB 2) Pts in AFC WC 3) Pts in NFC WC</p>
+      <p><strong>Finals:</strong> 1) Super Bowl TB 2) Closest to longest SB field goal</p></div>
+  </div>
+
+  <div class="rule-content" id="rPayouts" style="display:none">
+    <div class="rule-subtitle" style="background:#2d6a4f">Prize Pool Breakdown</div>
+    <div class="rule-sec" style="font-size:13px;line-height:2.2">
+      Weeks 1–6 Winner <span style="float:right;color:#3fb950;font-weight:700;">$25</span><br>
+      Weeks 7–12 Winner <span style="float:right;color:#3fb950;font-weight:700;">$25</span><br>
+      Division Winners (×4) <span style="float:right;color:#3fb950;font-weight:700;">$10 ea.</span><br>
+      <span style="border-top:1px solid #30363d;display:block;margin:4px 0;padding-top:4px;">Playoff 1st <span style="float:right;color:#3fb950;font-weight:700;">$200</span></span>
+      Playoff 2nd <span style="float:right;color:#3fb950;font-weight:700;">$75</span><br>
+      Playoff 3rd <span style="float:right;color:#3fb950;font-weight:700;">$35</span>
     </div>
   </div>
 
@@ -307,6 +307,22 @@ function show(id) {
   for (var i=0;i<panels.length;i++) panels[i].className='panel';
   document.getElementById(id).className='panel active';
 }
+
+function showRule(id, el) {
+  var panels = document.querySelectorAll('.rule-content');
+  for(var i=0;i<panels.length;i++) panels[i].style.display='none';
+  document.getElementById(id).style.display='block';
+  var items = document.querySelectorAll('.rule-dd-item');
+  for(var i=0;i<items.length;i++) items[i].className='rule-dd-item';
+  if(el) el.className='rule-dd-item active';
+  document.getElementById('ruleDDLabel').textContent = el ? el.textContent : '';
+  document.getElementById('ruleDDWrap').classList.remove('open');
+}
+// Close dropdown when clicking outside
+document.addEventListener('click', function(e) {
+  var wrap = document.getElementById('ruleDDWrap');
+  if(wrap && !wrap.contains(e.target)) wrap.classList.remove('open');
+});
 
 function tabTo(id, btn) {
   show(id);
