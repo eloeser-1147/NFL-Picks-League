@@ -132,8 +132,10 @@ tr:last-child td{border-bottom:none}
 .nfl-blurb{max-width:720px;margin:0 auto 12px;padding:10px 14px;background:linear-gradient(135deg,rgba(88,166,255,.08),rgba(63,185,80,.06));border:1px solid #21262d;border-left:3px solid #58a6ff;border-radius:8px;font-size:12px;line-height:1.6;color:#c9d1d9}
 .nfl-blurb b{color:#58a6ff;font-weight:700}
 .nfl-blurb .seg-label{font-size:10px;font-weight:700;color:#58a6ff;text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
-.nfl-bye{max-width:720px;margin:0 auto 10px;padding:6px 14px;background:#161b22;border:1px solid #21262d;border-radius:8px;text-align:center;font-size:11px;color:#6e7681}
-.nfl-bye b{color:#8b949e;font-weight:600}
+.nfl-bye{max-width:720px;margin:14px auto 0;padding:10px 14px;background:#161b22;border:1px solid #21262d;border-radius:8px;text-align:center;font-size:11px;color:#6e7681}
+.nfl-bye b{color:#8b949e;font-weight:600;display:block;margin-bottom:6px}
+.nfl-bye-logos{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:4px}
+.nfl-bye-logos img{width:28px;height:28px;object-fit:contain;opacity:.5}
 .nfl-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;max-width:720px;margin:0 auto}
 .nfl-mu{background:#161b22;border:1px solid #21262d;border-radius:8px;display:flex;align-items:center;justify-content:center;gap:4px;padding:10px 4px}
 .nfl-mu img{width:36px;height:36px;object-fit:contain}
@@ -174,9 +176,9 @@ tr:last-child td{border-bottom:none}
 </div>
 <div class="panel active" id="nflsched">
   <div class="nfl-week-strip" id="nflStrip"></div>
-  <div class="nfl-bye" id="nflBye" style="display:none"></div>
   <div class="nfl-grid" id="nflGrid"></div>
   <div class="nfl-blurb" id="nflBlurb" style="margin-top:14px"></div>
+  <div class="nfl-bye" id="nflBye" style="display:none"></div>
 </div>
 <div class="panel" id="sched"><div class="loading">Loading...</div></div>
 <div class="panel" id="playersched"><div class="loading">Loading...</div></div>
@@ -521,12 +523,12 @@ function renderSched(){
   window._sched = sched;
   var defaultIdx=0;for(var i=0;i<sched.length;i++){if(sched[i].wk===currentWeek){defaultIdx=i;break;}}
   
-  var o='<div class="wk-picker">';
-  o+='<select class="wk-sel" onchange="pickWk(this.value)">';
-  for(var i=0;i<sched.length;i++)o+='<option value="'+i+'"'+(i===defaultIdx?' selected':'')+'>Week '+sched[i].wk+'</option>';
-  o+='</select>';
-  o+='<div class="wk-seg" id="wkSeg">'+sched[defaultIdx].seg+'</div>';
+  var o='<div class="nfl-week-strip" id="sbStrip">';
+  for(var i=0;i<sched.length;i++){
+    o+='<button class="nfl-wk'+(i===defaultIdx?' active':'')+'" onclick="pickWk('+i+')" data-sb="'+i+'">'+sched[i].wk+'<span class="wn">Wk</span></button>';
+  }
   o+='</div>';
+  o+='<div class="wk-seg" id="wkSeg" style="text-align:center;font-size:11px;color:#8b949e;font-weight:600;padding:2px 0 12px">'+sched[defaultIdx].seg+'</div>';
   
   for(var i=0;i<sched.length;i++){
     var s=sched[i];
@@ -566,6 +568,11 @@ function pickWk(i){
   sw(i);
   var s=window._sched;
   if(s)document.getElementById('wkSeg').textContent=s[i].seg;
+  var btns=document.querySelectorAll('#sbStrip .nfl-wk');
+  for(var x=0;x<btns.length;x++){btns[x].className=btns[x].getAttribute('data-sb')==String(i)?'nfl-wk active':'nfl-wk';}
+  var strip=document.getElementById('sbStrip');
+  var btn=strip&&strip.querySelector('[data-sb="'+i+'"]');
+  if(btn)btn.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
 }
 
 // ===== STANDINGS =====
@@ -907,9 +914,16 @@ function nflRender(wk){
 
   // Byes
   var byes=[];
-  for(var t in NFL_SCHED){if(NFL_SCHED[t][wk-1]==='BYE')byes.push(NFL_NAMES[t]);}
+  for(var t in NFL_SCHED){if(NFL_SCHED[t][wk-1]==='BYE')byes.push(t);}
   var byeEl=document.getElementById('nflBye');
-  if(byes.length>0){byes.sort();byeEl.style.display='block';byeEl.innerHTML='<b>Bye Week</b>&ensp;'+byes.join(' &middot; ');}
+  if(byes.length>0){
+    byes.sort();
+    byeEl.style.display='block';
+    var bh='<b>Bye Week</b><div class="nfl-bye-logos">';
+    for(var i=0;i<byes.length;i++){bh+='<img src="'+nflLogo(byes[i])+'" alt="'+byes[i]+'" title="'+(NFL_NAMES[byes[i]]||byes[i])+'">';}
+    bh+='</div>';
+    byeEl.innerHTML=bh;
+  }
   else{byeEl.style.display='none';}
 
   // Games
