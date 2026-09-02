@@ -151,18 +151,18 @@ tr:last-child td{border-bottom:none}
 </style>
 </head>
 <body>
-<div class="header"><h1>NFL Picks League</h1><div class="status" id="status">Loading...</div></div>
+<div class="header"><h1>NFL Picks League</h1></div>
 <!-- Hamburger Menu -->
 <div class="menu-bar">
   <div class="hamburger" onclick="toggleMenu()">
     <span></span><span></span><span></span>
   </div>
-  <div class="menu-title" id="menuTitle">Games</div>
+  <div class="menu-title" id="menuTitle">Home</div>
 </div>
 <div class="menu-overlay" id="menuOverlay" onclick="toggleMenu()"></div>
 <div class="menu-drawer" id="menuDrawer">
   <div class="menu-header">NFL Picks League</div>
-  <div class="menu-item" onclick="navTo('nflsched','Games')">Games</div>
+  <div class="menu-item" onclick="navTo('nflsched','Home')">Home</div>
   <div class="menu-item" onclick="navTo('sched','Scoreboard')">Scoreboard</div>
   <div class="menu-item" onclick="navTo('playersched','Schedule')">Schedule</div>
   <div class="menu-item" onclick="navTo('standings','Standings')">Standings</div>
@@ -319,6 +319,7 @@ tr:last-child td{border-bottom:none}
     </div>
   </div>
 </div>
+<div id="status" style="text-align:center;padding:40px 24px 20px;font-size:10px;color:#30363d">Loading...</div>
 <script>
 var P = []; // all players
 var currentWeek = 1;
@@ -532,7 +533,7 @@ function renderSched(){
   
   for(var i=0;i<sched.length;i++){
     var s=sched[i];
-    o+='<div id="wk'+i+'" style="display:'+(i===0?'block':'none')+'"><div class="mu-grid">';
+    o+='<div id="wk'+i+'" style="display:'+(i===defaultIdx?'block':'none')+'"><div class="mu-grid">';
     for(var j=0;j<s.mu.length;j++){
       var n1=s.mu[j][0],n2=s.mu[j][1];
       var p1=pm[n1],p2=pm[n2];
@@ -562,6 +563,7 @@ function renderSched(){
   }
   document.getElementById('sched').innerHTML=o;
   sw(defaultIdx);
+  setTimeout(function(){var strip=document.getElementById('sbStrip');var btn=strip&&strip.querySelector('[data-sb="'+defaultIdx+'"]');if(btn)btn.scrollIntoView({behavior:'auto',inline:'center',block:'nearest'});},50);
 }
 function sw(i){var a=document.querySelectorAll('[id^="wk"]');for(var x=0;x<a.length;x++){if(a[x].id.indexOf('wk')===0&&a[x].id.length<=4)a[x].style.display='none';}document.getElementById('wk'+i).style.display='block';}
 function pickWk(i){
