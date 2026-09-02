@@ -76,17 +76,22 @@ tr:last-child td{border-bottom:none}
 .wk-sel:focus{outline:none;border-color:#58a6ff;box-shadow:0 0 0 2px rgba(88,166,255,0.2)}
 .wk-sel option{background:#161b22;color:#e6edf3}
 .wk-seg{font-size:11px;color:#8b949e;margin-top:6px;font-weight:600}
-.mu-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px;margin-bottom:8px}
-.mu{background:#161b22;border:1px solid #30363d;border-radius:8px;overflow:hidden}
-.mu-header{display:flex;border-bottom:1px solid #30363d}
-.mu-side{flex:1;padding:12px 14px;text-align:center}
-.mu-side.left{border-right:1px solid #21262d}
-.mu-name{font-size:15px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mu-score{font-size:18px;font-weight:900;color:#8b949e;margin-top:4px}
-.mu-side.mw .mu-name{color:#3fb950}.mu-side.mw .mu-score{color:#3fb950}
-.mu-side.ml .mu-name{color:#f85149;opacity:.7}.mu-side.ml .mu-score{color:#f85149;opacity:.7}
-.mu-side.mt .mu-name{color:#d29922}.mu-side.mt .mu-score{color:#d29922}
-@media(max-width:640px){.card-scroll{margin:0 -2px}.card-scroll::-webkit-scrollbar{height:4px}.card-scroll::-webkit-scrollbar-thumb{background:#30363d;border-radius:4px}.header h1{font-size:24px}.qg{grid-template-columns:1fr}td,th{padding:6px 8px;font-size:11px}.seg-tab{font-size:12px}.seg-tabs{gap:12px}.mu-grid{grid-template-columns:repeat(auto-fill,minmax(160px,1fr))}.mu-name{font-size:13px}.mu-score{font-size:15px}}
+.mu-grid{display:flex;flex-direction:column;gap:10px;margin-bottom:8px}
+.mu{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:14px 18px}
+.mu-row{display:flex;align-items:center;justify-content:space-between}
+.mu-left,.mu-right{flex:1}
+.mu-right{text-align:right}
+.mu-center{width:40px;text-align:center;font-size:12px;color:#30363d;font-weight:700;flex-shrink:0}
+.mu-name{font-size:16px;font-weight:800;color:#e6edf3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mu-meta{font-size:11px;color:#6e7681;margin-top:3px;font-weight:500}
+.mu-meta .mu-seed{font-weight:700;color:#8b949e}
+.mu-scores{display:flex;align-items:center;justify-content:center;margin-top:10px;padding-top:10px;border-top:1px solid #21262d}
+.mu-sc{flex:1;font-size:26px;font-weight:900;color:#8b949e;letter-spacing:-1px}
+.mu-sc.left{text-align:left;padding-left:4px}
+.mu-sc.right{text-align:right;padding-right:4px}
+.mu-sc-div{width:30px;text-align:center;font-size:14px;color:#30363d;font-weight:800}
+.mu-sc.mw{color:#3fb950}.mu-sc.ml{color:#f85149;opacity:.7}.mu-sc.mt{color:#d29922}
+@media(max-width:640px){.card-scroll{margin:0 -2px}.card-scroll::-webkit-scrollbar{height:4px}.card-scroll::-webkit-scrollbar-thumb{background:#30363d;border-radius:4px}.header h1{font-size:24px}.qg{grid-template-columns:1fr}td,th{padding:6px 8px;font-size:11px}.seg-tab{font-size:12px}.seg-tabs{gap:12px}.mu{padding:12px 14px}.mu-name{font-size:14px}.mu-sc{font-size:22px}.mu-meta{font-size:10px}}
 @media (max-width: 640px) {
   .wk-col { display: none !important; }
   table { table-layout: auto !important; width: 100% !important; }
@@ -96,10 +101,6 @@ tr:last-child td{border-bottom:none}
   td, th { padding: 6px 6px; font-size: 11px; }
   .nm { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 8px; }
   .tot { font-size: 13px; }
-  .mu-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
-  .mu-side { padding: 10px 8px; }
-  .mu-name { font-size: 13px; }
-  .mu-score { font-size: 15px; }
   .seg-tabs { gap: 8px; }
   .seg-tab { font-size: 12px; padding: 6px 2px; }
   .ps-table td { font-size: 11px; padding: 6px 4px; }
@@ -501,6 +502,10 @@ function renderSched(){
   o+='</div>';
   o+='<div class="wk-seg" id="wkSeg" style="text-align:center;font-size:11px;color:#8b949e;font-weight:600;padding:2px 0 12px">'+sched[defaultIdx].seg+'</div>';
   
+  // Build overall rankings for seed numbers
+  var ranked=P.slice().sort(function(a,b){return(b.t1+b.t2+b.p3)-(a.t1+a.t2+a.p3);});
+  var seedMap={};for(var i=0;i<ranked.length;i++){seedMap[ranked[i].num]=i+1;}
+
   for(var i=0;i<sched.length;i++){
     var s=sched[i];
     o+='<div id="wk'+i+'" style="display:'+(i===defaultIdx?'block':'none')+'"><div class="mu-grid">';
@@ -510,7 +515,24 @@ function renderSched(){
       var name1=p1?p1.name:'Player '+n1;
       var name2=p2?p2.name:'Player '+n2;
       
-      // Get raw picks for this week
+      // Overall record: H2H wins from seg1 + seg2 + seg3 wins
+      var w1=p1?(p1.h1||0):0, w2=p1?(p1.h2||0):0, w3=p1?(p1.w3||0):0;
+      var ow1=w1+w2+w3;
+      var l1a=p2?(p2.h1||0):0, l2a=p2?(p2.h2||0):0, l3a=p2?(p2.w3||0):0;
+      // Total points
+      var tp1=p1?(p1.t1+p1.t2+p1.p3):0;
+      var tp2=p2?(p2.t1+p2.t2+p2.p3):0;
+      // Compute losses from total games played so far
+      var totalWeeksPlayed=0;for(var ww=1;ww<=18;ww++){if(weekPlayed[ww])totalWeeksPlayed++;}
+      var seed1=seedMap[n1]||'-';
+      var seed2=seedMap[n2]||'-';
+      // Overall record (simplified: wins from h1+h2+w3)
+      var rec1W=p1?((p1.h1||0)+(p1.h2||0)+(p1.w3||0)):0;
+      var rec1L=p2?((p2.h1||0)+(p2.h2||0)+(p2.l3||0)):0;
+      var rec2W=p2?((p2.h1||0)+(p2.h2||0)+(p2.w3||0)):0;
+      var rec2L=p1?((p1.h1||0)+(p1.h2||0)+(p1.l3||0)):0;
+      
+      // Week score
       var sc1=picks[s.wk]?picks[s.wk][n1]:'';
       var sc2=picks[s.wk]?picks[s.wk][n2]:'';
       if(sc1===undefined||sc1===null)sc1=0;
@@ -524,10 +546,21 @@ function renderSched(){
       }
       
       o+='<div class="mu">';
-      o+='<div class="mu-header">';
-      o+='<div class="mu-side left '+c1+'"><div class="mu-name">'+name1+'</div><div class="mu-score">'+sc1+'</div></div>';
-      o+='<div class="mu-side '+c2+'"><div class="mu-name">'+name2+'</div><div class="mu-score">'+sc2+'</div></div>';
-      o+='</div></div>';
+      // Names row
+      o+='<div class="mu-row">';
+      o+='<div class="mu-left"><div class="mu-name">'+name1+'</div>';
+      o+='<div class="mu-meta"><span class="mu-seed">#'+seed1+'</span> · '+rec1W+'-'+rec1L+' · ('+tp1+' pts)</div></div>';
+      o+='<div class="mu-center">vs</div>';
+      o+='<div class="mu-right"><div class="mu-name">'+name2+'</div>';
+      o+='<div class="mu-meta"><span class="mu-seed">#'+seed2+'</span> · '+rec2W+'-'+rec2L+' · ('+tp2+' pts)</div></div>';
+      o+='</div>';
+      // Scores row
+      o+='<div class="mu-scores">';
+      o+='<div class="mu-sc left '+c1+'">'+sc1+'</div>';
+      o+='<div class="mu-sc-div">—</div>';
+      o+='<div class="mu-sc right '+c2+'">'+sc2+'</div>';
+      o+='</div>';
+      o+='</div>';
     }
     o+='</div></div>';
   }
