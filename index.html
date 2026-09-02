@@ -826,8 +826,8 @@ function renderPlayerSched() {
 var NFL_ESPN = {ARI:'ari',ATL:'atl',BAL:'bal',BUF:'buf',CAR:'car',CHI:'chi',CIN:'cin',CLE:'cle',DAL:'dal',DEN:'den',DET:'det',GB:'gb',HOU:'hou',IND:'ind',JAX:'jax',KC:'kc',LAC:'lac',LAR:'lar',LV:'lv',MIA:'mia',MIN:'min',NE:'ne',NO:'no',NYG:'nyg',NYJ:'nyj',PHI:'phi',PIT:'pit',SF:'sf',SEA:'sea',TB:'tb',TEN:'ten',WAS:'wsh'};
 var NFL_NAMES = {ARI:'Arizona Cardinals',ATL:'Atlanta Falcons',BAL:'Baltimore Ravens',BUF:'Buffalo Bills',CAR:'Carolina Panthers',CHI:'Chicago Bears',CIN:'Cincinnati Bengals',CLE:'Cleveland Browns',DAL:'Dallas Cowboys',DEN:'Denver Broncos',DET:'Detroit Lions',GB:'Green Bay Packers',HOU:'Houston Texans',IND:'Indianapolis Colts',JAX:'Jacksonville Jaguars',KC:'Kansas City Chiefs',LAC:'Los Angeles Chargers',LAR:'Los Angeles Rams',LV:'Las Vegas Raiders',MIA:'Miami Dolphins',MIN:'Minnesota Vikings',NE:'New England Patriots',NO:'New Orleans Saints',NYG:'New York Giants',NYJ:'New York Jets',PHI:'Philadelphia Eagles',PIT:'Pittsburgh Steelers',SF:'San Francisco 49ers',SEA:'Seattle Seahawks',TB:'Tampa Bay Buccaneers',TEN:'Tennessee Titans',WAS:'Washington Commanders'};
 function nflLogo(a){return 'https://a.espncdn.com/i/teamlogos/nfl/500/'+(NFL_ESPN[a]||a.toLowerCase())+'.png';}
-var DARK_LOGOS = {NYG:1,NYJ:1,LAR:1,SEA:1,HOU:1,NE:1,CHI:1,BAL:1};
-function logoStyle(a){return DARK_LOGOS[a]?'style="filter:drop-shadow(0 0 3px rgba(255,255,255,.45))"':'';}
+var DARK_LOGOS = {NYG:1,NYJ:1,LAR:1};
+function logoStyle(a){return DARK_LOGOS[a]?'style="outline:1.5px solid rgba(255,255,255,.55);outline-offset:1px;border-radius:4px"':'';}
 
 var NFL_SCHED = {
   ARI:['@LAC','SEA','@SF','@NYG','DET','@LAR','DEN','@DAL','@SEA','LAR','@KC','WAS','PHI','BYE','NYJ','@NO','LV','SF'],
