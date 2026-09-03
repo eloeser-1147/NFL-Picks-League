@@ -330,7 +330,6 @@ tr:last-child td{border-bottom:none}
   </div>
 <div id="infoUpdates">
     <div class="card">
-      <h2 class="hdr6">Updates</h2>
       <div style="padding:16px;font-size:13px;line-height:1.7;color:#8b949e;text-align:center;">
         <p style="font-size:15px;margin-bottom:8px;">No updates at this time.</p>
         <p>Check back weekly for standings updates, rule clarifications, and league news.</p>
@@ -633,35 +632,45 @@ function renderSched(){
     }
     o+='</div></div>';
   }
-  // H2H bonus blurb at bottom
-  o+='<div style="max-width:720px;margin:16px auto 0;padding:10px 14px;background:rgba(88,166,255,.06);border:1px solid #21262d;border-left:3px solid #58a6ff;border-radius:8px;font-size:11px;line-height:1.8;color:#8b949e">';
-  var cw=currentWeek||1;
-  if(cw<=6){
-    o+='<strong style="color:#c9d1d9">Segment 1 · Weeks 1–6</strong><br>';
-    o+='• More correct picks = H2H win<br>';
-    o+='• H2H win = <strong style="color:#3fb950">+6 bonus points</strong><br>';
-    o+='• H2H tie = <strong style="color:#d29922">+3 points each</strong>';
-  } else if(cw<=12){
-    o+='<strong style="color:#c9d1d9">Segment 2 · Weeks 7–12</strong><br>';
-    o+='• More weighted points = H2H win<br>';
-    o+='• H2H win = <strong style="color:#3fb950">+10 bonus points</strong><br>';
-    o+='• H2H tie = <strong style="color:#d29922">+5 points each</strong>';
-  } else {
-    o+='<strong style="color:#c9d1d9">Segment 3 · Weeks 13–18</strong><br>';
-    o+='• More correct picks = H2H win<br>';
-    o+='• H2H win = <strong style="color:#3fb950">+1 win</strong> to divisional record<br>';
-    o+='• H2H tie = <strong style="color:#d29922">+.5 W / .5 L each</strong>';
-  }
-  o+='</div>';
+  o+='<div id="scoresBlurb"></div>';
   document.getElementById('sched').innerHTML=o;
   pickWk(defaultIdx);
   window._sbDefaultIdx = defaultIdx;
 }
+
+function updateScoresBlurb(weekNum){
+  var el=document.getElementById('scoresBlurb');
+  if(!el)return;
+  var seg=weekNum<=6?1:weekNum<=12?2:3;
+  var h='<div style="max-width:720px;margin:16px auto 0;padding:10px 14px;background:rgba(88,166,255,.06);border:1px solid #21262d;border-left:3px solid #58a6ff;border-radius:8px;font-size:11px;line-height:1.8;color:#8b949e">';
+  if(seg===1){
+    h+='<strong style="color:#c9d1d9">Segment 1 - Week '+weekNum+' · H2H + Points</strong><br>';
+    h+='• More correct picks = H2H win<br>';
+    h+='• H2H win = <strong style="color:#3fb950">+6 bonus points</strong><br>';
+    h+='• H2H tie = <strong style="color:#d29922">+3 points each</strong>';
+  } else if(seg===2){
+    h+='<strong style="color:#c9d1d9">Segment 2 - Week '+weekNum+' · H2H + Weighted</strong><br>';
+    h+='• More weighted points = H2H win<br>';
+    h+='• H2H win = <strong style="color:#3fb950">+10 bonus points</strong><br>';
+    h+='• H2H tie = <strong style="color:#d29922">+5 points each</strong>';
+  } else {
+    h+='<strong style="color:#c9d1d9">Segment 3 - Week '+weekNum+' · Divisions</strong><br>';
+    h+='• More correct picks = H2H win<br>';
+    h+='• H2H win = <strong style="color:#3fb950">+1 win</strong> to divisional record<br>';
+    h+='• H2H tie = <strong style="color:#d29922">+.5 W / .5 L each</strong>';
+  }
+  h+='</div>';
+  el.innerHTML=h;
+}
+
 function sw(i){var a=document.querySelectorAll('[id^="wk"]');for(var x=0;x<a.length;x++){if(a[x].id.indexOf('wk')===0&&a[x].id.length<=4)a[x].style.display='none';}document.getElementById('wk'+i).style.display='block';}
 function pickWk(i){
   sw(i);
   var s=window._sched;
-  if(s)document.getElementById('wkSeg').textContent=s[i].seg;
+  if(s){
+    document.getElementById('wkSeg').textContent=s[i].seg;
+    updateScoresBlurb(s[i].wk);
+  }
   var btns=document.querySelectorAll('#sbStrip .nfl-wk');
   for(var x=0;x<btns.length;x++){btns[x].className=btns[x].getAttribute('data-sb')==String(i)?'nfl-wk active':'nfl-wk';}
   var strip=document.getElementById('sbStrip');
@@ -979,11 +988,19 @@ for (var w=1;w<=18;w++){
 var nflWeek = currentWeek || 1;
 
 // Segment blurbs
-var NFL_BLURBS = {
-  1:'<div class="seg-label">Segment 1 · Weeks 1–6 · H2H + Points</div><div style="margin-top:6px">• Pick every game against the spread<br>• Each correct pick = <b>1 point</b><br>• H2H win = <b>6 bonus points</b> · tie = 3 each<br>• Max <b>22 pts/week</b></div>',
-  2:'<div class="seg-label">Segment 2 · Weeks 7–12 · H2H + Weighted</div><div style="margin-top:6px">• Choose <b>8 games</b> against the spread<br>• Rank confidence <b>8</b> (most) down to <b>1</b> (least)<br>• Correct picks earn their weighted value<br>• H2H win = <b>10 bonus points</b> · tie = 5 each<br>• Max <b>46 pts/week</b></div>',
-  3:'<div class="seg-label">Segment 3 · Weeks 13–18 · Divisions</div><div style="margin-top:6px">• Pick every game against the spread<br>• Most correct picks <b>wins the H2H matchup</b><br>• Divisional round-robin — face each opponent <b>twice</b><br>• Standings by <b>win-loss record</b></div>'
-};
+var NFL_BLURBS = {};
+function getNflBlurb(wk){
+  var seg=wk<=6?1:wk<=12?2:3;
+  var h='<div class="seg-label">Segment '+seg+' - Week '+wk+' · ';
+  if(seg===1){
+    h+='H2H + Points</div><div style="margin-top:6px">• Pick every game against the spread<br>• Each correct pick = <b>1 point</b><br>• H2H win = <b>6 bonus points</b> · tie = 3 each<br>• Max <b>22 pts/week</b></div>';
+  } else if(seg===2){
+    h+='H2H + Weighted</div><div style="margin-top:6px">• Choose <b>8 games</b> against the spread<br>• Rank confidence <b>8</b> (most) down to <b>1</b> (least)<br>• Correct picks earn their weighted value<br>• H2H win = <b>10 bonus points</b> · tie = 5 each<br>• Max <b>46 pts/week</b></div>';
+  } else {
+    h+='Divisions</div><div style="margin-top:6px">• Pick every game against the spread<br>• Most correct picks <b>wins the H2H matchup</b><br>• Divisional round-robin — face each opponent <b>twice</b><br>• Standings by <b>win-loss record</b></div>';
+  }
+  return h;
+}
 
 function nflBuildStrip(){
   var h='';
@@ -1009,8 +1026,7 @@ function nflRender(wk){
   nflScrollToWeek(wk);
 
   // Blurb
-  var seg=wk<=6?1:wk<=12?2:3;
-  document.getElementById('nflBlurb').innerHTML=NFL_BLURBS[seg];
+  document.getElementById('nflBlurb').innerHTML=getNflBlurb(wk);
 
   // Byes
   var byes=[];
