@@ -842,7 +842,9 @@ function renderSched(){
       var players = (pw[s.wk] || []).slice();
       players.sort(function(a,b){return b.pts - a.pts;});
       
-      if(currentWeek < s.wk){
+      // Week 19 shows at cw>=19, weeks 20-22 all show once cw>=20
+      var showThreshold = s.wk <= 19 ? 19 : 20;
+      if(currentWeek < showThreshold){
         o+='<div style="padding:30px;color:#484f58;text-align:center;font-size:13px;">No scores yet for this playoff week.</div>';
       } else {
         o+='<div class="mu-grid">';
