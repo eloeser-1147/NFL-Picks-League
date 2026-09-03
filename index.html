@@ -125,6 +125,18 @@ tr:last-child td{border-bottom:none}
 .champ-title{font-size:12px;text-transform:uppercase;letter-spacing:3px;color:#3fb950;font-weight:700;margin-bottom:6px}
 .champ-name{font-size:32px;font-weight:900;color:#e6edf3;margin-bottom:4px}
 .champ-earn{font-size:22px;font-weight:800;color:#3fb950;margin-bottom:24px}
+.champ-podium{display:flex;align-items:flex-end;justify-content:center;gap:16px;margin-bottom:28px}
+.champ-pod{text-align:center;flex:1;max-width:130px}
+.champ-pod-place{font-size:11px;color:#8b949e;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
+.champ-pod-name{font-weight:800;color:#e6edf3;margin-bottom:3px}
+.champ-pod-earn{font-weight:700;color:#3fb950}
+.champ-pod.first .champ-pod-name{font-size:24px;color:#fff}
+.champ-pod.first .champ-pod-earn{font-size:20px}
+.champ-pod.first .champ-pod-place{font-size:12px;color:#3fb950}
+.champ-pod.second .champ-pod-name{font-size:16px}
+.champ-pod.second .champ-pod-earn{font-size:14px}
+.champ-pod.third .champ-pod-name{font-size:16px}
+.champ-pod.third .champ-pod-earn{font-size:14px}
 .champ-others{border-top:1px solid #21262d;padding-top:16px;margin-top:4px}
 .champ-others-title{font-size:11px;color:#8b949e;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
 .champ-other-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px}
@@ -132,7 +144,7 @@ tr:last-child td{border-bottom:none}
 .champ-other-earn{color:#3fb950;font-weight:700}
 .confetti-piece{position:fixed;width:10px;height:10px;z-index:10000;pointer-events:none;animation:confetti-fall linear forwards}
 @keyframes confetti-fall{0%{opacity:1;transform:translateY(0) rotate(0deg)}100%{opacity:0;transform:translateY(100vh) rotate(720deg)}}
-@media(max-width:480px){.mu{padding:10px 12px}.mu-name{font-size:16px}.mu-sc{font-size:21px;padding:0 8px}.mu-meta{font-size:9px}.po-name{font-size:16px}.po-pts{font-size:22px}.champ-name{font-size:24px}.champ-earn{font-size:18px}.champ-popup{padding:28px 18px 20px}.nfl-wk.cur-wk{min-width:130px;font-size:13px}}
+@media(max-width:480px){.mu{padding:10px 12px}.mu-name{font-size:16px}.mu-sc{font-size:21px;padding:0 8px}.mu-meta{font-size:9px}.po-name{font-size:16px}.po-pts{font-size:22px}.champ-name{font-size:24px}.champ-earn{font-size:18px}.champ-popup{padding:28px 18px 20px}.nfl-wk.active{min-width:140px;font-size:13px}.champ-pod.first .champ-pod-name{font-size:20px}.champ-pod.second .champ-pod-name,.champ-pod.third .champ-pod-name{font-size:14px}.champ-podium{gap:10px}}
 @media(max-width:640px){.card-scroll{margin:0 -2px}.card-scroll::-webkit-scrollbar{height:4px}.card-scroll::-webkit-scrollbar-thumb{background:#30363d;border-radius:4px}.header h1{font-size:24px}.qg{grid-template-columns:1fr}td,th{padding:6px 8px;font-size:11px}.seg-tab{font-size:12px}.seg-tabs{gap:12px}}
 @media (max-width: 640px) {
   .wk-col { display: none !important; }
@@ -154,8 +166,8 @@ tr:last-child td{border-bottom:none}
 .nfl-week-strip::-webkit-scrollbar{display:none}
 .nfl-wk{padding:8px 0;min-width:52px;border:none;border-radius:8px;background:#161b22;color:#8b949e;font-size:12px;font-weight:700;font-family:'Inter',Arial,sans-serif;cursor:pointer;text-align:center;flex-shrink:0;transition:all .15s;border:1px solid #21262d}
 .nfl-wk:hover{color:#e6edf3;border-color:#30363d}
-.nfl-wk.active{background:linear-gradient(135deg,#58a6ff,#3fb950);color:#fff;border-color:transparent}
-.nfl-wk.cur-wk{min-width:156px;font-size:14px;font-weight:800}
+.nfl-wk.active{background:linear-gradient(135deg,#58a6ff,#3fb950);color:#fff;border-color:transparent;min-width:168px;font-size:14px;font-weight:800}
+.nfl-wk.active .wn{font-size:11px;font-weight:600;opacity:1}
 .nfl-wk .wn{display:block;font-size:10px;font-weight:500;opacity:.7;margin-top:1px}
 .nfl-blurb{max-width:720px;margin:0 auto 12px;padding:10px 14px;background:linear-gradient(135deg,rgba(88,166,255,.08),rgba(63,185,80,.06));border:1px solid #21262d;border-left:3px solid #58a6ff;border-radius:8px;font-size:12px;line-height:1.6;color:#c9d1d9}
 .nfl-blurb b{color:#58a6ff;font-weight:700}
@@ -846,31 +858,44 @@ function showChampPopup(){
   var h = '<div class="champ-popup">';
   h += '<button class="champ-close" onclick="closeChampPopup()">&times;</button>';
   
-  // Winner - "League Champion" above trophy
-  var winner = fs[0];
-  var winEarn = earnings[winner.name] ? earnings[winner.name].total : 0;
   h += '<div class="champ-title">League Champion</div>';
   h += '<div class="champ-crown">&#127942;</div>';
-  h += '<div class="champ-name">' + winner.name + '</div>';
-  h += '<div class="champ-earn">$' + winEarn + '</div>';
   
-  // 2nd and 3rd as rows (name left, earnings right)
-  h += '<div class="champ-others" style="margin-top:0;padding-top:20px">';
-  for(var i = 1; i <= 2; i++){
-    var p = fs[i];
-    var earn = earnings[p.name] ? earnings[p.name].total : 0;
-    var placeLabel = i === 1 ? '2nd' : '3rd';
-    h += '<div class="champ-other-row" style="padding:8px 0">';
-    h += '<span class="champ-other-name" style="font-size:15px;font-weight:800"><span style="color:#8b949e;font-size:11px;font-weight:600;margin-right:6px">' + placeLabel + '</span>' + p.name + '</span>';
-    h += '<span class="champ-other-earn" style="font-size:15px;font-weight:800">$' + earn + '</span>';
-    h += '</div>';
-  }
+  // Podium: 2nd (left) — 1st (center, tallest) — 3rd (right)
+  var p1 = fs[0], p2 = fs[1], p3 = fs[2];
+  var e1 = earnings[p1.name] ? earnings[p1.name].total : 0;
+  var e2 = earnings[p2.name] ? earnings[p2.name].total : 0;
+  var e3 = earnings[p3.name] ? earnings[p3.name].total : 0;
+  
+  h += '<div class="champ-podium">';
+  
+  // 2nd place (left, shorter)
+  h += '<div class="champ-pod second" style="margin-bottom:20px">';
+  h += '<div class="champ-pod-place">2nd</div>';
+  h += '<div class="champ-pod-name">' + p2.name + '</div>';
+  h += '<div class="champ-pod-earn">$' + e2 + '</div>';
+  h += '</div>';
+  
+  // 1st place (center, tallest)
+  h += '<div class="champ-pod first">';
+  h += '<div class="champ-pod-place">1st</div>';
+  h += '<div class="champ-pod-name">' + p1.name + '</div>';
+  h += '<div class="champ-pod-earn">$' + e1 + '</div>';
+  h += '</div>';
+  
+  // 3rd place (right, shorter)
+  h += '<div class="champ-pod third" style="margin-bottom:20px">';
+  h += '<div class="champ-pod-place">3rd</div>';
+  h += '<div class="champ-pod-name">' + p3.name + '</div>';
+  h += '<div class="champ-pod-earn">$' + e3 + '</div>';
+  h += '</div>';
+  
   h += '</div>';
   
   // All other earners
   var otherEarners = [];
   for(var name in earnings){
-    if(name === fs[0].name || name === fs[1].name || name === fs[2].name) continue;
+    if(name === p1.name || name === p2.name || name === p3.name) continue;
     var e = earnings[name];
     if(e.total > 0) otherEarners.push({name: name, total: e.total});
   }
@@ -954,13 +979,8 @@ function renderSched(){
   
   var o='<div class="nfl-week-strip" id="sbStrip">';
   for(var i=0;i<sched.length;i++){
-    var isCur = sched[i].wk === currentWeek;
-    var cls = 'nfl-wk' + (i===defaultIdx?' active':'') + (isCur?' cur-wk':'');
-    if(isCur){
-      o+='<button class="'+cls+'" onclick="pickWk('+i+')" data-sb="'+i+'">'+sched[i].wk+'<span class="wn">Week</span></button>';
-    } else {
-      o+='<button class="'+cls+'" onclick="pickWk('+i+')" data-sb="'+i+'">'+sched[i].wk+'<span class="wn">Wk</span></button>';
-    }
+    var isActive = i === defaultIdx;
+    o+='<button class="nfl-wk'+(isActive?' active':'')+'" onclick="pickWk('+i+')" data-sb="'+i+'">'+sched[i].wk+'<span class="wn">'+(isActive?'Week':'Wk')+'</span></button>';
   }
   o+='</div>';
   o+='<div class="wk-seg" id="wkSeg" style="text-align:center;font-size:11px;color:#8b949e;font-weight:600;padding:2px 0 12px">'+sched[defaultIdx].seg+'</div>';
@@ -1117,7 +1137,12 @@ function pickWk(i){
     updateScoresBlurb(s[i].wk);
   }
   var btns=document.querySelectorAll('#sbStrip .nfl-wk');
-  for(var x=0;x<btns.length;x++){btns[x].className=btns[x].getAttribute('data-sb')==String(i)?'nfl-wk active':'nfl-wk';}
+  for(var x=0;x<btns.length;x++){
+    var isActive = btns[x].getAttribute('data-sb')==String(i);
+    btns[x].className = isActive ? 'nfl-wk active' : 'nfl-wk';
+    var wnSpan = btns[x].querySelector('.wn');
+    if(wnSpan) wnSpan.textContent = isActive ? 'Week' : 'Wk';
+  }
   var strip=document.getElementById('sbStrip');
   var btn=strip&&strip.querySelector('[data-sb="'+i+'"]');
   if(btn)btn.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
@@ -1488,13 +1513,8 @@ function nflBuildStrip(){
   var maxWk = currentWeek > 18 ? Math.min(currentWeek, 22) : 18;
   var h='';
   for(var w=1;w<=maxWk;w++){
-    var isCur = w === Math.min(currentWeek, 22);
-    var cls = 'nfl-wk' + (w===nflWeek?' active':'') + (isCur?' cur-wk':'');
-    if(isCur){
-      h+='<button class="'+cls+'" onclick="nflRender('+w+')" data-wk="'+w+'">'+w+'<span class="wn">Week</span></button>';
-    } else {
-      h+='<button class="'+cls+'" onclick="nflRender('+w+')" data-wk="'+w+'">'+w+'<span class="wn">Wk</span></button>';
-    }
+    var isActive = w === nflWeek;
+    h+='<button class="nfl-wk'+(isActive?' active':'')+'" onclick="nflRender('+w+')" data-wk="'+w+'">'+w+'<span class="wn">'+(isActive?'Week':'Wk')+'</span></button>';
   }
   document.getElementById('nflStrip').innerHTML=h;
 }
@@ -1508,9 +1528,8 @@ function nflScrollToWeek(wk){
 function nflRender(wk){
   nflWeek=wk;
 
-  // Update strip active state
-  var btns=document.querySelectorAll('#nflStrip .nfl-wk');
-  for(var i=0;i<btns.length;i++){btns[i].className=btns[i].getAttribute('data-wk')==String(wk)?'nfl-wk active':'nfl-wk';}
+  // Rebuild strip so active button gets wide style + "Week" label
+  nflBuildStrip();
   nflScrollToWeek(wk);
 
   // Blurb
