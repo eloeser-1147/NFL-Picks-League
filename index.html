@@ -787,14 +787,23 @@ function render(){
   // Show playoff tab only when week >= 19
   var pt=document.getElementById('playoffDDItem');
   if(pt) pt.style.display = currentWeek >= 19 ? '' : 'none';
-  // Default standings to Playoffs tab when in playoff weeks
+  // Default standings tab to the current segment
+  var defaultPanel, defaultLabel;
+  if(currentWeek >= 19){ defaultPanel='poststand'; defaultLabel='Playoffs'; }
+  else if(currentWeek >= 13){ defaultPanel='s3'; defaultLabel='Segment 3'; }
+  else if(currentWeek >= 7){ defaultPanel='s2'; defaultLabel='Segment 2'; }
+  else { defaultPanel='s1'; defaultLabel='Segment 1'; }
+  
+  var panels = document.querySelectorAll('#standings .seg-panel');
+  for(var i=0;i<panels.length;i++) panels[i].className='seg-panel';
+  document.getElementById(defaultPanel).className='seg-panel active';
+  document.getElementById('standDDLabel').textContent=defaultLabel;
+  var items = document.querySelectorAll('#standDDMenu .rule-dd-item');
+  for(var i=0;i<items.length;i++){
+    items[i].className = items[i].textContent===defaultLabel ? 'rule-dd-item active' : 'rule-dd-item';
+  }
+  
   if(currentWeek >= 19){
-    var panels = document.querySelectorAll('#standings .seg-panel');
-    for(var i=0;i<panels.length;i++) panels[i].className='seg-panel';
-    document.getElementById('poststand').className='seg-panel active';
-    document.getElementById('standDDLabel').textContent='Playoffs';
-    var items = document.querySelectorAll('#standDDMenu .rule-dd-item');
-    for(var i=0;i<items.length;i++) items[i].className='rule-dd-item';
     if(pt) pt.className='rule-dd-item active';
     // Default to Round 2 sub-tab when week 20+
     if(currentWeek >= 20){
