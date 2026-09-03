@@ -642,19 +642,25 @@ function updateScoresBlurb(weekNum){
   var el=document.getElementById('scoresBlurb');
   if(!el)return;
   var seg=weekNum<=6?1:weekNum<=12?2:3;
-  var h='<div style="max-width:720px;margin:16px auto 0;padding:10px 14px;background:rgba(88,166,255,.06);border:1px solid #21262d;border-left:3px solid #58a6ff;border-radius:8px;font-size:11px;line-height:1.8;color:#8b949e">';
+  var segColor=seg===1?'#58a6ff':seg===2?'#bc8cff':'#d29922';
+  var bgColor=seg===1?'rgba(88,166,255,.1)':seg===2?'rgba(188,140,255,.1)':'rgba(210,153,34,.1)';
+  var borderColor=seg===1?'#58a6ff':seg===2?'#bc8cff':'#d29922';
+  var h='<div style="max-width:720px;margin:16px auto 0;padding:12px 16px;background:'+bgColor+';border:1px solid rgba(255,255,255,.08);border-left:3px solid '+borderColor+';border-radius:8px;font-size:12px;line-height:1.8;color:#c9d1d9">';
   if(seg===1){
-    h+='<strong style="color:#c9d1d9">Segment 1 - Week '+weekNum+' · H2H + Points</strong><br>';
+    h+='<div style="font-size:14px;font-weight:800;color:'+segColor+'">Segment 1 - Week '+weekNum+'</div>';
+    h+='<div style="font-size:10px;color:#8b949e;font-weight:600;margin-bottom:5px">H2H + Points</div>';
     h+='• More correct picks = H2H win<br>';
     h+='• H2H win = <strong style="color:#3fb950">+6 bonus points</strong><br>';
     h+='• H2H tie = <strong style="color:#d29922">+3 points each</strong>';
   } else if(seg===2){
-    h+='<strong style="color:#c9d1d9">Segment 2 - Week '+weekNum+' · H2H + Weighted</strong><br>';
+    h+='<div style="font-size:14px;font-weight:800;color:'+segColor+'">Segment 2 - Week '+weekNum+'</div>';
+    h+='<div style="font-size:10px;color:#8b949e;font-weight:600;margin-bottom:5px">H2H + Weighted Confidence</div>';
     h+='• More weighted points = H2H win<br>';
     h+='• H2H win = <strong style="color:#3fb950">+10 bonus points</strong><br>';
     h+='• H2H tie = <strong style="color:#d29922">+5 points each</strong>';
   } else {
-    h+='<strong style="color:#c9d1d9">Segment 3 - Week '+weekNum+' · Divisions</strong><br>';
+    h+='<div style="font-size:14px;font-weight:800;color:'+segColor+'">Segment 3 - Week '+weekNum+'</div>';
+    h+='<div style="font-size:10px;color:#8b949e;font-weight:600;margin-bottom:5px">Divisional Round-Robin</div>';
     h+='• More correct picks = H2H win<br>';
     h+='• H2H win = <strong style="color:#3fb950">+1 win</strong> to divisional record<br>';
     h+='• H2H tie = <strong style="color:#d29922">+.5 W / .5 L each</strong>';
@@ -748,7 +754,7 @@ function renderS3(){
 }
 function renderAll(){
   var s=P.slice().sort(function(a,b){return(b.t1+b.t2+b.p3)-(a.t1+a.t2+a.p3);});
-  var o='<div class="card"><h2 class="hdr4">Overall Season Standings</h2><div class="card-scroll"><table><tr><th>#</th><th style="text-align:left">Player</th><th>Seg 1</th><th>Seg 2</th><th>Seg 3</th><th>Picks</th></tr>';
+  var o='<div class="card"><div class="card-scroll"><table><tr><th>#</th><th style="text-align:left">Player</th><th>Seg 1</th><th>Seg 2</th><th>Seg 3</th><th>Picks</th></tr>';
   for(var i=0;i<s.length;i++){
     var rp1t=s[i].rp1Total||0,rp2t=s[i].rp2Total||0,rp3=s[i].p3;
     var t=rp1t+rp2t+rp3;
@@ -991,13 +997,17 @@ var nflWeek = currentWeek || 1;
 var NFL_BLURBS = {};
 function getNflBlurb(wk){
   var seg=wk<=6?1:wk<=12?2:3;
-  var h='<div class="seg-label">Segment '+seg+' - Week '+wk+' · ';
+  var segColor=seg===1?'#58a6ff':seg===2?'#bc8cff':'#d29922';
+  var h='<div style="font-size:15px;font-weight:800;color:'+segColor+'">Segment '+seg+' - Week '+wk+'</div>';
   if(seg===1){
-    h+='H2H + Points</div><div style="margin-top:6px">• Pick every game against the spread<br>• Each correct pick = <b>1 point</b><br>• H2H win = <b>6 bonus points</b> · tie = 3 each<br>• Max <b>22 pts/week</b></div>';
+    h+='<div style="font-size:11px;color:#8b949e;font-weight:600;margin-bottom:6px">H2H + Points</div>';
+    h+='• Pick every game against the spread<br>• Each correct pick = <b>1 point</b><br>• H2H win = <b>6 bonus points</b> · tie = 3 each<br>• Max <b>22 pts/week</b>';
   } else if(seg===2){
-    h+='H2H + Weighted</div><div style="margin-top:6px">• Choose <b>8 games</b> against the spread<br>• Rank confidence <b>8</b> (most) down to <b>1</b> (least)<br>• Correct picks earn their weighted value<br>• H2H win = <b>10 bonus points</b> · tie = 5 each<br>• Max <b>46 pts/week</b></div>';
+    h+='<div style="font-size:11px;color:#8b949e;font-weight:600;margin-bottom:6px">H2H + Weighted Confidence</div>';
+    h+='• Choose <b>8 games</b> against the spread<br>• Rank confidence <b>8</b> (most) down to <b>1</b> (least)<br>• Correct picks earn their weighted value<br>• H2H win = <b>10 bonus points</b> · tie = 5 each<br>• Max <b>46 pts/week</b>';
   } else {
-    h+='Divisions</div><div style="margin-top:6px">• Pick every game against the spread<br>• Most correct picks <b>wins the H2H matchup</b><br>• Divisional round-robin — face each opponent <b>twice</b><br>• Standings by <b>win-loss record</b></div>';
+    h+='<div style="font-size:11px;color:#8b949e;font-weight:600;margin-bottom:6px">Divisional Round-Robin</div>';
+    h+='• Pick every game against the spread<br>• Most correct picks <b>wins the H2H matchup</b><br>• Divisional round-robin — face each opponent <b>twice</b><br>• Standings by <b>win-loss record</b>';
   }
   return h;
 }
@@ -1078,7 +1088,7 @@ function showPlayerSched(playerNum, el) {
   for(var x=0;x<items.length;x++) items[x].className='rule-dd-item';
   if(el) el.className='rule-dd-item active';
   
-  var o = '<div class="card"><h2 class="hdr6">'+player.name+' — Full Schedule</h2>';
+  var o = '<div class="card">';
   o += '<div class="card-scroll"><table class="ps-table">';
   o += '<tr><th>Week</th><th>Segment</th><th style="text-align:left">Opponent</th><th>My Picks</th><th>Opp Picks</th><th>Result</th></tr>';
   
