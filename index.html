@@ -753,12 +753,9 @@ function renderSched(){
       // Playoff week: render individual player cards sorted by score
       var pw = window._playoffWeeks || {};
       var players = (pw[s.wk] || []).slice();
-      // Only show player cards if at least one player has scored
-      var hasScores = false;
-      for(var k=0;k<players.length;k++){if(players[k].pts>0){hasScores=true;break;}}
       players.sort(function(a,b){return b.pts - a.pts;});
       
-      if(!hasScores){
+      if(currentWeek < s.wk){
         o+='<div style="padding:30px;color:#484f58;text-align:center;font-size:13px;">No scores yet for this playoff week.</div>';
       } else {
         o+='<div class="mu-grid">';
