@@ -1007,7 +1007,7 @@ function renderS3(){
 }
 function renderAll(){
   var cw=currentWeek;
-  // Build set of auto-qualified player numbers
+  // Build set of auto-qualified player numbers (seg winners + div winners only — NOT wild card winners)
   var qualSet=new Set();
   var s1s=P.slice().sort(function(a,b){return b.t1-a.t1;});
   var s2s=P.slice().sort(function(a,b){return b.t2-a.t2;});
@@ -1016,12 +1016,16 @@ function renderAll(){
   if(cw>12){var q=s2s.find(function(p){return !qualSet.has(p.num);})||s2s[0];qualSet.add(q.num);}
   if(cw>=19){for(var i=0;i<4;i++){var ds=dv[i].slice().sort(function(a,b){return b.w3-a.w3||b.p3-a.p3;});var q=ds.find(function(p){return !qualSet.has(p.num);})||ds[0];qualSet.add(q.num);}}
 
+  // Filter out auto-qualifiers, keep everyone else including eventual WC winners
   var s=P.slice().filter(function(p){return !qualSet.has(p.num);}).sort(function(a,b){return(b.t1+b.t2+b.p3)-(a.t1+a.t2+a.p3);});
+  var wcDone = cw >= 19; // week 18 complete, WC winners are locked in
   var o='<div class="card"><div class="card-scroll"><table><tr><th>#</th><th style="text-align:left">Player</th><th>Seg 1</th><th>Seg 2</th><th>Seg 3</th><th>Total</th></tr>';
   for(var i=0;i<s.length;i++){
     var rp1t=s[i].rp1Total||0,rp2t=s[i].rp2Total||0,rp3=s[i].p3;
     var t=rp1t+rp2t+rp3;
-    o+='<tr><td class="'+rc(i)+'">'+(i+1)+'</td><td class="nm">'+s[i].name+'</td><td class="wk">'+rp1t+'</td><td class="wk">'+rp2t+'</td><td class="wk">'+rp3+'</td><td class="tot">'+t+'</td></tr>';}
+    var isWC = wcDone && i < 2;
+    var nameStyle = isWC ? 'color:#3fb950;' : '';
+    o+='<tr><td class="'+rc(i)+'">'+(i+1)+'</td><td class="nm" style="'+nameStyle+'">'+s[i].name+'</td><td class="wk">'+rp1t+'</td><td class="wk">'+rp2t+'</td><td class="wk">'+rp3+'</td><td class="tot">'+t+'</td></tr>';}
   o+='</table></div></div>';document.getElementById('all').innerHTML=o;
 }
 function renderPS() {
