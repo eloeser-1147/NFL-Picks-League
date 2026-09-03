@@ -119,6 +119,12 @@ tr:last-child td{border-bottom:none}
 .po-pts.top{color:#3fb950}.po-pts.mid{color:#e6edf3}.po-pts.low{color:#8b949e}
 .champ-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,.85);z-index:9999;display:flex;align-items:center;justify-content:center;overflow-y:auto;padding:20px;box-sizing:border-box}
 .champ-popup{position:relative;background:#0d1117;border:2px solid #3fb950;border-radius:16px;max-width:440px;width:100%;padding:36px 28px 28px;text-align:center;box-shadow:0 0 60px rgba(63,185,80,.25)}
+.pools-popup{border-color:#58a6ff;box-shadow:0 0 60px rgba(88,166,255,.25)}
+.pool-btn{display:block;width:100%;padding:14px 20px;margin-bottom:10px;background:linear-gradient(135deg,#161b22,#1c2333);border:1px solid #30363d;border-radius:10px;color:#e6edf3;font-family:'Inter',Arial,sans-serif;font-size:14px;font-weight:700;cursor:pointer;text-decoration:none;text-align:left;transition:all .15s}
+.pool-btn:hover{border-color:#58a6ff;background:linear-gradient(135deg,#161b22,#1a2744)}
+.pool-btn span{display:block;font-size:11px;color:#8b949e;font-weight:500;margin-top:2px}
+.pool-info-btn{display:block;width:100%;padding:14px 20px;margin-bottom:10px;background:#161b22;border:1px solid #30363d;border-radius:10px;color:#e6edf3;font-family:'Inter',Arial,sans-serif;font-size:14px;font-weight:700;cursor:pointer;text-decoration:none;transition:all .15s}
+.pool-info-btn:hover{border-color:#58a6ff;background:#1c2333}
 .champ-close{position:absolute;top:12px;right:16px;background:none;border:none;color:#8b949e;font-size:22px;cursor:pointer;padding:4px 8px;line-height:1}
 .champ-close:hover{color:#e6edf3}
 .champ-crown{font-size:48px;margin-bottom:4px}
@@ -170,7 +176,7 @@ tr:last-child td{border-bottom:none}
 .nfl-week-strip{display:flex;gap:6px;overflow-x:auto;padding:0 0 8px;max-width:none;margin:0 auto;scrollbar-width:none;-ms-overflow-style:none;scroll-snap-type:x mandatory}
 .nfl-week-strip::-webkit-scrollbar{display:none}
 .nfl-week-spacer{flex-shrink:0;width:calc(50% - 26px)}
-.nfl-wk{padding:8px 0;min-width:52px;border:none;border-radius:8px;background:#161b22;color:#8b949e;font-size:12px;font-weight:700;font-family:'Inter',Arial,sans-serif;cursor:pointer;text-align:center;flex-shrink:0;transition:transform .15s ease,opacity .15s ease;border:1px solid #21262d;transform-origin:center center;scroll-snap-align:center;scroll-snap-stop:always}
+.nfl-wk{padding:8px 0;min-width:52px;border:none;border-radius:8px;background:#161b22;color:#8b949e;font-size:12px;font-weight:700;font-family:'Inter',Arial,sans-serif;cursor:pointer;text-align:center;flex-shrink:0;transition:transform .15s ease,opacity .15s ease;border:1px solid #21262d;transform-origin:center center;scroll-snap-align:center}
 .nfl-wk:hover{color:#e6edf3;border-color:#30363d}
 .nfl-wk.active{background:linear-gradient(135deg,#58a6ff,#3fb950);color:#fff;border-color:transparent;min-width:130px;font-size:14px;font-weight:800}
 .nfl-wk.active .wn{font-size:11px;font-weight:600;opacity:1}
@@ -242,6 +248,16 @@ tr:last-child td{border-bottom:none}
   <div class="seg-tabs" style="margin-bottom:16px">
     <div class="seg-tab active" onclick="showInfo('infoUpdates',this)">Updates</div>
     <div class="seg-tab" onclick="showInfo('infoRules',this)">Rules</div>
+    <div class="seg-tab" onclick="showInfo('infoPools',this)">Pools</div>
+  </div>
+  <div id="infoPools" style="display:none">
+    <div class="card" style="padding:20px">
+      <div style="font-size:16px;font-weight:800;color:#e6edf3;margin-bottom:4px;text-align:center">Join the Pools</div>
+      <div style="font-size:12px;color:#8b949e;text-align:center;margin-bottom:16px">Click below to join each segment's CBS Sports pool</div>
+      <a class="pool-info-btn" href="https://picks.cbssports.com/football/pickem/pools/kbxw63b2ge3domzxhezds===/join?invited-by=ivxhi4tzhizdkmjqg44tenbr&via-medium=copy&ttag=FF26_cpy_invite_new_mt_opm&pool-join-key=doywcns2q0egt8fv00jw8zjzi3ip2u95&senderRole=m5a7nfa7gjekr7" target="_blank">Segment 1 — Weeks 1–6<span style="display:block;font-size:11px;color:#58a6ff;font-weight:500;margin-top:2px">H2H + Points</span></a>
+      <a class="pool-info-btn" href="https://picks.cbssports.com/football/pickem/pools/kbxw63b2ge3domzxhezta===/join?invited-by=ivxhi4tzhizdkmjqg44tenbx&via-medium=copy&ttag=FF26_cpy_invite_new_mt_opm&pool-join-key=k88oge8khziflykldnigh7pwbnpl9j40&senderRole=mta0nbaegaeor9" target="_blank">Segment 2 — Weeks 7–12<span style="display:block;font-size:11px;color:#bc8cff;font-weight:500;margin-top:2px">H2H + Weighted Confidence</span></a>
+      <a class="pool-info-btn" href="https://picks.cbssports.com/football/pickem/pools/kbxw63b2ge3domzxheztc===/join?invited-by=ivxhi4tzhizdkmjqg44tenby&via-medium=copy&ttag=FF26_cpy_invite_new_mt_opm&pool-join-key=ji1080lpufhluk8o2orziah12qcitcze&senderRole=mfaxniawgeewrr" target="_blank">Segment 3 — Weeks 13–18<span style="display:block;font-size:11px;color:#d29922;font-weight:500;margin-top:2px">Divisional Round-Robin</span></a>
+    </div>
   </div>
   <div id="infoRules" style="display:none">
 
@@ -440,6 +456,7 @@ function tabTo(id, btn) {
 function showInfo(id, el) {
   document.getElementById('infoRules').style.display='none';
   document.getElementById('infoUpdates').style.display='none';
+  document.getElementById('infoPools').style.display='none';
   document.getElementById(id).style.display='block';
   var tabs=document.querySelectorAll('#info .seg-tab');
   for(var i=0;i<tabs.length;i++) tabs[i].className='seg-tab';
@@ -854,6 +871,34 @@ function render(){
   }
   // Show champion popup when season is over (week 23)
   if(currentWeek >= 23) showChampPopup();
+  // Show pools popup at week 0 (pre-season)
+  if(currentWeek === 0) showPoolsPopup();
+}
+
+function showPoolsPopup(){
+  var overlay = document.getElementById('champOverlay');
+  var h = '<div class="champ-popup pools-popup">';
+  h += '<button class="champ-close" onclick="closeChampPopup()">&times;</button>';
+  h += '<div style="font-size:36px;margin-bottom:4px">&#127944;</div>';
+  h += '<div style="font-size:12px;text-transform:uppercase;letter-spacing:3px;color:#58a6ff;font-weight:700;margin-bottom:6px">NFL Picks League</div>';
+  h += '<div style="font-size:24px;font-weight:900;color:#e6edf3;margin-bottom:6px">Join the Pools</div>';
+  h += '<div style="font-size:12px;color:#8b949e;margin-bottom:20px">Sign up for each segment below to get started</div>';
+  
+  h += '<a class="pool-btn" href="https://picks.cbssports.com/football/pickem/pools/kbxw63b2ge3domzxhezds===/join?invited-by=ivxhi4tzhizdkmjqg44tenbr&via-medium=copy&ttag=FF26_cpy_invite_new_mt_opm&pool-join-key=doywcns2q0egt8fv00jw8zjzi3ip2u95&senderRole=m5a7nfa7gjekr7" target="_blank">';
+  h += '<span style="color:#58a6ff;font-size:10px;font-weight:600;display:block;margin-bottom:2px">SEGMENT 1</span>';
+  h += 'Weeks 1–6<span>H2H + Points</span></a>';
+  
+  h += '<a class="pool-btn" href="https://picks.cbssports.com/football/pickem/pools/kbxw63b2ge3domzxhezta===/join?invited-by=ivxhi4tzhizdkmjqg44tenbx&via-medium=copy&ttag=FF26_cpy_invite_new_mt_opm&pool-join-key=k88oge8khziflykldnigh7pwbnpl9j40&senderRole=mta0nbaegaeor9" target="_blank">';
+  h += '<span style="color:#bc8cff;font-size:10px;font-weight:600;display:block;margin-bottom:2px">SEGMENT 2</span>';
+  h += 'Weeks 7–12<span>H2H + Weighted Confidence</span></a>';
+  
+  h += '<a class="pool-btn" href="https://picks.cbssports.com/football/pickem/pools/kbxw63b2ge3domzxheztc===/join?invited-by=ivxhi4tzhizdkmjqg44tenby&via-medium=copy&ttag=FF26_cpy_invite_new_mt_opm&pool-join-key=ji1080lpufhluk8o2orziah12qcitcze&senderRole=mfaxniawgeewrr" target="_blank">';
+  h += '<span style="color:#d29922;font-size:10px;font-weight:600;display:block;margin-bottom:2px">SEGMENT 3</span>';
+  h += 'Weeks 13–18<span>Divisional Round-Robin</span></a>';
+  
+  h += '</div>';
+  overlay.innerHTML = h;
+  overlay.style.display = 'flex';
 }
 
 function showChampPopup(){
