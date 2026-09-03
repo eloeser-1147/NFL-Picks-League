@@ -190,18 +190,18 @@ tr:last-child td{border-bottom:none}
 
 <div class="panel" id="info">
   <div class="seg-tabs" style="margin-bottom:16px">
-    <div class="seg-tab active" onclick="showInfo('infoRules',this)">Rules</div>
-    <div class="seg-tab" onclick="showInfo('infoUpdates',this)">Updates</div>
+    <div class="seg-tab active" onclick="showInfo('infoUpdates',this)">Updates</div>
+    <div class="seg-tab" onclick="showInfo('infoRules',this)">Rules</div>
   </div>
-  <div id="infoRules">
+  <div id="infoRules" style="display:none">
 
   <div class="rule-dd-wrap" id="ruleDDWrap">
     <button class="rule-dd-btn" onclick="document.getElementById('ruleDDWrap').classList.toggle('open')">
-      <span id="ruleDDLabel">Select Set of Rules</span>
+      <span id="ruleDDLabel">Select Rules</span>
       <span class="rule-dd-arrow">&#9660;</span>
     </button>
     <div class="rule-dd-menu" id="ruleDDMenu">
-      <div class="rule-dd-item" onclick="showRule('rStandard',this)">Standard Rules</div>
+      <div class="rule-dd-item" onclick="showRule('rStandard',this)">House Rules</div>
       <div class="rule-dd-item" onclick="showRule('rSeg1',this)">Weeks 1–6</div>
       <div class="rule-dd-item" onclick="showRule('rSeg2',this)">Weeks 7–12</div>
       <div class="rule-dd-item" onclick="showRule('rSeg3',this)">Weeks 13–18</div>
@@ -328,7 +328,7 @@ tr:last-child td{border-bottom:none}
   </div>
 
   </div>
-<div id="infoUpdates" style="display:none">
+<div id="infoUpdates">
     <div class="card">
       <h2 class="hdr6">Updates</h2>
       <div style="padding:16px;font-size:13px;line-height:1.7;color:#8b949e;text-align:center;">
@@ -634,14 +634,23 @@ function renderSched(){
     o+='</div></div>';
   }
   // H2H bonus blurb at bottom
-  o+='<div style="max-width:720px;margin:16px auto 0;padding:10px 14px;background:rgba(88,166,255,.06);border:1px solid #21262d;border-left:3px solid #58a6ff;border-radius:8px;font-size:11px;line-height:1.6;color:#8b949e">';
+  o+='<div style="max-width:720px;margin:16px auto 0;padding:10px 14px;background:rgba(88,166,255,.06);border:1px solid #21262d;border-left:3px solid #58a6ff;border-radius:8px;font-size:11px;line-height:1.8;color:#8b949e">';
   var cw=currentWeek||1;
   if(cw<=6){
-    o+='<strong style="color:#c9d1d9">Segment 1 (Weeks 1–6):</strong> The player with more correct picks wins their H2H matchup and receives <strong style="color:#3fb950">6 bonus points</strong> added to their weekly total. A tie awards <strong style="color:#d29922">3 points</strong> to each player.';
+    o+='<strong style="color:#c9d1d9">Segment 1 · Weeks 1–6</strong><br>';
+    o+='• More correct picks = H2H win<br>';
+    o+='• H2H win = <strong style="color:#3fb950">+6 bonus points</strong><br>';
+    o+='• H2H tie = <strong style="color:#d29922">+3 points each</strong>';
   } else if(cw<=12){
-    o+='<strong style="color:#c9d1d9">Segment 2 (Weeks 7–12):</strong> The player with more weighted points wins their H2H matchup and receives <strong style="color:#3fb950">10 bonus points</strong> added to their weekly total. A tie awards <strong style="color:#d29922">5 points</strong> to each player.';
+    o+='<strong style="color:#c9d1d9">Segment 2 · Weeks 7–12</strong><br>';
+    o+='• More weighted points = H2H win<br>';
+    o+='• H2H win = <strong style="color:#3fb950">+10 bonus points</strong><br>';
+    o+='• H2H tie = <strong style="color:#d29922">+5 points each</strong>';
   } else {
-    o+='<strong style="color:#c9d1d9">Segment 3 (Weeks 13–18):</strong> The player with more correct picks wins the H2H matchup outright — <strong style="color:#3fb950">1 win</strong> is added to their divisional record. A tie awards <strong style="color:#d29922">.5 W / .5 L</strong> to each player.';
+    o+='<strong style="color:#c9d1d9">Segment 3 · Weeks 13–18</strong><br>';
+    o+='• More correct picks = H2H win<br>';
+    o+='• H2H win = <strong style="color:#3fb950">+1 win</strong> to divisional record<br>';
+    o+='• H2H tie = <strong style="color:#d29922">+.5 W / .5 L each</strong>';
   }
   o+='</div>';
   document.getElementById('sched').innerHTML=o;
@@ -971,9 +980,9 @@ var nflWeek = currentWeek || 1;
 
 // Segment blurbs
 var NFL_BLURBS = {
-  1:'<div class="seg-label">Segment 1 · Weeks 1–6 · H2H + Points</div>Pick every game against the spread. Each correct pick = <b>1 point</b>. Beat your H2H opponent for <b>6 bonus points</b> (tie = 3 each). Max <b>22 pts/week</b>.',
-  2:'<div class="seg-label">Segment 2 · Weeks 7–12 · H2H + Weighted</div>Choose <b>8 games</b> against the spread and rank them <b>8 (most confident) down to 1</b>. Correct picks earn their weighted value. H2H win = <b>10 bonus points</b> (tie = 5 each). Max <b>46 pts/week</b>.',
-  3:'<div class="seg-label">Segment 3 · Weeks 13–18 · Divisions</div>Pick every game against the spread. The player with <b>more correct picks wins the H2H matchup</b>. Divisional round-robin — face each division opponent <b>twice</b> over 6 weeks. Standings by <b>win-loss record</b>.'
+  1:'<div class="seg-label">Segment 1 · Weeks 1–6 · H2H + Points</div><div style="margin-top:6px">• Pick every game against the spread<br>• Each correct pick = <b>1 point</b><br>• H2H win = <b>6 bonus points</b> · tie = 3 each<br>• Max <b>22 pts/week</b></div>',
+  2:'<div class="seg-label">Segment 2 · Weeks 7–12 · H2H + Weighted</div><div style="margin-top:6px">• Choose <b>8 games</b> against the spread<br>• Rank confidence <b>8</b> (most) down to <b>1</b> (least)<br>• Correct picks earn their weighted value<br>• H2H win = <b>10 bonus points</b> · tie = 5 each<br>• Max <b>46 pts/week</b></div>',
+  3:'<div class="seg-label">Segment 3 · Weeks 13–18 · Divisions</div><div style="margin-top:6px">• Pick every game against the spread<br>• Most correct picks <b>wins the H2H matchup</b><br>• Divisional round-robin — face each opponent <b>twice</b><br>• Standings by <b>win-loss record</b></div>'
 };
 
 function nflBuildStrip(){
