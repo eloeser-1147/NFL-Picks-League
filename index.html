@@ -579,12 +579,11 @@ function readPlayoffPicture(wb) {
 }
 
 function readPlayoffs(wb) {
-  playoffData = {wc:{}, finals:{}};
+  playoffData = {wc:{}, finals:{}, finalStandings:[]};
   
   // Read Playoff Wild Card sheet
   var wc = wb.Sheets['Playoff Wild Card'];
   if (wc) {
-    // Input rows 5-12: col A=#, col B=Player name, col C=Weighted Pts
     for (var r = 4; r < 12; r++) {
       var name = '';
       var nameCell = wc[XLSX.utils.encode_cell({r:r, c:1})];
@@ -595,10 +594,9 @@ function readPlayoffs(wb) {
     }
   }
   
-  // Read Playoff Finals sheet
+  // Read Playoff Finals sheet — Round-by-Round Input (rows 6-9)
   var fin = wb.Sheets['Playoff Finals'];
   if (fin) {
-    // Input rows 6-9: col A=Player, col B=WC Pts, col D=Div Pts, col F=Champ Pts, col H=SB Pts, col I=Total
     for (var r = 5; r < 9; r++) {
       var nameCell = fin[XLSX.utils.encode_cell({r:r, c:0})];
       var name = nameCell ? String(nameCell.v || '') : '';
@@ -615,6 +613,28 @@ function readPlayoffs(wb) {
         sb: sbPts && typeof sbPts.v === 'number' ? sbPts.v : 0,
         total: total && typeof total.v === 'number' ? total.v : 0
       };
+    }
+    
+    // Read FINAL STANDINGS rows 13-16 — already sorted by the sheet with tiebreakers applied
+    for (var r = 12; r < 16; r++) {
+      var placeCell = fin[XLSX.utils.encode_cell({r:r, c:0})];
+      var nameCell = fin[XLSX.utils.encode_cell({r:r, c:1})];
+      var wcCell = fin[XLSX.utils.encode_cell({r:r, c:2})];
+      var divCell = fin[XLSX.utils.encode_cell({r:r, c:3})];
+      var champCell = fin[XLSX.utils.encode_cell({r:r, c:4})];
+      var sbCell = fin[XLSX.utils.encode_cell({r:r, c:5})];
+      var totCell = fin[XLSX.utils.encode_cell({r:r, c:6})];
+      var name = nameCell ? String(nameCell.v || '') : '';
+      if (name) {
+        playoffData.finalStandings.push({
+          name: name,
+          wc: wcCell && typeof wcCell.v === 'number' ? wcCell.v : 0,
+          div: divCell && typeof divCell.v === 'number' ? divCell.v : 0,
+          champ: champCell && typeof champCell.v === 'number' ? champCell.v : 0,
+          sb: sbCell && typeof sbCell.v === 'number' ? sbCell.v : 0,
+          total: totCell && typeof totCell.v === 'number' ? totCell.v : 0
+        });
+      }
     }
   }
 }
@@ -1133,9 +1153,8 @@ function renderPS() {
   // ---- ROUND 2 ----
   o+='<div id="psR2" style="display:none">';
   
-  var finalists=[];
-  for(var name in playoffData.finals){var f=playoffData.finals[name];finalists.push({name:name,wc:f.wc||playoffData.wc[name]||0,div:f.div||0,champ:f.champ||0,sb:f.sb||0,total:f.total||0});}
-  finalists.sort(function(a,b){return b.total-a.total;});
+  // Use the FINAL STANDINGS from the Excel sheet directly — already sorted with tiebreakers applied
+  var finalists = playoffData.finalStandings || [];
   
   o+='<div class="card">';
   o+='<div class="card-scroll"><table><tr><th>#</th><th style="text-align:left">Player</th><th>WC Pts</th><th>Div</th><th>Champ</th><th>SB</th><th>Total</th></tr>';
