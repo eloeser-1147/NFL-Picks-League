@@ -641,33 +641,43 @@ function readEarnings(wb) {
 }
 
 function readPlayoffWeeks(wb) {
-  var pw = wb.Sheets['Wk 19-22 Input'];
   window._playoffWeeks = {19:[], 20:[], 21:[], 22:[]};
-  if (!pw) return;
-  var ref = pw['!ref'];
-  if (!ref) return;
-  var range = XLSX.utils.decode_range(ref);
-  var curWeek = 0;
-  for (var r = range.s.r; r <= range.e.r; r++) {
-    var a = pw[XLSX.utils.encode_cell({r:r, c:0})];
-    if (!a) continue;
-    var av = String(a.v || '');
-    // Detect week header
-    if (av.indexOf('WEEK 19') >= 0) { curWeek = 19; continue; }
-    if (av.indexOf('WEEK 20') >= 0) { curWeek = 20; continue; }
-    if (av.indexOf('WEEK 21') >= 0) { curWeek = 21; continue; }
-    if (av.indexOf('WEEK 22') >= 0) { curWeek = 22; continue; }
-    // Skip header rows
-    if (av === '#' || av === 'Rank') continue;
-    // Player row: col A=#, col B=name, col C=points
-    if (curWeek > 0 && typeof a.v === 'number' && a.v >= 1 && a.v <= 8) {
-      var nameCell = pw[XLSX.utils.encode_cell({r:r, c:1})];
-      var ptsCell = pw[XLSX.utils.encode_cell({r:r, c:2})];
+  
+  // Week 19 = Wild Card: 8 players from Playoff Wild Card sheet, col B=name, col C=Weighted Pts (rows 5-12)
+  var wc = wb.Sheets['Playoff Wild Card'];
+  if (wc) {
+    for (var r = 4; r < 12; r++) {
+      var nameCell = wc[XLSX.utils.encode_cell({r:r, c:1})];
+      var ptsCell = wc[XLSX.utils.encode_cell({r:r, c:2})];
       var name = nameCell ? String(nameCell.v || '') : '';
       var pts = ptsCell && typeof ptsCell.v === 'number' ? ptsCell.v : 0;
-      if (name) {
-        window._playoffWeeks[curWeek].push({name: name, pts: pts});
-      }
+      if (name) window._playoffWeeks[19].push({name: name, pts: pts});
+    }
+  }
+  
+  // Weeks 20-22 = Finals: 4 players from Playoff Finals sheet
+  // Row layout: A=Player, B=WC Pts, C=Div Correct, D=Div Pts(×2), E=Champ Correct, F=Champ Pts(×4), G=SB Correct, H=SB Pts(×8), I=TOTAL
+  var fin = wb.Sheets['Playoff Finals'];
+  if (fin) {
+    for (var r = 5; r < 9; r++) {
+      var nameCell = fin[XLSX.utils.encode_cell({r:r, c:0})];
+      var name = nameCell ? String(nameCell.v || '') : '';
+      if (!name) continue;
+      
+      // Week 20 = Divisional: col D = Div Pts (×2)
+      var divCell = fin[XLSX.utils.encode_cell({r:r, c:3})];
+      var divPts = divCell && typeof divCell.v === 'number' ? divCell.v : 0;
+      window._playoffWeeks[20].push({name: name, pts: divPts});
+      
+      // Week 21 = Championship: col F = Champ Pts (×4)
+      var champCell = fin[XLSX.utils.encode_cell({r:r, c:5})];
+      var champPts = champCell && typeof champCell.v === 'number' ? champCell.v : 0;
+      window._playoffWeeks[21].push({name: name, pts: champPts});
+      
+      // Week 22 = Super Bowl: col H = SB Pts (×8)
+      var sbCell = fin[XLSX.utils.encode_cell({r:r, c:7})];
+      var sbPts = sbCell && typeof sbCell.v === 'number' ? sbCell.v : 0;
+      window._playoffWeeks[22].push({name: name, pts: sbPts});
     }
   }
 }
