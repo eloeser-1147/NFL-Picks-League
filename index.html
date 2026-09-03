@@ -469,6 +469,8 @@ function load() {
     // Read raw picks from input sheets
     readPicks(wb);
     readPlayoffs(wb);
+    readPlayoffPicture(wb);
+    readUpdates(wb);
     
     render();
     nflWeek = currentWeek;
@@ -517,6 +519,52 @@ function readPicks(wb) {
       }
     }
   }
+}
+
+function readUpdates(wb) {
+  var us = wb.Sheets['Updates'];
+  if (!us) return;
+  var updates = [];
+  for (var r = 6; r < 27; r++) {
+    var dateCell = us[XLSX.utils.encode_cell({r:r, c:0})];
+    var titleCell = us[XLSX.utils.encode_cell({r:r, c:1})];
+    var msgCell = us[XLSX.utils.encode_cell({r:r, c:2})];
+    var date = dateCell ? String(dateCell.v || '') : '';
+    var title = titleCell ? String(titleCell.v || '') : '';
+    var msg = msgCell ? String(msgCell.v || '') : '';
+    if (title || msg) updates.push({date:date, title:title, msg:msg});
+  }
+  window._updates = updates;
+}
+
+function readPlayoffPicture(wb) {
+  var pp = wb.Sheets['Playoff Picture'];
+  if (!pp) { window._ppQualifiers = []; return; }
+  var qualifiers = [];
+  // Rows 19-26 (0-indexed: 18-25): #, Player, Qualified Via
+  for (var r = 18; r < 26; r++) {
+    var numCell = pp[XLSX.utils.encode_cell({r:r, c:0})];
+    var nameCell = pp[XLSX.utils.encode_cell({r:r, c:1})];
+    var viaCell = pp[XLSX.utils.encode_cell({r:r, c:2})];
+    var name = nameCell ? String(nameCell.v || '') : '';
+    var via = viaCell ? String(viaCell.v || '') : '';
+    if (name) qualifiers.push({name:name, via:via});
+  }
+  window._ppQualifiers = qualifiers;
+  
+  // Also read auto-qualifier details (rows 5-10) for earnings
+  var autoQ = [];
+  for (var r = 4; r < 10; r++) {
+    var spotCell = pp[XLSX.utils.encode_cell({r:r, c:0})];
+    var nameCell = pp[XLSX.utils.encode_cell({r:r, c:1})];
+    var prizeCell = pp[XLSX.utils.encode_cell({r:r, c:2})];
+    var qualCell = pp[XLSX.utils.encode_cell({r:r, c:4})];
+    var name = qualCell ? String(qualCell.v || '') : '';
+    var prize = prizeCell ? String(prizeCell.v || '') : '';
+    var via = spotCell ? String(spotCell.v || '') : '';
+    if (name) autoQ.push({name:name, via:via, prize:prize});
+  }
+  window._ppAutoQ = autoQ;
 }
 
 function readPlayoffs(wb) {
@@ -574,10 +622,10 @@ function render(){
     }
   }
   renderSched();
-  renderS1();renderS2();renderS3();renderAll();renderPS();renderQualifiers();renderPlayerSched();
+  renderS1();renderS2();renderS3();renderAll();renderPS();renderQualifiers();renderPlayerSched();renderUpdates();
   // Show playoff tab only when week >= 18
   var pt=document.getElementById('playoffDDItem');
-  if(pt) pt.style.display = currentWeek >= 18 ? '' : 'none';
+  if(pt) pt.style.display = currentWeek >= 19 ? '' : 'none';
 }
 
 // ===== SCHEDULE =====
@@ -797,7 +845,7 @@ function renderAll(){
   var dv=[P.filter(function(x){return x.num<=4}),P.filter(function(x){return x.num>=5&&x.num<=8}),P.filter(function(x){return x.num>=9&&x.num<=12}),P.filter(function(x){return x.num>=13})];
   if(cw>6){var q=s1s[0];qualSet.add(q.num);}
   if(cw>12){var q=s2s.find(function(p){return !qualSet.has(p.num);})||s2s[0];qualSet.add(q.num);}
-  if(cw>18){for(var i=0;i<4;i++){var ds=dv[i].slice().sort(function(a,b){return b.w3-a.w3||b.p3-a.p3;});var q=ds.find(function(p){return !qualSet.has(p.num);})||ds[0];qualSet.add(q.num);}}
+  if(cw>=19){for(var i=0;i<4;i++){var ds=dv[i].slice().sort(function(a,b){return b.w3-a.w3||b.p3-a.p3;});var q=ds.find(function(p){return !qualSet.has(p.num);})||ds[0];qualSet.add(q.num);}}
 
   var s=P.slice().filter(function(p){return !qualSet.has(p.num);}).sort(function(a,b){return(b.t1+b.t2+b.p3)-(a.t1+a.t2+a.p3);});
   var o='<div class="card"><div class="card-scroll"><table><tr><th>#</th><th style="text-align:left">Player</th><th>Seg 1</th><th>Seg 2</th><th>Seg 3</th><th>Total</th></tr>';
@@ -820,7 +868,7 @@ function renderPS() {
   
   if (cw > 6) { var q=s1.find(function(p){return !qualSet.has(p.num);})||s1[0]; qualSet.add(q.num); qualified.push({name:q.name,num:q.num,via:'Weeks 1-6 Winner'}); }
   if (cw > 12) { var q=s2.find(function(p){return !qualSet.has(p.num);})||s2[0]; qualSet.add(q.num); qualified.push({name:q.name,num:q.num,via:'Weeks 7-12 Winner'}); }
-  if (cw > 18) {
+  if (cw >= 18) {
     for(var i=0;i<4;i++){var ds=dv[i].slice().sort(function(a,b){return b.w3-a.w3||b.p3-a.p3;});var q=ds.find(function(p){return !qualSet.has(p.num);})||ds[0];qualSet.add(q.num);qualified.push({name:q.name,num:q.num,via:dn[i]+' Winner'});}
     var os=P.slice().sort(function(a,b){return(b.t1+b.t2+b.p3)-(a.t1+a.t2+a.p3);});
     var wcs=os.filter(function(p){return !qualSet.has(p.num);}).slice(0,2);
@@ -838,7 +886,7 @@ function renderPS() {
   o+='<div class="card">';
   o+='<div class="card-scroll"><table><tr><th>#</th><th style="text-align:left">Player</th><th>Qualified Via</th><th>WC Pts</th></tr>';
   
-  if(qualified.length < 8){
+  if(cw < 19 || qualified.length < 8){
     o+='<tr><td colspan="4" style="padding:30px;color:#484f58;text-align:center;font-size:13px;">All 8 qualifiers must be determined before the Wild Card Round begins.<br>Qualifiers populate as segments are completed.</td></tr>';
   } else {
     var r1=qualified.map(function(q){var wc=playoffData.wc[q.name]||0;return{name:q.name,via:q.via,pts:wc};});
@@ -870,7 +918,7 @@ function renderPS() {
   o+='<div class="card-scroll"><table><tr><th>#</th><th style="text-align:left">Player</th><th>WC Pts</th><th>Div</th><th>Champ</th><th>SB</th><th>Total</th></tr>';
   
   if(finalists.length===0){
-    o+='<tr><td colspan="7" style="padding:30px;color:#484f58;text-align:center;font-size:13px;">Round 2 has not begun.<br>The top 4 qualifiers from Round 1 will advance here once the Wild Card Round is complete.</td></tr>';
+    o+='<tr><td colspan="7" style="padding:30px;color:#484f58;text-align:center;font-size:13px;">No players have qualified for Round 2.<br>The top 4 qualifiers from Round 1 will advance here once the Wild Card Round is complete.</td></tr>';
   } else {
     for(var i=0;i<finalists.length;i++){
       var f=finalists[i];
@@ -895,54 +943,36 @@ function renderPS() {
 
 function renderQualifiers() {
   var cw = currentWeek;
-  var s1 = P.slice().sort(function(a,b){return b.t1-a.t1;});
-  var s2 = P.slice().sort(function(a,b){return b.t2-a.t2;});
-  var dv = [P.filter(function(x){return x.num<=4}),P.filter(function(x){return x.num>=5&&x.num<=8}),P.filter(function(x){return x.num>=9&&x.num<=12}),P.filter(function(x){return x.num>=13})];
-  var dn = ['Div A','Div B','Div C','Div D'];
-  var qualSet = new Set();
-  var qualified = [];
-  
-  if(cw>6){var q=s1.find(function(p){return !qualSet.has(p.num);})||s1[0];qualSet.add(q.num);qualified.push({name:q.name,via:'Weeks 1-6 Winner',amount:25,color:'#58a6ff'});}
-  if(cw>12){var q=s2.find(function(p){return !qualSet.has(p.num);})||s2[0];qualSet.add(q.num);qualified.push({name:q.name,via:'Weeks 7-12 Winner',amount:25,color:'#bc8cff'});}
-  if(cw>18){
-    for(var i=0;i<4;i++){var ds=dv[i].slice().sort(function(a,b){return b.w3-a.w3||b.p3-a.p3;});var q=ds.find(function(p){return !qualSet.has(p.num);})||ds[0];qualSet.add(q.num);qualified.push({name:q.name,via:dn[i]+' Winner',amount:10,color:'#d29922'});}
-    var os=P.slice().sort(function(a,b){return(b.t1+b.t2+b.p3)-(a.t1+a.t2+a.p3);});
-    var wcs=os.filter(function(p){return !qualSet.has(p.num);}).slice(0,2);
-    wcs.forEach(function(p){qualSet.add(p.num);qualified.push({name:p.name,via:'Wild Card',amount:0,color:'#8b949e'});});
-  }
-  
-  // Playoff payouts
-  var finalists=[];
-  for(var n in playoffData.finals){var f=playoffData.finals[n];if(f.total>0)finalists.push({name:n,total:f.total});}
-  finalists.sort(function(a,b){return b.total-a.total;});
-  var payouts=[200,75,35];
+  var qualifiers = window._ppQualifiers || [];
   
   var o='<div class="card">';
   o+='<div style="padding:12px 16px;background:linear-gradient(135deg,#1a3a5c,#1a4a1e);border-radius:8px 8px 0 0;text-align:center"><div style="font-size:14px;font-weight:800;color:#e6edf3">Playoff Qualifiers</div></div>';
   
-  if(qualified.length===0){
+  if(cw < 19 || qualifiers.length === 0){
     o+='<div style="padding:30px;color:#484f58;text-align:center;font-size:13px;">No qualifiers yet. Players qualify as segments complete.</div>';
   } else {
     o+='<div class="card-scroll"><table><tr><th style="text-align:left">Player</th><th>Qualified Via</th><th style="text-align:right">Earnings</th></tr>';
-    // Build earnings map
-    var earnMap={};
-    for(var i=0;i<qualified.length;i++){
-      var q=qualified[i];
-      if(!earnMap[q.name])earnMap[q.name]={total:0};
-      earnMap[q.name].total+=q.amount;
-    }
-    for(var i=0;i<Math.min(finalists.length,3);i++){
-      if(!earnMap[finalists[i].name])earnMap[finalists[i].name]={total:0};
-      earnMap[finalists[i].name].total+=payouts[i];
+    
+    var autoQ = window._ppAutoQ || [];
+    var earnMap = {};
+    for(var i=0;i<autoQ.length;i++){
+      var q=autoQ[i];
+      var amt=0;
+      if(q.prize) { var m=q.prize.match(/\$(\d+)/); if(m) amt=parseInt(m[1]); }
+      if(!earnMap[q.name]) earnMap[q.name]=0;
+      earnMap[q.name]+=amt;
     }
     
-    for(var i=0;i<qualified.length;i++){
-      var q=qualified[i];
-      var totalEarn=earnMap[q.name]?earnMap[q.name].total:0;
+    var colorMap={'Weeks 1-6':'#58a6ff','Weeks 7-12':'#bc8cff','Div A':'#d29922','Div B':'#d29922','Div C':'#d29922','Div D':'#d29922','Wild Card 1':'#8b949e','Wild Card 2':'#8b949e'};
+    
+    for(var i=0;i<qualifiers.length;i++){
+      var q=qualifiers[i];
+      var color=colorMap[q.via]||'#8b949e';
+      var earn=earnMap[q.name]||0;
       o+='<tr>';
       o+='<td class="nm">'+q.name+'</td>';
-      o+='<td style="font-size:11px;font-weight:600;color:'+q.color+'">'+q.via+'</td>';
-      o+='<td class="tot" style="text-align:right;color:#3fb950">'+(totalEarn>0?'$'+totalEarn:'—')+'</td></tr>';
+      o+='<td style="font-size:11px;font-weight:600;color:'+color+'">'+q.via+'</td>';
+      o+='<td class="tot" style="text-align:right;color:#3fb950">'+(earn>0?'$'+earn:'—')+'</td></tr>';
     }
     o+='</table></div>';
   }
@@ -1188,6 +1218,28 @@ function showPlayerSched(playerNum, el) {
   
   o += '</table></div></div>';
   document.getElementById('playerSchedTable').innerHTML = o;
+}
+
+function renderUpdates() {
+  var updates = window._updates || [];
+  var el = document.getElementById('infoUpdates');
+  if (!el) return;
+  
+  if (updates.length === 0) {
+    el.innerHTML = '<div class="card"><div style="padding:16px;font-size:13px;line-height:1.7;color:#8b949e;text-align:center;"><p style="font-size:15px;margin-bottom:8px;">No updates at this time.</p><p>Check back weekly for standings updates, rule clarifications, and league news.</p></div></div>';
+    return;
+  }
+  
+  var o = '';
+  for (var i = 0; i < updates.length; i++) {
+    var u = updates[i];
+    o += '<div class="card" style="margin-bottom:10px;padding:14px 16px;">';
+    if (u.date) o += '<div style="font-size:10px;color:#58a6ff;font-weight:600;margin-bottom:4px;">' + u.date + '</div>';
+    if (u.title) o += '<div style="font-size:15px;font-weight:800;color:#e6edf3;margin-bottom:6px;">' + u.title + '</div>';
+    if (u.msg) o += '<div style="font-size:13px;color:#c9d1d9;line-height:1.7;">' + u.msg + '</div>';
+    o += '</div>';
+  }
+  el.innerHTML = o;
 }
 
 </script>
