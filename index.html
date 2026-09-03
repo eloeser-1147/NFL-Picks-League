@@ -167,8 +167,8 @@ tr:last-child td{border-bottom:none}
 <div class="tab-bar" id="tabBar">
   <button class="tab-btn active" onclick="tabTo('nflsched',this)">Home</button>
   <button class="tab-btn" onclick="tabTo('sched',this)">Scores</button>
-  <button class="tab-btn" onclick="tabTo('playersched',this)">Schedule</button>
   <button class="tab-btn" onclick="tabTo('standings',this)">Standings</button>
+  <button class="tab-btn" onclick="tabTo('playersched',this)">Schedule</button>
   <button class="tab-btn" onclick="tabTo('info',this)">Info</button>
 </div>
 <div class="panel active" id="nflsched">
@@ -658,7 +658,8 @@ function readPlayoffWeeks(wb) {
   }
   
   // Weeks 20-22 = Finals: 4 players from Playoff Finals sheet
-  // Row layout: A=Player, B=WC Pts, C=Div Correct, D=Div Pts(×2), E=Champ Correct, F=Champ Pts(×4), G=SB Correct, H=SB Pts(×8), I=TOTAL
+  // Col A=Player, B=WC Pts, D=Div Pts(×2), F=Champ Pts(×4), H=SB Pts(×8), I=TOTAL
+  // Cumulative: Wk20 = B+D, Wk21 = B+D+F, Wk22 = I
   var fin = wb.Sheets['Playoff Finals'];
   if (fin) {
     for (var r = 5; r < 9; r++) {
@@ -666,20 +667,23 @@ function readPlayoffWeeks(wb) {
       var name = nameCell ? String(nameCell.v || '') : '';
       if (!name) continue;
       
-      // Week 20 = Divisional: col D = Div Pts (×2)
+      var wcPts = fin[XLSX.utils.encode_cell({r:r, c:1})];
+      var wcVal = wcPts && typeof wcPts.v === 'number' ? wcPts.v : 0;
       var divCell = fin[XLSX.utils.encode_cell({r:r, c:3})];
-      var divPts = divCell && typeof divCell.v === 'number' ? divCell.v : 0;
-      window._playoffWeeks[20].push({name: name, pts: divPts});
-      
-      // Week 21 = Championship: col F = Champ Pts (×4)
+      var divVal = divCell && typeof divCell.v === 'number' ? divCell.v : 0;
       var champCell = fin[XLSX.utils.encode_cell({r:r, c:5})];
-      var champPts = champCell && typeof champCell.v === 'number' ? champCell.v : 0;
-      window._playoffWeeks[21].push({name: name, pts: champPts});
+      var champVal = champCell && typeof champCell.v === 'number' ? champCell.v : 0;
+      var totalCell = fin[XLSX.utils.encode_cell({r:r, c:8})];
+      var totalVal = totalCell && typeof totalCell.v === 'number' ? totalCell.v : 0;
       
-      // Week 22 = Super Bowl: col H = SB Pts (×8)
+      // Week 20 = Divisional: just this week's Div Pts
+      window._playoffWeeks[20].push({name: name, pts: divVal});
+      // Week 21 = Championship: just this week's Champ Pts
+      window._playoffWeeks[21].push({name: name, pts: champVal});
+      // Week 22 = Super Bowl: just this week's SB Pts
       var sbCell = fin[XLSX.utils.encode_cell({r:r, c:7})];
-      var sbPts = sbCell && typeof sbCell.v === 'number' ? sbCell.v : 0;
-      window._playoffWeeks[22].push({name: name, pts: sbPts});
+      var sbVal = sbCell && typeof sbCell.v === 'number' ? sbCell.v : 0;
+      window._playoffWeeks[22].push({name: name, pts: sbVal});
     }
   }
 }
@@ -772,6 +776,16 @@ function render(){
     var items = document.querySelectorAll('#standDDMenu .rule-dd-item');
     for(var i=0;i<items.length;i++) items[i].className='rule-dd-item';
     if(pt) pt.className='rule-dd-item active';
+    // Default to Round 2 sub-tab when week 20+
+    if(currentWeek >= 20){
+      var r1=document.getElementById('psR1');
+      var r2=document.getElementById('psR2');
+      if(r1) r1.style.display='none';
+      if(r2) r2.style.display='block';
+      var psTabs=document.querySelectorAll('#poststand .seg-tab');
+      for(var i=0;i<psTabs.length;i++) psTabs[i].className='seg-tab';
+      if(psTabs.length>1) psTabs[1].className='seg-tab active';
+    }
   }
 }
 
@@ -1487,7 +1501,9 @@ function renderUpdates() {
   for (var i = 0; i < updates.length; i++) {
     var u = updates[i];
     o += '<div class="card" style="margin-bottom:10px;padding:14px 16px;">';
-    if (u.date) o += '<div style="font-size:10px;color:#58a6ff;font-weight:600;margin-bottom:4px;">' + u.date + '</div>';
+    // Show "Week X" based on currentWeek - 1 - i (most recent update = prior week, older = further back)
+    var priorWk = currentWeek - 1 - i;
+    if (priorWk >= 1) o += '<div style="font-size:10px;color:#58a6ff;font-weight:600;margin-bottom:4px;">Week ' + priorWk + '</div>';
     if (u.title) o += '<div style="font-size:15px;font-weight:800;color:#e6edf3;margin-bottom:6px;">' + u.title + '</div>';
     if (u.msg) o += '<div style="font-size:13px;color:#c9d1d9;line-height:1.7;">' + u.msg + '</div>';
     o += '</div>';
