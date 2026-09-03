@@ -167,9 +167,10 @@ tr:last-child td{border-bottom:none}
 }
 
 /* NFL Schedule */
-.nfl-week-strip{display:flex;gap:6px;overflow-x:auto;padding:0 calc(50% - 30px) 8px;max-width:none;margin:0 auto;scrollbar-width:none;-ms-overflow-style:none;scroll-behavior:auto;scroll-snap-type:x mandatory}
+.nfl-week-strip{display:flex;gap:6px;overflow-x:auto;padding:0 0 8px;max-width:none;margin:0 auto;scrollbar-width:none;-ms-overflow-style:none;scroll-snap-type:x mandatory}
 .nfl-week-strip::-webkit-scrollbar{display:none}
-.nfl-wk{padding:8px 0;min-width:52px;border:none;border-radius:8px;background:#161b22;color:#8b949e;font-size:12px;font-weight:700;font-family:'Inter',Arial,sans-serif;cursor:pointer;text-align:center;flex-shrink:0;transition:all .2s ease;border:1px solid #21262d;transform-origin:center center;scroll-snap-align:center}
+.nfl-week-spacer{flex-shrink:0;width:calc(50% - 26px)}
+.nfl-wk{padding:8px 0;min-width:52px;border:none;border-radius:8px;background:#161b22;color:#8b949e;font-size:12px;font-weight:700;font-family:'Inter',Arial,sans-serif;cursor:pointer;text-align:center;flex-shrink:0;transition:transform .15s ease,opacity .15s ease;border:1px solid #21262d;transform-origin:center center;scroll-snap-align:center;scroll-snap-stop:always}
 .nfl-wk:hover{color:#e6edf3;border-color:#30363d}
 .nfl-wk.active{background:linear-gradient(135deg,#58a6ff,#3fb950);color:#fff;border-color:transparent;min-width:130px;font-size:14px;font-weight:800}
 .nfl-wk.active .wn{font-size:11px;font-weight:600;opacity:1}
@@ -985,10 +986,12 @@ function renderSched(){
   var defaultIdx=0;for(var i=0;i<sched.length;i++){if(sched[i].wk===targetWk){defaultIdx=i;break;}}
   
   var o='<div class="nfl-week-strip" id="sbStrip">';
+  o+='<div class="nfl-week-spacer"></div>';
   for(var i=0;i<sched.length;i++){
     var isActive = i === defaultIdx;
     o+='<button class="nfl-wk'+(isActive?' active':'')+'" onclick="pickWk('+i+')" data-sb="'+i+'">'+sched[i].wk+'<span class="wn">'+(isActive?'Week':'Wk')+'</span></button>';
   }
+  o+='<div class="nfl-week-spacer"></div>';
   o+='</div>';
   o+='<div class="wk-seg" id="wkSeg" style="text-align:center;font-size:11px;color:#8b949e;font-weight:600;padding:2px 0 12px">'+sched[defaultIdx].seg+'</div>';
   
@@ -1523,11 +1526,12 @@ function getNflBlurb(wk){
 
 function nflBuildStrip(){
   var maxWk = currentWeek > 18 ? Math.min(currentWeek, 22) : 18;
-  var h='';
+  var h='<div class="nfl-week-spacer"></div>';
   for(var w=1;w<=maxWk;w++){
     var isActive = w === nflWeek;
     h+='<button class="nfl-wk'+(isActive?' active':'')+'" onclick="nflRender('+w+')" data-wk="'+w+'">'+w+'<span class="wn">'+(isActive?'Week':'Wk')+'</span></button>';
   }
+  h+='<div class="nfl-week-spacer"></div>';
   document.getElementById('nflStrip').innerHTML=h;
 }
 
