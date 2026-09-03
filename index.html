@@ -753,9 +753,12 @@ function renderSched(){
       // Playoff week: render individual player cards sorted by score
       var pw = window._playoffWeeks || {};
       var players = (pw[s.wk] || []).slice();
+      // Only show player cards if at least one player has scored
+      var hasScores = false;
+      for(var k=0;k<players.length;k++){if(players[k].pts>0){hasScores=true;break;}}
       players.sort(function(a,b){return b.pts - a.pts;});
       
-      if(players.length === 0){
+      if(!hasScores){
         o+='<div style="padding:30px;color:#484f58;text-align:center;font-size:13px;">No scores yet for this playoff week.</div>';
       } else {
         o+='<div class="mu-grid">';
@@ -1085,8 +1088,15 @@ function renderQualifiers() {
     for(var i=0;i<qualifiers.length;i++){
       var q=qualifiers[i];
       var color=colorMap[q.via]||'#8b949e';
-      // Pull total earned directly from the Excel Earnings Tracker
-      var earn = earnings[q.name] ? earnings[q.name].total : 0;
+      // Pull earnings from the Excel Earnings Tracker
+      // Only show segment + division earnings from weeks 1-18
+      // Playoff earnings only display after week 22 is complete
+      var e = earnings[q.name];
+      var earn = 0;
+      if(e){
+        earn = (e.segment || 0) + (e.division || 0);
+        if(cw > 22) earn += (e.playoff || 0);
+      }
       o+='<tr>';
       o+='<td class="nm">'+q.name+'</td>';
       o+='<td style="font-size:11px;font-weight:600;color:'+color+'">'+q.via+'</td>';
