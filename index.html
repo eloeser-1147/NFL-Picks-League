@@ -1299,7 +1299,7 @@ function getNflBlurb(wk){
 }
 
 function nflBuildStrip(){
-  var maxWk = currentWeek >= 19 ? 22 : 18;
+  var maxWk = currentWeek > 18 ? currentWeek : 18;
   var h='';
   for(var w=1;w<=maxWk;w++){
     h+='<button class="nfl-wk'+(w===nflWeek?' active':'')+'" onclick="nflRender('+w+')" data-wk="'+w+'">'+w+'<span class="wn">Wk</span></button>';
@@ -1376,7 +1376,7 @@ function nflRender(wk){
 }
 
 function nflChangeWeek(d){
-  var max = currentWeek >= 19 ? 22 : 18;
+  var max = currentWeek > 18 ? currentWeek : 18;
   var n=nflWeek+d;
   if(n>=1&&n<=max)nflRender(n);
 }
