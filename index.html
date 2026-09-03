@@ -197,11 +197,11 @@ tr:last-child td{border-bottom:none}
 
   <div class="rule-dd-wrap" id="ruleDDWrap">
     <button class="rule-dd-btn" onclick="document.getElementById('ruleDDWrap').classList.toggle('open')">
-      <span id="ruleDDLabel">Standard Rules</span>
+      <span id="ruleDDLabel">Select Set of Rules</span>
       <span class="rule-dd-arrow">&#9660;</span>
     </button>
     <div class="rule-dd-menu" id="ruleDDMenu">
-      <div class="rule-dd-item active" onclick="showRule('rStandard',this)">Standard Rules</div>
+      <div class="rule-dd-item" onclick="showRule('rStandard',this)">Standard Rules</div>
       <div class="rule-dd-item" onclick="showRule('rSeg1',this)">Weeks 1–6</div>
       <div class="rule-dd-item" onclick="showRule('rSeg2',this)">Weeks 7–12</div>
       <div class="rule-dd-item" onclick="showRule('rSeg3',this)">Weeks 13–18</div>
@@ -210,43 +210,76 @@ tr:last-child td{border-bottom:none}
     </div>
   </div>
 
-  <div class="rule-content" id="rStandard">
+  <div class="rule-content" id="rStandard" style="display:none">
     <div class="rule-subtitle" style="background:#9c2020">General League Rules</div>
     <div class="rule-sec"><p>• All picks are against the spread</p></div>
     <div class="rule-sec"><p>• Picks must be submitted before kickoff</p></div>
     <div class="rule-sec"><p>• Missed picks count as losses</p></div>
     <div class="rule-sec"><p>• Push counts as a correct pick (1 point)</p></div>
-    <div class="rule-sec"><p>• Spreads lock at kickoff — picks can be changed up until kickoff</p></div>
+    <div class="rule-sec"><p>• Spreads lock at kickoff — picks can be changed up until then</p></div>
     <div class="rule-sec"><p>• Multi-segment winners keep all cash prizes; playoff entry passes to next qualified player</p></div>
   </div>
 
   <div class="rule-content" id="rSeg1" style="display:none">
     <div class="rule-subtitle" style="background:#1a3a5c">H2H + Points</div>
-    <div class="rule-sec"><div class="rule-sec-title" style="color:#58a6ff">Pick Format</div><p>All games against the spread. Each correct pick = <strong>1 point</strong>.</p></div>
-    <div class="rule-sec"><div class="rule-sec-title" style="color:#3fb950">Head-to-Head</div><p>H2H win = <strong>6 bonus points</strong>. Tie = <strong>3 points</strong> each.</p></div>
-    <div class="rule-sec"><div class="rule-sec-title" style="color:#d29922">Scoring</div><p>16 games (1 pt each) + H2H win (6 pts) = <strong>Max 22 pts/week</strong></p></div>
-    <div class="rule-sec"><div class="rule-sec-title" style="color:#bc8cff">Winner</div><p>Highest total points across Weeks 1–6.</p></div>
+    <div class="rule-sec"><div class="rule-sec-title" style="color:#58a6ff">Pick Format</div>
+      <p>• Pick all games against the spread</p>
+      <p>• Each correct pick = <strong>1 point</strong></p></div>
+    <div class="rule-sec"><div class="rule-sec-title" style="color:#3fb950">Head-to-Head</div>
+      <p>• H2H win = <strong>6 bonus points</strong></p>
+      <p>• H2H tie = <strong>3 points</strong> each</p></div>
+    <div class="rule-sec"><div class="rule-sec-title" style="color:#d29922">Scoring</div>
+      <p>• 16 games × 1 pt + H2H win (6 pts) = <strong>Max 22 pts/week</strong></p>
+      <p>• Points accrue through end of Week 6</p></div>
+    <div class="rule-sec"><div class="rule-sec-title" style="color:#bc8cff">Segment Winner</div>
+      <p>• Highest total points across Weeks 1–6</p></div>
     <div class="rule-prize">Segment winner → auto playoff entry + <span style="color:#3fb950;font-weight:800;">$25</span></div>
-    <div class="rule-tb"><div class="rule-sec-title" style="color:#8b949e">Tiebreakers</div><p>1) H2H record • 2) Best single-week score • 3) Most H2H wins</p></div>
+    <div class="rule-tb"><div class="rule-sec-title" style="color:#8b949e">Tiebreakers</div>
+      <p>1. H2H record between tied players</p>
+      <p>2. Highest single-week score within Weeks 1–6</p>
+      <p>3. Most H2H wins across Weeks 1–6</p></div>
   </div>
 
   <div class="rule-content" id="rSeg2" style="display:none">
     <div class="rule-subtitle" style="background:#3d1e5c">H2H + Weighted Confidence</div>
-    <div class="rule-sec"><div class="rule-sec-title" style="color:#58a6ff">Pick Format</div><p>Choose <strong>8 games</strong> ATS. Rank confidence <strong>8</strong> (most) → <strong>1</strong> (least).</p></div>
-    <div class="rule-sec"><div class="rule-sec-title" style="color:#3fb950">Head-to-Head</div><p>H2H win = <strong>10 bonus points</strong>. Tie = <strong>5 points</strong> each.</p></div>
-    <div class="rule-sec"><div class="rule-sec-title" style="color:#d29922">Scoring</div><p>36 weighted + 10 H2H = <strong>Max 46 pts/week</strong></p></div>
-    <div class="rule-sec"><div class="rule-sec-title" style="color:#bc8cff">Winner</div><p>Highest total weighted points across Weeks 7–12.</p></div>
+    <div class="rule-sec"><div class="rule-sec-title" style="color:#58a6ff">Pick Format</div>
+      <p>• Choose any <strong>8 games</strong> against the spread</p>
+      <p>• Assign confidence: <strong>8</strong> (most) down to <strong>1</strong> (least)</p>
+      <p>• Correct pick earns its weighted value</p></div>
+    <div class="rule-sec"><div class="rule-sec-title" style="color:#3fb950">Head-to-Head</div>
+      <p>• H2H win = <strong>10 bonus points</strong></p>
+      <p>• H2H tie = <strong>5 points</strong> each</p></div>
+    <div class="rule-sec"><div class="rule-sec-title" style="color:#d29922">Scoring</div>
+      <p>• 36 max weighted + 10 H2H = <strong>Max 46 pts/week</strong></p>
+      <p>• Points accrue through end of Week 12</p></div>
+    <div class="rule-sec"><div class="rule-sec-title" style="color:#bc8cff">Segment Winner</div>
+      <p>• Highest total weighted points across Weeks 7–12</p></div>
     <div class="rule-prize">Segment winner → auto playoff entry + <span style="color:#3fb950;font-weight:800;">$25</span></div>
-    <div class="rule-tb"><div class="rule-sec-title" style="color:#8b949e">Tiebreakers</div><p>1) H2H record • 2) Best single-week score • 3) Most H2H wins</p></div>
+    <div class="rule-tb"><div class="rule-sec-title" style="color:#8b949e">Tiebreakers</div>
+      <p>1. H2H record between tied players</p>
+      <p>2. Highest single-week score within Weeks 7–12</p>
+      <p>3. Most H2H wins across Weeks 7–12</p></div>
   </div>
 
   <div class="rule-content" id="rSeg3" style="display:none">
     <div class="rule-subtitle" style="background:#4a3020">Divisional Round-Robin</div>
-    <div class="rule-sec"><div class="rule-sec-title" style="color:#58a6ff">Pick Format</div><p>All games against the spread.</p></div>
-    <div class="rule-sec"><div class="rule-sec-title" style="color:#3fb950">Head-to-Head</div><p>Most correct picks wins. Tie → tiebreaker decides. Same tiebreaker = <strong>.5 W / .5 L</strong> each.</p></div>
-    <div class="rule-sec"><div class="rule-sec-title" style="color:#d29922">Divisions</div><p><strong>4 divisions of 4</strong>. Face each opponent <strong>twice</strong> over 6 weeks. Standings by <strong>record</strong>.</p></div>
+    <div class="rule-sec"><div class="rule-sec-title" style="color:#58a6ff">Pick Format</div>
+      <p>• Pick all games against the spread</p></div>
+    <div class="rule-sec"><div class="rule-sec-title" style="color:#3fb950">Head-to-Head</div>
+      <p>• Most correct picks wins the matchup</p>
+      <p>• Tied → weekly tiebreaker decides</p>
+      <p>• Same tiebreaker → <strong>.5 W / .5 L</strong> each</p></div>
+    <div class="rule-sec"><div class="rule-sec-title" style="color:#d29922">Divisions</div>
+      <p>• <strong>4 divisions of 4</strong> players</p>
+      <p>• Face each division opponent <strong>twice</strong> over 6 weeks</p>
+      <p>• Standings determined by <strong>win-loss record</strong></p></div>
     <div class="rule-prize">4 division winners → auto playoff entry + <span style="color:#3fb950;font-weight:800;">$10 each</span></div>
-    <div class="rule-tb"><div class="rule-sec-title" style="color:#8b949e">Tiebreakers</div><p>1) H2H record vs. tied • 2) Correct picks in H2H • 3) Best week vs. tied • 4) Most picks Wks 13–18 • 5) Best single week</p></div>
+    <div class="rule-tb"><div class="rule-sec-title" style="color:#8b949e">Tiebreakers</div>
+      <p>1. H2H record vs. tied opponents</p>
+      <p>2. Most correct picks in H2H matchups vs. tied</p>
+      <p>3. Highest correct picks in any one week vs. tied</p>
+      <p>4. Most correct picks across Weeks 13–18</p>
+      <p>5. Best single-week score</p></div>
   </div>
 
   <div class="rule-content" id="rPlayoffs" style="display:none">
@@ -259,15 +292,27 @@ tr:last-child td{border-bottom:none}
       <p>• Top 2 overall season point totals among non-qualified players</p></div>
     <div style="border-top:2px solid #30363d"></div>
     <div class="rule-sec"><div class="rule-sec-title" style="color:#58a6ff">Wild Card Round</div>
-      <p>All 8 pick ATS, weighted <strong>1–4</strong> confidence. <strong>Top 4</strong> in weighted points advance.</p></div>
+      <p>• All 8 players pick all games ATS</p>
+      <p>• Assign confidence weights <strong>1–4</strong></p>
+      <p>• <strong>Top 4</strong> in weighted points advance</p></div>
     <div class="rule-sec"><div class="rule-sec-title" style="color:#bc8cff">Final Rounds (4 Players)</div>
-      <p>Carry Wild Card points forward through remaining playoff weeks.</p>
-      <p><strong>Divisional:</strong> 2 pts/game • <strong>Championship:</strong> 4 pts/game • <strong>Super Bowl:</strong> 8 pts</p></div>
+      <p>• Carry Wild Card points forward</p>
+      <p>• Pick all remaining playoff games ATS</p>
+      <p>• <strong>Divisional:</strong> 2 pts per correct pick</p>
+      <p>• <strong>Championship:</strong> 4 pts per correct pick</p>
+      <p>• <strong>Super Bowl:</strong> 8 pts for correct pick</p>
+      <p>• Top 3 in total cumulative points receive payouts</p></div>
     <div class="rule-prize">1st: <span style="color:#3fb950;font-weight:800;">$200</span> · 2nd: <span style="color:#3fb950;font-weight:800;">$75</span> · 3rd: <span style="color:#3fb950;font-weight:800;">$35</span></div>
-    <div class="rule-tb"><div class="rule-sec-title" style="color:#8b949e">Tiebreakers</div>
-      <p><strong>Qualification:</strong> 1) H2H record 2) Best record Wks 1–18</p>
-      <p><strong>Wild Card:</strong> 1) Weekly TB 2) Pts in AFC WC 3) Pts in NFC WC</p>
-      <p><strong>Finals:</strong> 1) Super Bowl TB 2) Closest to longest SB field goal</p></div>
+    <div class="rule-tb"><div class="rule-sec-title" style="color:#8b949e">Qualification Tiebreakers</div>
+      <p>1. H2H record (if applicable)</p>
+      <p>2. Best overall record Weeks 1–18</p></div>
+    <div class="rule-tb"><div class="rule-sec-title" style="color:#8b949e">Wild Card Tiebreakers</div>
+      <p>1. Weekly tiebreaker</p>
+      <p>2. Total points scored in 2 AFC Wild Card games</p>
+      <p>3. Total points scored in 2 NFC Wild Card games</p></div>
+    <div class="rule-tb"><div class="rule-sec-title" style="color:#8b949e">Finals Tiebreakers</div>
+      <p>1. Weekly tiebreaker for the Super Bowl</p>
+      <p>2. Closest guess to longest field goal made in Super Bowl</p></div>
   </div>
 
   <div class="rule-content" id="rPayouts" style="display:none">
