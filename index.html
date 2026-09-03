@@ -186,18 +186,18 @@ tr:last-child td{border-bottom:none}
       <span class="rule-dd-arrow">&#9660;</span>
     </button>
     <div class="rule-dd-menu" id="standDDMenu">
-      <div class="rule-dd-item active" onclick="showStand('all',this,'Wild Card')">Wild Card</div>
       <div class="rule-dd-item" onclick="showStand('s1',this,'Segment 1')">Segment 1</div>
       <div class="rule-dd-item" onclick="showStand('s2',this,'Segment 2')">Segment 2</div>
       <div class="rule-dd-item" onclick="showStand('s3',this,'Segment 3')">Segment 3</div>
+      <div class="rule-dd-item" onclick="showStand('all',this,'Wild Card')">Wild Card</div>
       <div class="rule-dd-item" onclick="showStand('qualifiers',this,'Qualifiers')">Qualifiers</div>
       <div class="rule-dd-item" id="playoffDDItem" onclick="showStand('poststand',this,'Playoffs')" style="display:none">Playoffs</div>
     </div>
   </div>
-  <div class="seg-panel active" id="all"><div class="loading">Loading...</div></div>
   <div class="seg-panel" id="s1"><div class="loading">Loading...</div></div>
   <div class="seg-panel" id="s2"><div class="loading">Loading...</div></div>
   <div class="seg-panel" id="s3"><div class="loading">Loading...</div></div>
+  <div class="seg-panel active" id="all"><div class="loading">Loading...</div></div>
   <div class="seg-panel" id="qualifiers"><div class="loading">Loading...</div></div>
   <div class="seg-panel" id="poststand"><div class="loading">Loading...</div></div>
 </div>
@@ -727,9 +727,19 @@ function render(){
   }
   renderSched();
   renderS1();renderS2();renderS3();renderAll();renderPS();renderQualifiers();renderPlayerSched();renderUpdates();
-  // Show playoff tab only when week >= 18
+  // Show playoff tab only when week >= 19
   var pt=document.getElementById('playoffDDItem');
   if(pt) pt.style.display = currentWeek >= 19 ? '' : 'none';
+  // Default standings to Playoffs tab when in playoff weeks
+  if(currentWeek >= 19){
+    var panels = document.querySelectorAll('#standings .seg-panel');
+    for(var i=0;i<panels.length;i++) panels[i].className='seg-panel';
+    document.getElementById('poststand').className='seg-panel active';
+    document.getElementById('standDDLabel').textContent='Playoffs';
+    var items = document.querySelectorAll('#standDDMenu .rule-dd-item');
+    for(var i=0;i<items.length;i++) items[i].className='rule-dd-item';
+    if(pt) pt.className='rule-dd-item active';
+  }
 }
 
 // ===== SCHEDULE =====
@@ -780,20 +790,6 @@ function renderSched(){
     o+='<div id="wk'+i+'" style="display:'+(i===defaultIdx?'block':'none')+'">';
     
     if(s.playoff){
-      // Show NFL playoff game logos for this week
-      var pg = (window._nflPlayoffGames || {})[s.wk] || [];
-      if(pg.length > 0){
-        o+='<div class="nfl-grid" style="margin-bottom:14px;max-width:720px">';
-        for(var g=0;g<pg.length;g++){
-          o+='<div class="nfl-mu">';
-          o+='<img src="'+nflLogo(pg[g].a)+'" alt="'+pg[g].a+'" title="'+(NFL_NAMES[pg[g].a]||pg[g].a)+'">';
-          o+='<span class="nfl-at">@</span>';
-          o+='<img src="'+nflLogo(pg[g].h)+'" alt="'+pg[g].h+'" title="'+(NFL_NAMES[pg[g].h]||pg[g].h)+'">';
-          o+='</div>';
-        }
-        o+='</div>';
-      }
-      
       // Playoff week: render individual player cards sorted by score
       var pw = window._playoffWeeks || {};
       var players = (pw[s.wk] || []).slice();
@@ -1090,7 +1086,7 @@ function renderPS() {
   o+='<div class="card">';
   o+='<div class="card-scroll"><table><tr><th>#</th><th style="text-align:left">Player</th><th>WC Pts</th><th>Div</th><th>Champ</th><th>SB</th><th>Total</th></tr>';
   
-  if(finalists.length===0){
+  if(finalists.length===0 || cw < 20){
     o+='<tr><td colspan="7" style="padding:30px;color:#484f58;text-align:center;font-size:13px;">No players have qualified for Round 2.<br>The top 4 qualifiers from Round 1 will advance here once the Wild Card Round is complete.</td></tr>';
   } else {
     for(var i=0;i<finalists.length;i++){
