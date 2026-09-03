@@ -777,8 +777,18 @@ function renderS3(){
   o+='</div></div>';document.getElementById('s3').innerHTML=o;
 }
 function renderAll(){
-  var s=P.slice().sort(function(a,b){return(b.t1+b.t2+b.p3)-(a.t1+a.t2+a.p3);});
-  var o='<div class="card"><div class="card-scroll"><table><tr><th>#</th><th style="text-align:left">Player</th><th>Seg 1</th><th>Seg 2</th><th>Seg 3</th><th>Picks</th></tr>';
+  var cw=currentWeek;
+  // Build set of auto-qualified player numbers
+  var qualSet=new Set();
+  var s1s=P.slice().sort(function(a,b){return b.t1-a.t1;});
+  var s2s=P.slice().sort(function(a,b){return b.t2-a.t2;});
+  var dv=[P.filter(function(x){return x.num<=4}),P.filter(function(x){return x.num>=5&&x.num<=8}),P.filter(function(x){return x.num>=9&&x.num<=12}),P.filter(function(x){return x.num>=13})];
+  if(cw>6){var q=s1s[0];qualSet.add(q.num);}
+  if(cw>12){var q=s2s.find(function(p){return !qualSet.has(p.num);})||s2s[0];qualSet.add(q.num);}
+  if(cw>18){for(var i=0;i<4;i++){var ds=dv[i].slice().sort(function(a,b){return b.w3-a.w3||b.p3-a.p3;});var q=ds.find(function(p){return !qualSet.has(p.num);})||ds[0];qualSet.add(q.num);}}
+
+  var s=P.slice().filter(function(p){return !qualSet.has(p.num);}).sort(function(a,b){return(b.t1+b.t2+b.p3)-(a.t1+a.t2+a.p3);});
+  var o='<div class="card"><div class="card-scroll"><table><tr><th>#</th><th style="text-align:left">Player</th><th>Seg 1</th><th>Seg 2</th><th>Seg 3</th><th>Total</th></tr>';
   for(var i=0;i<s.length;i++){
     var rp1t=s[i].rp1Total||0,rp2t=s[i].rp2Total||0,rp3=s[i].p3;
     var t=rp1t+rp2t+rp3;
