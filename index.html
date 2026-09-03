@@ -1094,25 +1094,20 @@ function renderSched(){
           o+='<div class="po-rank '+rankClass+'">'+(j+1)+'</div>';
           o+='<div class="po-info"><div class="po-name">'+pl.name+'</div>';
           o+='<div class="po-via">This week: '+wkPts+' pts</div>';
+          if(s.wk === 22){
+            var tbd = (playoffData.tiebreakers||{})[pl.name]||{sbTbRank:0,fgDiff:0};
+            o+='<div style="font-size:9px;color:#d29922;font-weight:600;margin-top:2px">TB Rank: '+(tbd.sbTbRank||'—')+' · FG Diff: '+(tbd.fgDiff||'—')+'</div>';
+          }
           o+='</div>';
           o+='<div class="po-pts '+ptsClass+'">'+cumPts+'</div>';
           o+='</div>';
         }
         o+='</div>';
-        // Show tiebreaker details on Week 22
+        // Week 22: show tiebreaker gold box with the actual TB result
         if(s.wk === 22){
           var tb = playoffData.tiebreakers || {};
-          o+='<div style="max-width:720px;margin:12px auto 0;padding:12px 16px;background:rgba(210,153,34,.08);border:1px solid rgba(210,153,34,.15);border-left:3px solid #d29922;border-radius:8px;font-size:11px;line-height:1.8;color:#c9d1d9">';
-          o+='<div style="font-size:12px;font-weight:800;color:#d29922;margin-bottom:6px">Tiebreaker Details</div>';
-          o+='<div style="font-size:11px;color:#8b949e;margin-bottom:8px">Ties broken by: <strong style="color:#c9d1d9">1)</strong> SB weekly tiebreaker rank, then <strong style="color:#c9d1d9">2)</strong> closest guess to longest FG made in the Super Bowl.</div>';
-          for(var t=0;t<players.length;t++){
-            var pl2=players[t];
-            var tbd=tb[pl2.name]||{sbTbRank:0,fgDiff:0};
-            o+='<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:12px">';
-            o+='<span style="color:#e6edf3;font-weight:700">'+pl2.name+'</span>';
-            o+='<span style="color:#8b949e">TB Rank: <strong style="color:#c9d1d9">'+(tbd.sbTbRank||'—')+'</strong> · FG Diff: <strong style="color:#c9d1d9">'+(tbd.fgDiff||'—')+'</strong></span>';
-            o+='</div>';
-          }
+          o+='<div style="max-width:720px;margin:12px auto 0;padding:10px 16px;background:rgba(210,153,34,.08);border:1px solid rgba(210,153,34,.15);border-left:3px solid #d29922;border-radius:8px;font-size:12px;color:#c9d1d9">';
+          o+='<span style="font-weight:800;color:#d29922">Tiebreaker:</span> Super Bowl weekly tiebreaker rank, then closest guess to the longest FG made in the Super Bowl';
           o+='</div>';
         }
       }
@@ -1401,35 +1396,15 @@ function renderPS() {
   if(finalists.length===0 || cw < 20){
     o+='<tr><td colspan="7" style="padding:30px;color:#484f58;text-align:center;font-size:13px;">No players have qualified for Round 2.<br>The top 4 qualifiers from Round 1 will advance here once the Wild Card Round is complete.</td></tr>';
   } else {
-    for(var i=0;i<finalists.length;i++){
-      var f=finalists[i];
-      o+='<tr><td class="'+rc(i)+'">'+(i+1)+'</td><td class="nm">'+f.name+'</td><td class="wk">'+f.wc+'</td><td class="wk">'+f.div+'</td><td class="wk">'+f.champ+'</td><td class="wk">'+f.sb+'</td><td class="tot">'+f.total+'</td></tr>';
-    }
-  }
-  o+='</table></div></div>';
-  
-  // Tiebreaker info card — show when any two finalists have the same total
-  var tb = playoffData.tiebreakers || {};
-  var hasTie = false;
-  if(finalists.length > 1 && cw >= 20){
-    for(var i=0;i<finalists.length-1;i++){
-      for(var j=i+1;j<finalists.length;j++){
-        if(finalists[i].total === finalists[j].total && finalists[i].total > 0) hasTie = true;
-      }
-    }
-  }
-  if(hasTie || (cw >= 22 && finalists.length > 0)){
-    o+='<div class="card" style="margin-top:10px;padding:14px 16px;border-left:3px solid #d29922">';
-    o+='<div style="font-size:13px;font-weight:800;color:#d29922;margin-bottom:8px">Tiebreaker Details</div>';
-    o+='<div style="font-size:11px;color:#8b949e;margin-bottom:10px">When players are tied on total points, ties are broken by: <strong style="color:#c9d1d9">1)</strong> Super Bowl weekly tiebreaker rank, then <strong style="color:#c9d1d9">2)</strong> closest guess to the longest field goal made in the Super Bowl.</div>';
-    o+='<div class="card-scroll"><table><tr><th style="text-align:left">Player</th><th>Total Pts</th><th>SB TB Rank</th><th>FG Diff</th></tr>';
+    var tb = playoffData.tiebreakers || {};
     for(var i=0;i<finalists.length;i++){
       var f=finalists[i];
       var t=tb[f.name]||{sbTbRank:0,fgDiff:0};
-      o+='<tr><td class="nm">'+f.name+'</td><td class="wk">'+f.total+'</td><td class="wk">'+(t.sbTbRank||'—')+'</td><td class="wk">'+(t.fgDiff||'—')+'</td></tr>';
+      var tbNote = (cw >= 22) ? '<div style="font-size:9px;color:#d29922;font-weight:600">TB: '+(t.sbTbRank||'—')+' · FG Diff: '+(t.fgDiff||'—')+'</div>' : '';
+      o+='<tr><td class="'+rc(i)+'">'+(i+1)+'</td><td class="nm">'+f.name+tbNote+'</td><td class="wk">'+f.wc+'</td><td class="wk">'+f.div+'</td><td class="wk">'+f.champ+'</td><td class="wk">'+f.sb+'</td><td class="tot">'+f.total+'</td></tr>';
     }
-    o+='</table></div></div>';
   }
+  o+='</table></div></div>';
   
   // Round 2 rules
   o+='<div style="max-width:720px;margin:14px auto 0;padding:12px 16px;background:rgba(88,166,255,.08);border:1px solid rgba(88,166,255,.15);border-left:3px solid #58a6ff;border-radius:8px;font-size:11px;line-height:1.8;color:#c9d1d9">';
