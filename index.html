@@ -480,6 +480,7 @@ function load() {
     readEarnings(wb);
     readPlayoffWeeks(wb);
     readNflPlayoffGames(wb);
+    readOverallStandings(wb);
     readUpdates(wb);
     
     render();
@@ -709,6 +710,38 @@ function readNflPlayoffGames(wb) {
         window._nflPlayoffGames[curWeek].push({a: away, h: home});
       }
     }
+  }
+}
+
+function readOverallStandings(wb) {
+  // Read the Overall Standings table directly from the Standings sheet (rows 71-86)
+  var st = wb.Sheets['Standings'];
+  window._overallStandings = [];
+  if (!st) return;
+  for (var r = 70; r < 86; r++) {
+    var rankCell = st[XLSX.utils.encode_cell({r:r, c:0})];
+    var nameCell = st[XLSX.utils.encode_cell({r:r, c:1})];
+    var s1Cell = st[XLSX.utils.encode_cell({r:r, c:2})];
+    var s2Cell = st[XLSX.utils.encode_cell({r:r, c:3})];
+    var s3Cell = st[XLSX.utils.encode_cell({r:r, c:4})];
+    var totCell = st[XLSX.utils.encode_cell({r:r, c:5})];
+    var rank = rankCell && typeof rankCell.v === 'number' ? rankCell.v : 0;
+    var name = nameCell ? String(nameCell.v || '') : '';
+    var s1 = s1Cell && typeof s1Cell.v === 'number' ? s1Cell.v : 0;
+    var s2 = s2Cell && typeof s2Cell.v === 'number' ? s2Cell.v : 0;
+    var s3 = s3Cell && typeof s3Cell.v === 'number' ? s3Cell.v : 0;
+    var tot = totCell && typeof totCell.v === 'number' ? totCell.v : 0;
+    if (name) window._overallStandings.push({rank:rank, name:name, s1:s1, s2:s2, s3:s3, total:tot});
+  }
+
+  // Read the 6 auto-qualifier names from Playoff Picture col E rows 5-10
+  var pp = wb.Sheets['Playoff Picture'];
+  window._autoQualNames = [];
+  if (!pp) return;
+  for (var r = 4; r < 10; r++) {
+    var qCell = pp[XLSX.utils.encode_cell({r:r, c:4})]; // col E = Playoff Qualifier
+    var name = qCell ? String(qCell.v || '') : '';
+    if (name) window._autoQualNames.push(name);
   }
 }
 
@@ -1007,25 +1040,26 @@ function renderS3(){
 }
 function renderAll(){
   var cw=currentWeek;
-  // Build set of auto-qualified player numbers (seg winners + div winners only — NOT wild card winners)
-  var qualSet=new Set();
-  var s1s=P.slice().sort(function(a,b){return b.t1-a.t1;});
-  var s2s=P.slice().sort(function(a,b){return b.t2-a.t2;});
-  var dv=[P.filter(function(x){return x.num<=4}),P.filter(function(x){return x.num>=5&&x.num<=8}),P.filter(function(x){return x.num>=9&&x.num<=12}),P.filter(function(x){return x.num>=13})];
-  if(cw>6){var q=s1s[0];qualSet.add(q.num);}
-  if(cw>12){var q=s2s.find(function(p){return !qualSet.has(p.num);})||s2s[0];qualSet.add(q.num);}
-  if(cw>=19){for(var i=0;i<4;i++){var ds=dv[i].slice().sort(function(a,b){return b.w3-a.w3||b.p3-a.p3;});var q=ds.find(function(p){return !qualSet.has(p.num);})||ds[0];qualSet.add(q.num);}}
+  var standings = window._overallStandings || [];
+  var autoQuals = window._autoQualNames || []; // 6 auto-qualifier names from Playoff Picture col E
+  var wcQuals = (window._ppQualifiers || []).filter(function(q){return q.via && q.via.indexOf('Wild Card')===0;});
+  var wcNames = {};
+  for(var i=0;i<wcQuals.length;i++) wcNames[wcQuals[i].name]=true;
 
-  // Filter out auto-qualifiers, keep everyone else including eventual WC winners
-  var s=P.slice().filter(function(p){return !qualSet.has(p.num);}).sort(function(a,b){return(b.t1+b.t2+b.p3)-(a.t1+a.t2+a.p3);});
-  var wcDone = cw >= 19; // week 18 complete, WC winners are locked in
+  // Build set of auto-qualifier names to filter out
+  var autoSet = {};
+  for(var i=0;i<autoQuals.length;i++) autoSet[autoQuals[i]]=true;
+
+  // Filter: remove auto-qualifiers, keep wild card winners and everyone else
+  var filtered = standings.filter(function(p){return !autoSet[p.name];});
+
+  var wcDone = cw >= 19;
   var o='<div class="card"><div class="card-scroll"><table><tr><th>#</th><th style="text-align:left">Player</th><th>Seg 1</th><th>Seg 2</th><th>Seg 3</th><th>Total</th></tr>';
-  for(var i=0;i<s.length;i++){
-    var rp1t=s[i].rp1Total||0,rp2t=s[i].rp2Total||0,rp3=s[i].p3;
-    var t=rp1t+rp2t+rp3;
-    var isWC = wcDone && i < 2;
+  for(var i=0;i<filtered.length;i++){
+    var p=filtered[i];
+    var isWC = wcDone && wcNames[p.name];
     var nameStyle = isWC ? 'color:#3fb950;' : '';
-    o+='<tr><td class="'+rc(i)+'">'+(i+1)+'</td><td class="nm" style="'+nameStyle+'">'+s[i].name+'</td><td class="wk">'+rp1t+'</td><td class="wk">'+rp2t+'</td><td class="wk">'+rp3+'</td><td class="tot">'+t+'</td></tr>';}
+    o+='<tr><td class="'+rc(i)+'">'+(i+1)+'</td><td class="nm" style="'+nameStyle+'">'+p.name+'</td><td class="wk">'+p.s1+'</td><td class="wk">'+p.s2+'</td><td class="wk">'+p.s3+'</td><td class="tot">'+p.total+'</td></tr>';}
   o+='</table></div></div>';document.getElementById('all').innerHTML=o;
 }
 function renderPS() {
