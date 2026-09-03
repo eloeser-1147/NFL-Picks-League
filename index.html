@@ -1601,6 +1601,8 @@ function applyStripScale(strip){
     var ratio = Math.min(dist / maxDist, 1);
     var scale = 1 - (ratio * 0.35);
     var opacity = 1 - (ratio * 0.4);
+    // Boost the active button slightly larger
+    if(btns[i].classList.contains('active')) scale = Math.max(scale, 1.18);
     btns[i].style.transform = 'scale(' + scale.toFixed(3) + ')';
     btns[i].style.opacity = opacity.toFixed(3);
   }
@@ -1675,7 +1677,7 @@ function initStripScaling(){
       }
       // Settle correction
       clearTimeout(_nflSettleTimer);
-      _nflSettleTimer = setTimeout(function(){ snapToCenter(nflStrip); }, 200);
+      _nflSettleTimer = setTimeout(function(){ snapToCenter(nflStrip); }, 80);
     });
     setTimeout(function(){ applyStripScale(nflStrip); snapToCenter(nflStrip); }, 300);
   }
@@ -1705,7 +1707,7 @@ function initStripScaling(){
       }
       // Settle correction
       clearTimeout(_sbSettleTimer);
-      _sbSettleTimer = setTimeout(function(){ snapToCenter(sbStrip); }, 200);
+      _sbSettleTimer = setTimeout(function(){ snapToCenter(sbStrip); }, 80);
     });
     setTimeout(function(){ applyStripScale(sbStrip); snapToCenter(sbStrip); }, 300);
   }
