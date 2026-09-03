@@ -173,17 +173,19 @@ tr:last-child td{border-bottom:none}
 <div class="panel" id="sched"><div class="loading">Loading...</div></div>
 <div class="panel" id="playersched"><div class="loading">Loading...</div></div>
 <div class="panel" id="standings">
-  <div class="seg-tabs">
-    <div class="seg-tab active" onclick="showSeg('all',this)">Overall</div>
+  <div class="seg-tabs" id="standingsTabs">
+    <div class="seg-tab active" onclick="showSeg('all',this)">Wild Card</div>
     <div class="seg-tab" onclick="showSeg('s1',this)">Seg. 1</div>
     <div class="seg-tab" onclick="showSeg('s2',this)">Seg. 2</div>
     <div class="seg-tab" onclick="showSeg('s3',this)">Seg. 3</div>
-    <div class="seg-tab" onclick="showSeg('poststand',this)">Playoffs</div>
+    <div class="seg-tab" onclick="showSeg('qualifiers',this)">Qualifiers</div>
+    <div class="seg-tab" id="playoffTab" onclick="showSeg('poststand',this)" style="display:none">Playoffs</div>
   </div>
   <div class="seg-panel active" id="all"><div class="loading">Loading...</div></div>
   <div class="seg-panel" id="s1"><div class="loading">Loading...</div></div>
   <div class="seg-panel" id="s2"><div class="loading">Loading...</div></div>
   <div class="seg-panel" id="s3"><div class="loading">Loading...</div></div>
+  <div class="seg-panel" id="qualifiers"><div class="loading">Loading...</div></div>
   <div class="seg-panel" id="poststand"><div class="loading">Loading...</div></div>
 </div>
 
@@ -541,7 +543,10 @@ function render(){
     }
   }
   renderSched();
-  renderS1();renderS2();renderS3();renderAll();renderPS();renderPlayerSched();
+  renderS1();renderS2();renderS3();renderAll();renderPS();renderQualifiers();renderPlayerSched();
+  // Show playoff tab only when week >= 18
+  var pt=document.getElementById('playoffTab');
+  if(pt) pt.style.display = currentWeek >= 18 ? '' : 'none';
 }
 
 // ===== SCHEDULE =====
@@ -763,130 +768,122 @@ function renderAll(){
 }
 function renderPS() {
   var cw = currentWeek;
-  var o = '<div class="card"><h2 class="hdr5">Playoff Standings</h2><div class="card-scroll"><table>';
-  o += '<tr><th class="ps-extra">#</th><th style="text-align:left">Player</th><th class="ps-extra">Qualified Via</th><th>WC Pts</th><th>Div Pts</th><th>Champ Pts</th><th>SB Pts</th><th>Total</th></tr>';
+  var o = '';
   
-  // Build qualifier list based on current week
+  // Build qualifier data
   var s1 = P.slice().sort(function(a,b){return b.t1-a.t1;});
   var s2 = P.slice().sort(function(a,b){return b.t2-a.t2;});
   var dv = [P.filter(function(x){return x.num<=4}),P.filter(function(x){return x.num>=5&&x.num<=8}),P.filter(function(x){return x.num>=9&&x.num<=12}),P.filter(function(x){return x.num>=13})];
   var dn = ['Div A','Div B','Div C','Div D'];
-  
-  var qualified = [];
   var qualSet = new Set();
+  var qualified = [];
   
-  // Seg 1
-  if (cw > 6) {
-    var q = s1.find(function(p){return !qualSet.has(p.num);}) || s1[0];
-    qualSet.add(q.num);
-    qualified.push({name: q.name, via: 'Weeks 1-6'});
-  }
-  
-  // Seg 2
-  if (cw > 12) {
-    var q = s2.find(function(p){return !qualSet.has(p.num);}) || s2[0];
-    qualSet.add(q.num);
-    qualified.push({name: q.name, via: 'Weeks 7-12'});
-  }
-  
-  // Divisions
+  if (cw > 6) { var q=s1.find(function(p){return !qualSet.has(p.num);})||s1[0]; qualSet.add(q.num); qualified.push({name:q.name,via:'Weeks 1-6'}); }
+  if (cw > 12) { var q=s2.find(function(p){return !qualSet.has(p.num);})||s2[0]; qualSet.add(q.num); qualified.push({name:q.name,via:'Weeks 7-12'}); }
   if (cw > 18) {
-    for (var i = 0; i < 4; i++) {
-      var ds = dv[i].slice().sort(function(a,b){return b.w3-a.w3||b.p3-a.p3;});
-      var q = ds.find(function(p){return !qualSet.has(p.num);}) || ds[0];
-      qualSet.add(q.num);
-      qualified.push({name: q.name, via: dn[i]});
-    }
-    
-    // Wild cards
-    var os = P.slice().sort(function(a,b){return(b.t1+b.t2+b.p3)-(a.t1+a.t2+a.p3);});
-    var wcs = os.filter(function(p){return !qualSet.has(p.num);}).slice(0, 2);
-    wcs.forEach(function(p, i) {
-      qualSet.add(p.num);
-      qualified.push({name: p.name, via: 'Wild Card'});
-    });
+    for(var i=0;i<4;i++){var ds=dv[i].slice().sort(function(a,b){return b.w3-a.w3||b.p3-a.p3;});var q=ds.find(function(p){return !qualSet.has(p.num);})||ds[0];qualSet.add(q.num);qualified.push({name:q.name,via:dn[i]});}
+    var os=P.slice().sort(function(a,b){return(b.t1+b.t2+b.p3)-(a.t1+a.t2+a.p3);});
+    var wcs=os.filter(function(p){return !qualSet.has(p.num);}).slice(0,2);
+    wcs.forEach(function(p){qualSet.add(p.num);qualified.push({name:p.name,via:'Wild Card'});});
   }
   
-  if (qualified.length === 0) {
-    o += '<tr><td colspan="8" style="padding:30px;color:#484f58;text-align:center;font-size:13px;">No players have qualified yet.<br>Qualifiers will appear as segments are completed.</td></tr>';
+  // ---- ROUND 1: Wild Card Round ----
+  o+='<div class="card">';
+  o+='<div style="padding:12px 16px;background:#1a4a1e;border-radius:8px 8px 0 0"><div style="font-size:14px;font-weight:800;color:#3fb950">Round 1 — Wild Card</div><div style="font-size:10px;color:rgba(255,255,255,.6);margin-top:2px">8 Players · All Games ATS · Confidence 1–4 · Top 4 Advance</div></div>';
+  o+='<div class="card-scroll"><table><tr><th>#</th><th style="text-align:left">Player</th><th>Qualified Via</th><th>WC Pts</th><th>Status</th></tr>';
+  
+  if(qualified.length === 0){
+    o+='<tr><td colspan="5" style="padding:30px;color:#484f58;text-align:center;font-size:13px;">Qualifiers will populate as segments complete.</td></tr>';
   } else {
-    for (var i = 0; i < qualified.length; i++) {
-      var q = qualified[i];
-      var wcPts = playoffData.wc[q.name] || 0;
-      var fin = playoffData.finals[q.name];
-      var divPts = fin ? fin.div : 0;
-      var champPts = fin ? fin.champ : 0;
-      var sbPts = fin ? fin.sb : 0;
-      var total = fin ? fin.total : wcPts;
-      
-      o += '<tr>';
-      o += '<td class="ps-extra ' + rc(i) + '">' + (i+1) + '</td>';
-      o += '<td class="nm">' + q.name + '</td>';
-      o += '<td class="wk ps-extra">' + q.via + '</td>';
-      o += '<td class="wk">' + wcPts + '</td>';
-      o += '<td class="wk">' + divPts + '</td>';
-      o += '<td class="wk">' + champPts + '</td>';
-      o += '<td class="wk">' + sbPts + '</td>';
-      o += '<td class="tot">' + total + '</td>';
-      o += '</tr>';
+    // Sort by WC points
+    var r1=qualified.map(function(q){var wc=playoffData.wc[q.name]||0;return{name:q.name,via:q.via,pts:wc};});
+    r1.sort(function(a,b){return b.pts-a.pts;});
+    for(var i=0;i<r1.length;i++){
+      var adv=i<4&&r1[i].pts>0;
+      var statusColor=adv?'#3fb950':'#8b949e';
+      var statusText=r1[i].pts>0?(adv?'Advanced':'Eliminated'):'TBD';
+      o+='<tr><td class="'+rc(i)+'">'+(i+1)+'</td><td class="nm">'+r1[i].name+'</td><td class="wk" style="font-size:11px;color:#8b949e">'+r1[i].via+'</td><td class="tot">'+r1[i].pts+'</td><td style="font-size:11px;font-weight:700;color:'+statusColor+'">'+statusText+'</td></tr>';
     }
   }
+  o+='</table></div></div>';
   
-  o += '</table></div></div>';
+  // ---- ROUND 2: Final Rounds ----
+  o+='<div class="card" style="margin-top:16px">';
+  o+='<div style="padding:12px 16px;background:#1a3a5c;border-radius:8px 8px 0 0"><div style="font-size:14px;font-weight:800;color:#58a6ff">Round 2 — Finals</div><div style="font-size:10px;color:rgba(255,255,255,.6);margin-top:2px">4 Players · Carry WC Pts · Divisional 2pts · Championship 4pts · Super Bowl 8pts</div></div>';
+  o+='<div class="card-scroll"><table><tr><th>#</th><th style="text-align:left">Player</th><th>WC Pts</th><th>Div</th><th>Champ</th><th>SB</th><th>Total</th></tr>';
   
-  // Earnings table
+  var finalists=[];
+  for(var name in playoffData.finals){var f=playoffData.finals[name];finalists.push({name:name,wc:f.wc||playoffData.wc[name]||0,div:f.div||0,champ:f.champ||0,sb:f.sb||0,total:f.total||0});}
+  finalists.sort(function(a,b){return b.total-a.total;});
+  
+  if(finalists.length===0){
+    o+='<tr><td colspan="7" style="padding:30px;color:#484f58;text-align:center;font-size:13px;">Top 4 from Wild Card Round will populate here.</td></tr>';
+  } else {
+    for(var i=0;i<finalists.length;i++){
+      var f=finalists[i];
+      o+='<tr><td class="'+rc(i)+'">'+(i+1)+'</td><td class="nm">'+f.name+'</td><td class="wk">'+f.wc+'</td><td class="wk">'+f.div+'</td><td class="wk">'+f.champ+'</td><td class="wk">'+f.sb+'</td><td class="tot">'+f.total+'</td></tr>';
+    }
+  }
+  o+='</table></div></div>';
+  
+  document.getElementById('poststand').innerHTML = o;
+}
+
+function renderQualifiers() {
+  var cw = currentWeek;
   var s1 = P.slice().sort(function(a,b){return b.t1-a.t1;});
   var s2 = P.slice().sort(function(a,b){return b.t2-a.t2;});
   var dv = [P.filter(function(x){return x.num<=4}),P.filter(function(x){return x.num>=5&&x.num<=8}),P.filter(function(x){return x.num>=9&&x.num<=12}),P.filter(function(x){return x.num>=13})];
-  var dw = dv.map(function(d){return d.slice().sort(function(a,b){return b.w3-a.w3||b.p3-a.p3;})[0];});
+  var dn = ['Div A','Div B','Div C','Div D'];
+  var qualSet = new Set();
+  var qualified = [];
   
-  var earn = [];
-  if (cw > 6) earn.push({name:s1[0].name, src:'Weeks 1-6 Winner', amount:25});
-  if (cw > 12) earn.push({name:s2[0].name, src:'Weeks 7-12 Winner', amount:25});
-  if (cw > 18) {
-    var dns = ['Div A','Div B','Div C','Div D'];
-    for(var i=0;i<4;i++) earn.push({name:dw[i].name, src:dns[i]+' Winner', amount:10});
+  if(cw>6){var q=s1.find(function(p){return !qualSet.has(p.num);})||s1[0];qualSet.add(q.num);qualified.push({name:q.name,via:'Weeks 1-6 Winner',amount:25,color:'#58a6ff'});}
+  if(cw>12){var q=s2.find(function(p){return !qualSet.has(p.num);})||s2[0];qualSet.add(q.num);qualified.push({name:q.name,via:'Weeks 7-12 Winner',amount:25,color:'#bc8cff'});}
+  if(cw>18){
+    for(var i=0;i<4;i++){var ds=dv[i].slice().sort(function(a,b){return b.w3-a.w3||b.p3-a.p3;});var q=ds.find(function(p){return !qualSet.has(p.num);})||ds[0];qualSet.add(q.num);qualified.push({name:q.name,via:dn[i]+' Winner',amount:10,color:'#d29922'});}
+    var os=P.slice().sort(function(a,b){return(b.t1+b.t2+b.p3)-(a.t1+a.t2+a.p3);});
+    var wcs=os.filter(function(p){return !qualSet.has(p.num);}).slice(0,2);
+    wcs.forEach(function(p){qualSet.add(p.num);qualified.push({name:p.name,via:'Wild Card',amount:0,color:'#8b949e'});});
   }
-  // Playoff payouts from Finals results
-  // Read from playoffData.finals - find top 3 by total
-  var finalists = [];
-  for (var name in playoffData.finals) {
-    var f = playoffData.finals[name];
-    if (f.total > 0) finalists.push({name: name, total: f.total});
-  }
-  finalists.sort(function(a,b){return b.total - a.total;});
-  var payoutAmounts = [200, 75, 35];
-  for (var i = 0; i < Math.min(finalists.length, 3); i++) {
-    if (finalists[i].total > 0) {
-      earn.push({name: finalists[i].name, src: 'Playoff ' + (i===0?'1st':i===1?'2nd':'3rd') + ' Place', amount: payoutAmounts[i]});
+  
+  // Playoff payouts
+  var finalists=[];
+  for(var n in playoffData.finals){var f=playoffData.finals[n];if(f.total>0)finalists.push({name:n,total:f.total});}
+  finalists.sort(function(a,b){return b.total-a.total;});
+  var payouts=[200,75,35];
+  
+  var o='<div class="card">';
+  o+='<div style="padding:12px 16px;background:linear-gradient(135deg,#1a3a5c,#1a4a1e);border-radius:8px 8px 0 0"><div style="font-size:14px;font-weight:800;color:#e6edf3">Playoff Qualifiers & Earnings</div></div>';
+  
+  if(qualified.length===0){
+    o+='<div style="padding:30px;color:#484f58;text-align:center;font-size:13px;">No qualifiers yet. Players qualify as segments complete.</div>';
+  } else {
+    o+='<div class="card-scroll"><table><tr><th>#</th><th style="text-align:left">Player</th><th>Qualified Via</th><th style="text-align:right">Earnings</th></tr>';
+    // Build earnings map
+    var earnMap={};
+    for(var i=0;i<qualified.length;i++){
+      var q=qualified[i];
+      if(!earnMap[q.name])earnMap[q.name]={total:0};
+      earnMap[q.name].total+=q.amount;
     }
-  }
-  
-  if (earn.length > 0) {
-    o += '<div class="card" style="margin-top:16px;"><h2 class="hdr5">Season Earnings</h2>';
-    o += '<div class="card-scroll"><table><tr><th style="text-align:left">Player</th><th class="ps-extra">Source</th><th style="text-align:right;">Amount</th></tr>';
-    // Merge by player - one row each
-    var merged = {};
-    earn.forEach(function(e) {
-      if (!merged[e.name]) merged[e.name] = {sources:[], total:0};
-      merged[e.name].sources.push(e.src);
-      merged[e.name].total += e.amount;
-    });
-    var earnList = [];
-    for (var name in merged) earnList.push({name:name, sources:merged[name].sources, total:merged[name].total});
-    earnList.sort(function(a,b){return b.total - a.total;});
-    for (var i = 0; i < earnList.length; i++) {
-      var e = earnList[i];
-      o += '<tr>';
-      o += '<td class="nm">'+e.name+'</td>';
-      o += '<td class="wk" style="font-size:11px;color:#8b949e;">'+e.sources.join(', ')+'</td>';
-      o += '<td class="tot">$'+e.total+'</td>';
-      o += '</tr>';
+    for(var i=0;i<Math.min(finalists.length,3);i++){
+      if(!earnMap[finalists[i].name])earnMap[finalists[i].name]={total:0};
+      earnMap[finalists[i].name].total+=payouts[i];
     }
-    o += '</table></div></div>';
+    
+    for(var i=0;i<qualified.length;i++){
+      var q=qualified[i];
+      var totalEarn=earnMap[q.name]?earnMap[q.name].total:0;
+      o+='<tr><td class="'+rc(i)+'">'+(i+1)+'</td>';
+      o+='<td class="nm">'+q.name+'</td>';
+      o+='<td style="font-size:11px;font-weight:600;color:'+q.color+'">'+q.via+'</td>';
+      o+='<td class="tot" style="text-align:right;color:#3fb950">'+(totalEarn>0?'$'+totalEarn:'—')+'</td></tr>';
+    }
+    o+='</table></div>';
   }
-  
-  document.getElementById('poststand').innerHTML = o;
+  o+='</div>';
+  document.getElementById('qualifiers').innerHTML=o;
 }
 
 function renderPlayerSched() {
