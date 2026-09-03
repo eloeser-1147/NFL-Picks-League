@@ -125,19 +125,22 @@ tr:last-child td{border-bottom:none}
 .champ-title{font-size:12px;text-transform:uppercase;letter-spacing:3px;color:#3fb950;font-weight:700;margin-bottom:6px}
 .champ-name{font-size:32px;font-weight:900;color:#e6edf3;margin-bottom:4px}
 .champ-earn{font-size:22px;font-weight:800;color:#3fb950;margin-bottom:24px}
-.champ-podium{display:flex;align-items:flex-start;justify-content:center;gap:16px;margin-bottom:28px}
-.champ-pod{text-align:center;flex:1;max-width:130px}
+.champ-podium{display:flex;flex-direction:column;align-items:center;gap:0;margin-bottom:28px}
+.champ-pod{text-align:center;width:100%}
 .champ-pod-place{font-size:11px;color:#8b949e;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px}
 .champ-pod-name{font-weight:800;color:#e6edf3;margin-bottom:3px}
 .champ-pod-earn{font-weight:700;color:#3fb950}
-.champ-pod.first .champ-pod-name{font-size:24px;color:#fff}
-.champ-pod.first .champ-pod-earn{font-size:20px}
-.champ-pod.first .champ-pod-place{font-size:12px;color:#3fb950}
-.champ-pod.second,.champ-pod.third{margin-top:32px}
-.champ-pod.second .champ-pod-name{font-size:16px}
-.champ-pod.second .champ-pod-earn{font-size:14px}
-.champ-pod.third .champ-pod-name{font-size:16px}
-.champ-pod.third .champ-pod-earn{font-size:14px}
+.champ-pod.third{margin-bottom:4px;opacity:.55}
+.champ-pod.third .champ-pod-place{font-size:9px}
+.champ-pod.third .champ-pod-name{font-size:13px;color:#8b949e}
+.champ-pod.third .champ-pod-earn{font-size:12px;color:rgba(63,185,80,.6)}
+.champ-pod.second{margin-bottom:8px;opacity:.75}
+.champ-pod.second .champ-pod-place{font-size:10px}
+.champ-pod.second .champ-pod-name{font-size:17px;color:#c9d1d9}
+.champ-pod.second .champ-pod-earn{font-size:15px;color:rgba(63,185,80,.8)}
+.champ-pod.first .champ-pod-place{font-size:13px;color:#3fb950}
+.champ-pod.first .champ-pod-name{font-size:28px;color:#fff}
+.champ-pod.first .champ-pod-earn{font-size:22px}
 .champ-others{border-top:1px solid #21262d;padding-top:16px;margin-top:4px}
 .champ-others-title{font-size:11px;color:#8b949e;font-weight:600;text-transform:uppercase;letter-spacing:1px;margin-bottom:10px}
 .champ-other-row{display:flex;justify-content:space-between;padding:6px 0;font-size:13px}
@@ -145,7 +148,7 @@ tr:last-child td{border-bottom:none}
 .champ-other-earn{color:#3fb950;font-weight:700}
 .confetti-piece{position:fixed;width:10px;height:10px;z-index:10000;pointer-events:none;animation:confetti-fall linear forwards}
 @keyframes confetti-fall{0%{opacity:1;transform:translateY(0) rotate(0deg)}100%{opacity:0;transform:translateY(100vh) rotate(720deg)}}
-@media(max-width:480px){.mu{padding:10px 12px}.mu-name{font-size:16px}.mu-sc{font-size:21px;padding:0 8px}.mu-meta{font-size:9px}.po-name{font-size:16px}.po-pts{font-size:22px}.champ-name{font-size:24px}.champ-earn{font-size:18px}.champ-popup{padding:28px 18px 20px}.nfl-wk.active{min-width:110px;font-size:13px}.champ-pod.first .champ-pod-name{font-size:20px}.champ-pod.second .champ-pod-name,.champ-pod.third .champ-pod-name{font-size:14px}.champ-podium{gap:10px}}
+@media(max-width:480px){.mu{padding:10px 12px}.mu-name{font-size:16px}.mu-sc{font-size:21px;padding:0 8px}.mu-meta{font-size:9px}.po-name{font-size:16px}.po-pts{font-size:22px}.champ-popup{padding:28px 18px 20px}.nfl-wk.active{min-width:110px;font-size:13px}.champ-pod.first .champ-pod-name{font-size:22px}.champ-pod.first .champ-pod-earn{font-size:18px}}
 @media(max-width:640px){.card-scroll{margin:0 -2px}.card-scroll::-webkit-scrollbar{height:4px}.card-scroll::-webkit-scrollbar-thumb{background:#30363d;border-radius:4px}.header h1{font-size:24px}.qg{grid-template-columns:1fr}td,th{padding:6px 8px;font-size:11px}.seg-tab{font-size:12px}.seg-tabs{gap:12px}}
 @media (max-width: 640px) {
   .wk-col { display: none !important; }
@@ -871,25 +874,25 @@ function showChampPopup(){
   
   h += '<div class="champ-podium">';
   
-  // 2nd place (left, lower)
+  // 3rd place (furthest away, smallest)
+  h += '<div class="champ-pod third">';
+  h += '<div class="champ-pod-place">3rd</div>';
+  h += '<div class="champ-pod-name">' + p3.name + '</div>';
+  h += '<div class="champ-pod-earn">$' + e3 + '</div>';
+  h += '</div>';
+  
+  // 2nd place (middle distance)
   h += '<div class="champ-pod second">';
   h += '<div class="champ-pod-place">2nd</div>';
   h += '<div class="champ-pod-name">' + p2.name + '</div>';
   h += '<div class="champ-pod-earn">$' + e2 + '</div>';
   h += '</div>';
   
-  // 1st place (center, tallest)
+  // 1st place (foreground, biggest)
   h += '<div class="champ-pod first">';
   h += '<div class="champ-pod-place">1st</div>';
   h += '<div class="champ-pod-name">' + p1.name + '</div>';
   h += '<div class="champ-pod-earn">$' + e1 + '</div>';
-  h += '</div>';
-  
-  // 3rd place (right, lower)
-  h += '<div class="champ-pod third">';
-  h += '<div class="champ-pod-place">3rd</div>';
-  h += '<div class="champ-pod-name">' + p3.name + '</div>';
-  h += '<div class="champ-pod-earn">$' + e3 + '</div>';
   h += '</div>';
   
   h += '</div>';
@@ -1148,9 +1151,12 @@ function pickWk(i){
   }
   var strip=document.getElementById('sbStrip');
   var btn=strip&&strip.querySelector('[data-sb="'+i+'"]');
-  if(btn)btn.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
+  if(btn){
+    _suppressSbScroll = true;
+    btn.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});
+  }
   var strip=document.getElementById('sbStrip');
-  setTimeout(function(){applyStripScale(strip);},350);
+  setTimeout(function(){applyStripScale(strip); _suppressSbScroll = false;},500);
 }
 
 // ===== STANDINGS =====
@@ -1525,10 +1531,11 @@ function nflBuildStrip(){
 }
 
 function nflScrollToWeek(wk){
+  _suppressNflScroll = true;
   var strip=document.getElementById('nflStrip');
   var btn=strip.querySelector('[data-wk="'+wk+'"]');
   if(btn){btn.scrollIntoView({behavior:'smooth',inline:'center',block:'nearest'});}
-  setTimeout(function(){applyStripScale(strip);},350);
+  setTimeout(function(){applyStripScale(strip); _suppressNflScroll = false;},500);
 }
 
 function applyStripScale(strip){
@@ -1549,14 +1556,69 @@ function applyStripScale(strip){
   }
 }
 
+function getCenteredBtn(strip){
+  var btns = strip.querySelectorAll('.nfl-wk');
+  var rect = strip.getBoundingClientRect();
+  var center = rect.left + rect.width / 2;
+  var closest = null, minDist = Infinity;
+  for(var i=0;i<btns.length;i++){
+    var br = btns[i].getBoundingClientRect();
+    var btnCenter = br.left + br.width / 2;
+    var dist = Math.abs(btnCenter - center);
+    if(dist < minDist){ minDist = dist; closest = btns[i]; }
+  }
+  return closest;
+}
+
+var _nflScrollTimer = null;
+var _sbScrollTimer = null;
+var _suppressNflScroll = false;
+var _suppressSbScroll = false;
+
 function initStripScaling(){
-  var strips = [document.getElementById('nflStrip'), document.getElementById('sbStrip')];
-  for(var s=0;s<strips.length;s++){
-    if(!strips[s]) continue;
-    (function(strip){
-      strip.addEventListener('scroll', function(){ applyStripScale(strip); });
-      setTimeout(function(){ applyStripScale(strip); }, 200);
-    })(strips[s]);
+  var nflStrip = document.getElementById('nflStrip');
+  var sbStrip = document.getElementById('sbStrip');
+  
+  if(nflStrip){
+    nflStrip.addEventListener('scroll', function(){
+      applyStripScale(nflStrip);
+      if(_suppressNflScroll) return;
+      clearTimeout(_nflScrollTimer);
+      _nflScrollTimer = setTimeout(function(){
+        var btn = getCenteredBtn(nflStrip);
+        if(btn){
+          var wk = parseInt(btn.getAttribute('data-wk'));
+          if(wk && wk !== nflWeek){
+            _suppressNflScroll = true;
+            nflRender(wk);
+            setTimeout(function(){ _suppressNflScroll = false; }, 500);
+          }
+        }
+      }, 150);
+    });
+    setTimeout(function(){ applyStripScale(nflStrip); }, 200);
+  }
+  
+  if(sbStrip){
+    sbStrip.addEventListener('scroll', function(){
+      applyStripScale(sbStrip);
+      if(_suppressSbScroll) return;
+      clearTimeout(_sbScrollTimer);
+      _sbScrollTimer = setTimeout(function(){
+        var btn = getCenteredBtn(sbStrip);
+        if(btn){
+          var idx = parseInt(btn.getAttribute('data-sb'));
+          var curActive = sbStrip.querySelector('.nfl-wk.active');
+          var curIdx = curActive ? parseInt(curActive.getAttribute('data-sb')) : -1;
+          if(idx !== curIdx && window._sched){
+            _suppressSbScroll = true;
+            pickWk(idx);
+            setTimeout(function(){ _suppressSbScroll = false; }, 500);
+          }
+        }
+      }, 150);
+    });
+    setTimeout(function(){ applyStripScale(sbStrip); }, 200);
   }
 }
 
