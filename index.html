@@ -110,7 +110,14 @@ tr:last-child td{border-bottom:none}
 .rule-prize{padding:10px 16px;background:rgba(63,185,80,0.06);border-top:1px solid rgba(63,185,80,0.15);font-weight:600;font-size:13px}
 .rule-tb{padding:10px 16px;border-top:1px solid #21262d;background:rgba(255,255,255,0.02)}
 .rule-tb p{font-size:11.5px;color:#8b949e;margin:0}
-@media(max-width:480px){.mu{padding:10px 12px}.mu-name{font-size:16px}.mu-sc{font-size:21px;padding:0 8px}.mu-meta{font-size:9px}}
+.po-card{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:14px 16px;display:flex;align-items:center;justify-content:space-between}
+.po-rank{font-size:14px;font-weight:900;min-width:28px;text-align:center;margin-right:12px}
+.po-info{flex:1;min-width:0}
+.po-name{font-size:20px;font-weight:800;color:#e6edf3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.po-via{font-size:10px;color:#6e7681;font-weight:500;margin-top:2px}
+.po-pts{font-size:28px;font-weight:900;letter-spacing:-1px;padding-left:12px;flex-shrink:0}
+.po-pts.top{color:#3fb950}.po-pts.mid{color:#e6edf3}.po-pts.low{color:#8b949e}
+@media(max-width:480px){.mu{padding:10px 12px}.mu-name{font-size:16px}.mu-sc{font-size:21px;padding:0 8px}.mu-meta{font-size:9px}.po-name{font-size:16px}.po-pts{font-size:22px}}
 @media(max-width:640px){.card-scroll{margin:0 -2px}.card-scroll::-webkit-scrollbar{height:4px}.card-scroll::-webkit-scrollbar-thumb{background:#30363d;border-radius:4px}.header h1{font-size:24px}.qg{grid-template-columns:1fr}td,th{padding:6px 8px;font-size:11px}.seg-tab{font-size:12px}.seg-tabs{gap:12px}}
 @media (max-width: 640px) {
   .wk-col { display: none !important; }
@@ -470,13 +477,15 @@ function load() {
     readPicks(wb);
     readPlayoffs(wb);
     readPlayoffPicture(wb);
+    readEarnings(wb);
+    readPlayoffWeeks(wb);
     readUpdates(wb);
     
     render();
     nflWeek = currentWeek;
     nflBuildStrip();
     nflRender(nflWeek);
-    document.getElementById('status').textContent='v28 | Updated: '+new Date().toLocaleString();
+    document.getElementById('status').textContent='v29 | Updated: '+new Date().toLocaleString();
   })
   .catch(function(e){document.getElementById('status').textContent='Could not load file';});
 }
@@ -608,6 +617,61 @@ function readPlayoffs(wb) {
   }
 }
 
+function readEarnings(wb) {
+  var pp = wb.Sheets['Playoff Picture'];
+  if (!pp) { window._earnings = {}; return; }
+  var earnings = {};
+  // Earnings Tracker rows 30-45 (0-indexed: 29-44): A=#, B=Player, C=Segment$, D=Division$, E=Playoff$, F=Total
+  for (var r = 29; r < 45; r++) {
+    var nameCell = pp[XLSX.utils.encode_cell({r:r, c:1})];
+    var segCell = pp[XLSX.utils.encode_cell({r:r, c:2})];
+    var divCell = pp[XLSX.utils.encode_cell({r:r, c:3})];
+    var plyCell = pp[XLSX.utils.encode_cell({r:r, c:4})];
+    var totCell = pp[XLSX.utils.encode_cell({r:r, c:5})];
+    var name = nameCell ? String(nameCell.v || '') : '';
+    if (!name) continue;
+    earnings[name] = {
+      segment: segCell && typeof segCell.v === 'number' ? segCell.v : 0,
+      division: divCell && typeof divCell.v === 'number' ? divCell.v : 0,
+      playoff: plyCell && typeof plyCell.v === 'number' ? plyCell.v : 0,
+      total: totCell && typeof totCell.v === 'number' ? totCell.v : 0
+    };
+  }
+  window._earnings = earnings;
+}
+
+function readPlayoffWeeks(wb) {
+  var pw = wb.Sheets['Wk 19-22 Input'];
+  window._playoffWeeks = {19:[], 20:[], 21:[], 22:[]};
+  if (!pw) return;
+  var ref = pw['!ref'];
+  if (!ref) return;
+  var range = XLSX.utils.decode_range(ref);
+  var curWeek = 0;
+  for (var r = range.s.r; r <= range.e.r; r++) {
+    var a = pw[XLSX.utils.encode_cell({r:r, c:0})];
+    if (!a) continue;
+    var av = String(a.v || '');
+    // Detect week header
+    if (av.indexOf('WEEK 19') >= 0) { curWeek = 19; continue; }
+    if (av.indexOf('WEEK 20') >= 0) { curWeek = 20; continue; }
+    if (av.indexOf('WEEK 21') >= 0) { curWeek = 21; continue; }
+    if (av.indexOf('WEEK 22') >= 0) { curWeek = 22; continue; }
+    // Skip header rows
+    if (av === '#' || av === 'Rank') continue;
+    // Player row: col A=#, col B=name, col C=points
+    if (curWeek > 0 && typeof a.v === 'number' && a.v >= 1 && a.v <= 8) {
+      var nameCell = pw[XLSX.utils.encode_cell({r:r, c:1})];
+      var ptsCell = pw[XLSX.utils.encode_cell({r:r, c:2})];
+      var name = nameCell ? String(nameCell.v || '') : '';
+      var pts = ptsCell && typeof ptsCell.v === 'number' ? ptsCell.v : 0;
+      if (name) {
+        window._playoffWeeks[curWeek].push({name: name, pts: pts});
+      }
+    }
+  }
+}
+
 function rc(i){return i===0?'r1':i===1?'r2':i===2?'r3':'';}
 
 function render(){
@@ -647,6 +711,14 @@ function renderSched(){
   for(var i=0;i<4;i++)sched.push({wk:i+9,seg:'Segment 2',mu:r3[i]});
   for(var i=0;i<6;i++)sched.push({wk:i+13,seg:'Division',mu:da[i].concat(db[i]).concat(dc[i]).concat(dd[i])});
   
+  // Add playoff weeks 19-22 when currentWeek >= 19
+  var playoffWeekNames = {19:'Wild Card',20:'Divisional',21:'Championship',22:'Super Bowl'};
+  if(currentWeek >= 19){
+    for(var pw=19;pw<=22;pw++){
+      sched.push({wk:pw,seg:'Playoffs — '+playoffWeekNames[pw],mu:[],playoff:true});
+    }
+  }
+  
   var pm={};for(var i=0;i<P.length;i++)pm[P[i].num]=P[i];
   
   window._sched = sched;
@@ -665,56 +737,82 @@ function renderSched(){
 
   for(var i=0;i<sched.length;i++){
     var s=sched[i];
-    o+='<div id="wk'+i+'" style="display:'+(i===defaultIdx?'block':'none')+'"><div class="mu-grid">';
-    for(var j=0;j<s.mu.length;j++){
-      var n1=s.mu[j][0],n2=s.mu[j][1];
-      var p1=pm[n1],p2=pm[n2];
-      var name1=p1?p1.name:'Player '+n1;
-      var name2=p2?p2.name:'Player '+n2;
+    o+='<div id="wk'+i+'" style="display:'+(i===defaultIdx?'block':'none')+'">';
+    
+    if(s.playoff){
+      // Playoff week: render individual player cards sorted by score
+      var pw = window._playoffWeeks || {};
+      var players = (pw[s.wk] || []).slice();
+      players.sort(function(a,b){return b.pts - a.pts;});
       
-      // Overall record: H2H wins from seg1 + seg2 + seg3 wins
-      var w1=p1?(p1.h1||0):0, w2=p1?(p1.h2||0):0, w3=p1?(p1.w3||0):0;
-      var ow1=w1+w2+w3;
-      var l1a=p2?(p2.h1||0):0, l2a=p2?(p2.h2||0):0, l3a=p2?(p2.w3||0):0;
-      // Total points
-      var tp1=p1?(p1.t1+p1.t2+p1.p3):0;
-      var tp2=p2?(p2.t1+p2.t2+p2.p3):0;
-      // Compute losses from total games played so far
-      var totalWeeksPlayed=0;for(var ww=1;ww<=18;ww++){if(weekPlayed[ww])totalWeeksPlayed++;}
-      var seed1=seedMap[n1]||'-';
-      var seed2=seedMap[n2]||'-';
-      // Overall record (simplified: wins from h1+h2+w3)
-      var rec1W=p1?((p1.h1||0)+(p1.h2||0)+(p1.w3||0)):0;
-      var rec1L=p2?((p2.h1||0)+(p2.h2||0)+(p2.l3||0)):0;
-      var rec2W=p2?((p2.h1||0)+(p2.h2||0)+(p2.w3||0)):0;
-      var rec2L=p1?((p1.h1||0)+(p1.h2||0)+(p1.l3||0)):0;
-      
-      // Week score
-      var sc1=picks[s.wk]?picks[s.wk][n1]:'';
-      var sc2=picks[s.wk]?picks[s.wk][n2]:'';
-      if(sc1===undefined||sc1===null)sc1=0;
-      if(sc2===undefined||sc2===null)sc2=0;
-      
-      var c1='',c2='';
-      if(sc1>0||sc2>0){
-        if(sc1>sc2){c1='mw';c2='ml';}
-        else if(sc2>sc1){c2='mw';c1='ml';}
-        else{c1='mt';c2='mt';}
+      if(players.length === 0){
+        o+='<div style="padding:30px;color:#484f58;text-align:center;font-size:13px;">No scores yet for this playoff week.</div>';
+      } else {
+        o+='<div class="mu-grid">';
+        for(var j=0;j<players.length;j++){
+          var pl = players[j];
+          var ptsClass = j===0?'top':j<4?'mid':'low';
+          var rankClass = j===0?'r1':j===1?'r2':j===2?'r3':'';
+          // Find qualified via
+          var qualifiers = window._ppQualifiers || [];
+          var via = '';
+          for(var q=0;q<qualifiers.length;q++){if(qualifiers[q].name===pl.name){via=qualifiers[q].via;break;}}
+          
+          o+='<div class="po-card">';
+          o+='<div class="po-rank '+rankClass+'">'+(j+1)+'</div>';
+          o+='<div class="po-info"><div class="po-name">'+pl.name+'</div>';
+          if(via) o+='<div class="po-via">'+via+'</div>';
+          o+='</div>';
+          o+='<div class="po-pts '+ptsClass+'">'+pl.pts+'</div>';
+          o+='</div>';
+        }
+        o+='</div>';
       }
-      
-      o+='<div class="mu">';
-      o+='<div class="mu-row">';
-      o+='<div class="mu-left"><div class="mu-info"><div class="mu-name">'+name1+'</div>';
-      o+='<div class="mu-meta"><span class="mu-seed">#'+seed1+'</span> · '+rec1W+'-'+rec1L+' ('+tp1+')</div></div>';
-      o+='<div class="mu-sc '+c1+'">'+sc1+'</div></div>';
-      o+='<div class="mu-vs">vs</div>';
-      o+='<div class="mu-right"><div class="mu-info"><div class="mu-name">'+name2+'</div>';
-      o+='<div class="mu-meta"><span class="mu-seed">#'+seed2+'</span> · '+rec2W+'-'+rec2L+' ('+tp2+')</div></div>';
-      o+='<div class="mu-sc '+c2+'">'+sc2+'</div></div>';
-      o+='</div>';
+    } else {
+      // Regular week: matchup format
+      o+='<div class="mu-grid">';
+      for(var j=0;j<s.mu.length;j++){
+        var n1=s.mu[j][0],n2=s.mu[j][1];
+        var p1=pm[n1],p2=pm[n2];
+        var name1=p1?p1.name:'Player '+n1;
+        var name2=p2?p2.name:'Player '+n2;
+        
+        var tp1=p1?(p1.t1+p1.t2+p1.p3):0;
+        var tp2=p2?(p2.t1+p2.t2+p2.p3):0;
+        var seed1=seedMap[n1]||'-';
+        var seed2=seedMap[n2]||'-';
+        var rec1W=p1?((p1.h1||0)+(p1.h2||0)+(p1.w3||0)):0;
+        var rec1L=p2?((p2.h1||0)+(p2.h2||0)+(p2.l3||0)):0;
+        var rec2W=p2?((p2.h1||0)+(p2.h2||0)+(p2.w3||0)):0;
+        var rec2L=p1?((p1.h1||0)+(p1.h2||0)+(p1.l3||0)):0;
+        
+        var sc1=picks[s.wk]?picks[s.wk][n1]:'';
+        var sc2=picks[s.wk]?picks[s.wk][n2]:'';
+        if(sc1===undefined||sc1===null)sc1=0;
+        if(sc2===undefined||sc2===null)sc2=0;
+        
+        var c1='',c2='';
+        if(sc1>0||sc2>0){
+          if(sc1>sc2){c1='mw';c2='ml';}
+          else if(sc2>sc1){c2='mw';c1='ml';}
+          else{c1='mt';c2='mt';}
+        }
+        
+        o+='<div class="mu">';
+        o+='<div class="mu-row">';
+        o+='<div class="mu-left"><div class="mu-info"><div class="mu-name">'+name1+'</div>';
+        o+='<div class="mu-meta"><span class="mu-seed">#'+seed1+'</span> · '+rec1W+'-'+rec1L+' ('+tp1+')</div></div>';
+        o+='<div class="mu-sc '+c1+'">'+sc1+'</div></div>';
+        o+='<div class="mu-vs">vs</div>';
+        o+='<div class="mu-right"><div class="mu-info"><div class="mu-name">'+name2+'</div>';
+        o+='<div class="mu-meta"><span class="mu-seed">#'+seed2+'</span> · '+rec2W+'-'+rec2L+' ('+tp2+')</div></div>';
+        o+='<div class="mu-sc '+c2+'">'+sc2+'</div></div>';
+        o+='</div>';
+        o+='</div>';
+      }
       o+='</div>';
     }
-    o+='</div></div>';
+    o+='</div>';
   }
   o+='<div id="scoresBlurb"></div>';
   document.getElementById('sched').innerHTML=o;
@@ -725,6 +823,24 @@ function renderSched(){
 function updateScoresBlurb(weekNum){
   var el=document.getElementById('scoresBlurb');
   if(!el)return;
+  
+  if(weekNum >= 19){
+    var playoffNames={19:'Wild Card Round',20:'Divisional Round',21:'Conference Championships',22:'Super Bowl'};
+    var playoffDescs={
+      19:'• All 8 qualified players pick all games ATS<br>• Assign confidence weights <strong>1–4</strong><br>• Correct picks earn their weighted value<br>• <strong>Top 4</strong> advance to the Finals',
+      20:'• 4 advancing players carry Wild Card points<br>• Pick all Divisional games ATS<br>• Each correct pick = <strong style="color:#3fb950">2 points</strong>',
+      21:'• Pick both Conference Championship games ATS<br>• Each correct pick = <strong style="color:#3fb950">4 points</strong>',
+      22:'• Pick the Super Bowl ATS<br>• Correct pick = <strong style="color:#3fb950">8 points</strong><br>• Top 3 in total cumulative points receive payouts'
+    };
+    var h='<div style="max-width:720px;margin:16px auto 0;padding:12px 16px;background:rgba(63,185,80,.08);border:1px solid rgba(63,185,80,.15);border-left:3px solid #3fb950;border-radius:8px;font-size:12px;line-height:1.8;color:#c9d1d9">';
+    h+='<div style="font-size:14px;font-weight:800;color:#3fb950">Playoffs — '+(playoffNames[weekNum]||'Week '+weekNum)+'</div>';
+    h+='<div style="font-size:10px;color:#8b949e;font-weight:600;margin-bottom:5px">Week '+weekNum+'</div>';
+    h+=(playoffDescs[weekNum]||'');
+    h+='</div>';
+    el.innerHTML=h;
+    return;
+  }
+  
   var seg=weekNum<=6?1:weekNum<=12?2:3;
   var segColor=seg===1?'#58a6ff':seg===2?'#bc8cff':'#d29922';
   var bgColor=seg===1?'rgba(88,166,255,.1)':seg===2?'rgba(188,140,255,.1)':'rgba(210,153,34,.1)';
@@ -753,7 +869,7 @@ function updateScoresBlurb(weekNum){
   el.innerHTML=h;
 }
 
-function sw(i){var a=document.querySelectorAll('[id^="wk"]');for(var x=0;x<a.length;x++){if(a[x].id.indexOf('wk')===0&&a[x].id.length<=4)a[x].style.display='none';}document.getElementById('wk'+i).style.display='block';}
+function sw(i){var s=window._sched;if(!s)return;for(var x=0;x<s.length;x++){var el=document.getElementById('wk'+x);if(el)el.style.display='none';}var target=document.getElementById('wk'+i);if(target)target.style.display='block';}
 function pickWk(i){
   sw(i);
   var s=window._sched;
@@ -944,6 +1060,7 @@ function renderPS() {
 function renderQualifiers() {
   var cw = currentWeek;
   var qualifiers = window._ppQualifiers || [];
+  var earnings = window._earnings || {};
   
   var o='<div class="card">';
   o+='<div style="padding:12px 16px;background:linear-gradient(135deg,#1a3a5c,#1a4a1e);border-radius:8px 8px 0 0;text-align:center"><div style="font-size:14px;font-weight:800;color:#e6edf3">Playoff Qualifiers</div></div>';
@@ -953,22 +1070,13 @@ function renderQualifiers() {
   } else {
     o+='<div class="card-scroll"><table><tr><th style="text-align:left">Player</th><th>Qualified Via</th><th style="text-align:right">Earnings</th></tr>';
     
-    var autoQ = window._ppAutoQ || [];
-    var earnMap = {};
-    for(var i=0;i<autoQ.length;i++){
-      var q=autoQ[i];
-      var amt=0;
-      if(q.prize) { var m=q.prize.match(/\$(\d+)/); if(m) amt=parseInt(m[1]); }
-      if(!earnMap[q.name]) earnMap[q.name]=0;
-      earnMap[q.name]+=amt;
-    }
-    
     var colorMap={'Weeks 1-6':'#58a6ff','Weeks 7-12':'#bc8cff','Div A':'#d29922','Div B':'#d29922','Div C':'#d29922','Div D':'#d29922','Wild Card 1':'#8b949e','Wild Card 2':'#8b949e'};
     
     for(var i=0;i<qualifiers.length;i++){
       var q=qualifiers[i];
       var color=colorMap[q.via]||'#8b949e';
-      var earn=earnMap[q.name]||0;
+      // Pull total earned directly from the Excel Earnings Tracker
+      var earn = earnings[q.name] ? earnings[q.name].total : 0;
       o+='<tr>';
       o+='<td class="nm">'+q.name+'</td>';
       o+='<td style="font-size:11px;font-weight:600;color:'+color+'">'+q.via+'</td>';
