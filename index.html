@@ -173,13 +173,19 @@ tr:last-child td{border-bottom:none}
 <div class="panel" id="sched"><div class="loading">Loading...</div></div>
 <div class="panel" id="playersched"><div class="loading">Loading...</div></div>
 <div class="panel" id="standings">
-  <div class="seg-tabs" id="standingsTabs">
-    <div class="seg-tab active" onclick="showSeg('all',this)">Wild Card</div>
-    <div class="seg-tab" onclick="showSeg('s1',this)">Seg. 1</div>
-    <div class="seg-tab" onclick="showSeg('s2',this)">Seg. 2</div>
-    <div class="seg-tab" onclick="showSeg('s3',this)">Seg. 3</div>
-    <div class="seg-tab" onclick="showSeg('qualifiers',this)">Qualifiers</div>
-    <div class="seg-tab" id="playoffTab" onclick="showSeg('poststand',this)" style="display:none">Playoffs</div>
+  <div class="rule-dd-wrap" id="standDDWrap">
+    <button class="rule-dd-btn" onclick="document.getElementById('standDDWrap').classList.toggle('open')">
+      <span id="standDDLabel">Wild Card</span>
+      <span class="rule-dd-arrow">&#9660;</span>
+    </button>
+    <div class="rule-dd-menu" id="standDDMenu">
+      <div class="rule-dd-item active" onclick="showStand('all',this,'Wild Card')">Wild Card</div>
+      <div class="rule-dd-item" onclick="showStand('s1',this,'Segment 1')">Segment 1</div>
+      <div class="rule-dd-item" onclick="showStand('s2',this,'Segment 2')">Segment 2</div>
+      <div class="rule-dd-item" onclick="showStand('s3',this,'Segment 3')">Segment 3</div>
+      <div class="rule-dd-item" onclick="showStand('qualifiers',this,'Qualifiers')">Qualifiers</div>
+      <div class="rule-dd-item" id="playoffDDItem" onclick="showStand('poststand',this,'Playoffs')" style="display:none">Playoffs</div>
+    </div>
   </div>
   <div class="seg-panel active" id="all"><div class="loading">Loading...</div></div>
   <div class="seg-panel" id="s1"><div class="loading">Loading...</div></div>
@@ -369,6 +375,8 @@ document.addEventListener('click', function(e) {
   var wrap = document.getElementById('ruleDDWrap');
   if(wrap && !wrap.contains(e.target)) wrap.classList.remove('open');
   var sw = document.getElementById('schedDDWrap');
+  var stw = document.getElementById('standDDWrap');
+  if(stw && !stw.contains(e.target)) stw.classList.remove('open');
   if(sw && !sw.contains(e.target)) sw.classList.remove('open');
 });
 
@@ -403,6 +411,17 @@ function showSeg(id, el) {
   for (var i=0;i<tabs.length;i++) tabs[i].className='seg-tab';
   document.getElementById(id).className='seg-panel active';
   if(el) el.className='seg-tab active';
+}
+
+function showStand(id, el, label) {
+  var panels = document.querySelectorAll('#standings .seg-panel');
+  for (var i=0;i<panels.length;i++) panels[i].className='seg-panel';
+  document.getElementById(id).className='seg-panel active';
+  var items = document.querySelectorAll('#standDDMenu .rule-dd-item');
+  for(var i=0;i<items.length;i++) items[i].className='rule-dd-item';
+  if(el) el.className='rule-dd-item active';
+  document.getElementById('standDDLabel').textContent = label || '';
+  document.getElementById('standDDWrap').classList.remove('open');
 }
 
 function load() {
@@ -545,7 +564,7 @@ function render(){
   renderSched();
   renderS1();renderS2();renderS3();renderAll();renderPS();renderQualifiers();renderPlayerSched();
   // Show playoff tab only when week >= 18
-  var pt=document.getElementById('playoffTab');
+  var pt=document.getElementById('playoffDDItem');
   if(pt) pt.style.display = currentWeek >= 18 ? '' : 'none';
 }
 
@@ -562,10 +581,10 @@ function renderSched(){
   var da=ds(A),db=ds(B),dc=ds(C),dd=ds(D);
   
   var sched=[];
-  for(var i=0;i<4;i++)sched.push({wk:i+1,seg:'Seg 1',mu:r1[i]});
-  for(var i=0;i<2;i++)sched.push({wk:i+5,seg:'Seg 1',mu:r2[i]});
-  for(var i=2;i<4;i++)sched.push({wk:i+5,seg:'Seg 2',mu:r2[i]});
-  for(var i=0;i<4;i++)sched.push({wk:i+9,seg:'Seg 2',mu:r3[i]});
+  for(var i=0;i<4;i++)sched.push({wk:i+1,seg:'Segment 1',mu:r1[i]});
+  for(var i=0;i<2;i++)sched.push({wk:i+5,seg:'Segment 1',mu:r2[i]});
+  for(var i=2;i<4;i++)sched.push({wk:i+5,seg:'Segment 2',mu:r2[i]});
+  for(var i=0;i<4;i++)sched.push({wk:i+9,seg:'Segment 2',mu:r3[i]});
   for(var i=0;i<6;i++)sched.push({wk:i+13,seg:'Division',mu:da[i].concat(db[i]).concat(dc[i]).concat(dd[i])});
   
   var pm={};for(var i=0;i<P.length;i++)pm[P[i].num]=P[i];
@@ -703,7 +722,7 @@ function renderS1(){
   }
   var s=P.slice().sort(function(a,b){return b.t1-a.t1||b.h1-a.h1;});
   var wn=['Wk 1','Wk 2','Wk 3','Wk 4','Wk 5','Wk 6'];
-  var o='<div class="card"><h2 class="hdr1">Segment 1 — Weeks 1-6</h2><div class="card-scroll"><table><tr><th>#</th><th style="text-align:left">Player</th>';
+  var o='<div class="card"><div class="card-scroll"><table><tr><th>#</th><th style="text-align:left">Player</th>';
   for(var i=0;i<6;i++)o+='<th class="wk-col">'+wn[i]+'</th>';
   o+='<th>H2H W</th><th class="wk-col">Best</th><th>Total Pts</th></tr>';
   for(var i=0;i<s.length;i++){
@@ -728,7 +747,7 @@ function renderS2(){
   }
   var s=P.slice().sort(function(a,b){return b.t2-a.t2||b.h2-a.h2;});
   var wn=['Wk 7','Wk 8','Wk 9','Wk 10','Wk 11','Wk 12'];
-  var o='<div class="card"><h2 class="hdr2">Segment 2 — Weeks 7-12</h2><div class="card-scroll"><table><tr><th>#</th><th style="text-align:left">Player</th>';
+  var o='<div class="card"><div class="card-scroll"><table><tr><th>#</th><th style="text-align:left">Player</th>';
   for(var i=0;i<6;i++)o+='<th class="wk-col">'+wn[i]+'</th>';
   o+='<th>H2H W</th><th class="wk-col">Best</th><th>Total Pts</th></tr>';
   for(var i=0;i<s.length;i++){
@@ -743,7 +762,7 @@ function renderS2(){
 function renderS3(){
   var divs=[{n:'Division A',p:P.filter(function(x){return x.num<=4})},{n:'Division B',p:P.filter(function(x){return x.num>=5&&x.num<=8})},{n:'Division C',p:P.filter(function(x){return x.num>=9&&x.num<=12})},{n:'Division D',p:P.filter(function(x){return x.num>=13})}];
   var wn=['W13','W14','W15','W16','W17','W18'];
-  var o='<div class="card"><h2 class="hdr3">Segment 3 — Weeks 13-18</h2><div class="card-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">';
+  var o='<div class="card"><div class="card-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">';
   for(var d=0;d<divs.length;d++){
     var s=divs[d].p.slice().sort(function(a,b){return b.w3-a.w3||b.p3-a.p3;});
     o+='<div class="dl">'+divs[d].n+'</div><table><tr><th>#</th><th style="text-align:left">Player</th>';
@@ -854,12 +873,12 @@ function renderQualifiers() {
   var payouts=[200,75,35];
   
   var o='<div class="card">';
-  o+='<div style="padding:12px 16px;background:linear-gradient(135deg,#1a3a5c,#1a4a1e);border-radius:8px 8px 0 0"><div style="font-size:14px;font-weight:800;color:#e6edf3">Playoff Qualifiers & Earnings</div></div>';
+  o+='<div style="padding:12px 16px;background:linear-gradient(135deg,#1a3a5c,#1a4a1e);border-radius:8px 8px 0 0;text-align:center"><div style="font-size:14px;font-weight:800;color:#e6edf3">Playoff Qualifiers</div></div>';
   
   if(qualified.length===0){
     o+='<div style="padding:30px;color:#484f58;text-align:center;font-size:13px;">No qualifiers yet. Players qualify as segments complete.</div>';
   } else {
-    o+='<div class="card-scroll"><table><tr><th>#</th><th style="text-align:left">Player</th><th>Qualified Via</th><th style="text-align:right">Earnings</th></tr>';
+    o+='<div class="card-scroll"><table><tr><th style="text-align:left">Player</th><th>Qualified Via</th><th style="text-align:right">Earnings</th></tr>';
     // Build earnings map
     var earnMap={};
     for(var i=0;i<qualified.length;i++){
@@ -875,7 +894,7 @@ function renderQualifiers() {
     for(var i=0;i<qualified.length;i++){
       var q=qualified[i];
       var totalEarn=earnMap[q.name]?earnMap[q.name].total:0;
-      o+='<tr><td class="'+rc(i)+'">'+(i+1)+'</td>';
+      o+='<tr>';
       o+='<td class="nm">'+q.name+'</td>';
       o+='<td style="font-size:11px;font-weight:600;color:'+q.color+'">'+q.via+'</td>';
       o+='<td class="tot" style="text-align:right;color:#3fb950">'+(totalEarn>0?'$'+totalEarn:'—')+'</td></tr>';
@@ -899,10 +918,10 @@ function renderPlayerSched() {
   var da=ds(A),db=ds(B),dc=ds(C),dd=ds(D);
   
   var sched=[];
-  for(var i=0;i<4;i++)sched.push({wk:i+1,seg:'Seg 1',mu:r1[i]});
-  for(var i=0;i<2;i++)sched.push({wk:i+5,seg:'Seg 1',mu:r2[i]});
-  for(var i=2;i<4;i++)sched.push({wk:i+5,seg:'Seg 2',mu:r2[i]});
-  for(var i=0;i<4;i++)sched.push({wk:i+9,seg:'Seg 2',mu:r3[i]});
+  for(var i=0;i<4;i++)sched.push({wk:i+1,seg:'Segment 1',mu:r1[i]});
+  for(var i=0;i<2;i++)sched.push({wk:i+5,seg:'Segment 1',mu:r2[i]});
+  for(var i=2;i<4;i++)sched.push({wk:i+5,seg:'Segment 2',mu:r2[i]});
+  for(var i=0;i<4;i++)sched.push({wk:i+9,seg:'Segment 2',mu:r3[i]});
   for(var i=0;i<6;i++)sched.push({wk:i+13,seg:'Division',mu:da[i].concat(db[i]).concat(dc[i]).concat(dd[i])});
   
   // Player lookup
@@ -1087,7 +1106,7 @@ function showPlayerSched(playerNum, el) {
   
   var o = '<div class="card">';
   o += '<div class="card-scroll"><table class="ps-table">';
-  o += '<tr><th>Week</th><th>Segment</th><th style="text-align:left">Opponent</th><th>My Picks</th><th>Opp Picks</th><th>Result</th></tr>';
+  o += '<tr><th>Week</th><th style="text-align:left">Opponent</th><th>My Picks</th><th>Opp Picks</th><th>Result</th></tr>';
   
   for (var i = 0; i < sched.length; i++) {
     var wk = sched[i];
@@ -1115,7 +1134,6 @@ function showPlayerSched(playerNum, el) {
     
     o += '<tr>';
     o += '<td class="ps-week">'+wk.wk+'</td>';
-    o += '<td class="ps-seg">'+wk.seg+'</td>';
     o += '<td class="nm">'+oppName+'</td>';
     o += '<td class="wk">'+myPicks+'</td>';
     o += '<td class="wk">'+oppPicks+'</td>';
