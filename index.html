@@ -479,6 +479,7 @@ function load() {
     readPlayoffPicture(wb);
     readEarnings(wb);
     readPlayoffWeeks(wb);
+    readNflPlayoffGames(wb);
     readUpdates(wb);
     
     render();
@@ -682,6 +683,35 @@ function readPlayoffWeeks(wb) {
   }
 }
 
+function readNflPlayoffGames(wb) {
+  window._nflPlayoffGames = {19:[], 20:[], 21:[], 22:[]};
+  var ws = wb.Sheets['NFL Playoff Games'];
+  if (!ws) return;
+  var ref = ws['!ref'];
+  if (!ref) return;
+  var range = XLSX.utils.decode_range(ref);
+  var curWeek = 0;
+  for (var r = range.s.r; r <= range.e.r; r++) {
+    var a = ws[XLSX.utils.encode_cell({r:r, c:0})];
+    if (!a) continue;
+    var av = String(a.v || '');
+    if (av.indexOf('WEEK 19') >= 0) { curWeek = 19; continue; }
+    if (av.indexOf('WEEK 20') >= 0) { curWeek = 20; continue; }
+    if (av.indexOf('WEEK 21') >= 0) { curWeek = 21; continue; }
+    if (av.indexOf('WEEK 22') >= 0) { curWeek = 22; continue; }
+    if (av === '#') continue;
+    if (curWeek > 0 && typeof a.v === 'number') {
+      var awayCell = ws[XLSX.utils.encode_cell({r:r, c:1})];
+      var homeCell = ws[XLSX.utils.encode_cell({r:r, c:2})];
+      var away = awayCell ? String(awayCell.v || '').trim().toUpperCase() : '';
+      var home = homeCell ? String(homeCell.v || '').trim().toUpperCase() : '';
+      if (away && home && NFL_ESPN[away] && NFL_ESPN[home]) {
+        window._nflPlayoffGames[curWeek].push({a: away, h: home});
+      }
+    }
+  }
+}
+
 function rc(i){return i===0?'r1':i===1?'r2':i===2?'r3':'';}
 
 function render(){
@@ -750,6 +780,20 @@ function renderSched(){
     o+='<div id="wk'+i+'" style="display:'+(i===defaultIdx?'block':'none')+'">';
     
     if(s.playoff){
+      // Show NFL playoff game logos for this week
+      var pg = (window._nflPlayoffGames || {})[s.wk] || [];
+      if(pg.length > 0){
+        o+='<div class="nfl-grid" style="margin-bottom:14px;max-width:720px">';
+        for(var g=0;g<pg.length;g++){
+          o+='<div class="nfl-mu">';
+          o+='<img src="'+nflLogo(pg[g].a)+'" alt="'+pg[g].a+'" title="'+(NFL_NAMES[pg[g].a]||pg[g].a)+'">';
+          o+='<span class="nfl-at">@</span>';
+          o+='<img src="'+nflLogo(pg[g].h)+'" alt="'+pg[g].h+'" title="'+(NFL_NAMES[pg[g].h]||pg[g].h)+'">';
+          o+='</div>';
+        }
+        o+='</div>';
+      }
+      
       // Playoff week: render individual player cards sorted by score
       var pw = window._playoffWeeks || {};
       var players = (pw[s.wk] || []).slice();
@@ -837,10 +881,10 @@ function updateScoresBlurb(weekNum){
   if(weekNum >= 19){
     var playoffNames={19:'Wild Card Round',20:'Divisional Round',21:'Conference Championships',22:'Super Bowl'};
     var playoffDescs={
-      19:'• All 8 qualified players pick all games ATS<br>• Assign confidence weights <strong>1–4</strong><br>• Correct picks earn their weighted value<br>• <strong>Top 4</strong> advance to the Finals',
+      19:'• All 8 qualified players pick all games ATS<br>• Assign confidence weights <strong>1–4</strong><br>• Correct picks earn their weighted value<br>• <strong>Top 4</strong> advance to the Finals<div style="margin-top:8px;padding-top:6px;border-top:1px solid rgba(255,255,255,.1);font-size:11px;color:#8b949e"><strong style="color:#d29922">Tiebreakers:</strong> 1) Weekly tiebreaker 2) Total points in AFC WC games 3) Total points in NFC WC games</div>',
       20:'• 4 advancing players carry Wild Card points<br>• Pick all Divisional games ATS<br>• Each correct pick = <strong style="color:#3fb950">2 points</strong>',
       21:'• Pick both Conference Championship games ATS<br>• Each correct pick = <strong style="color:#3fb950">4 points</strong>',
-      22:'• Pick the Super Bowl ATS<br>• Correct pick = <strong style="color:#3fb950">8 points</strong><br>• Top 3 in total cumulative points receive payouts'
+      22:'• Pick the Super Bowl ATS<br>• Correct pick = <strong style="color:#3fb950">8 points</strong><br>• Top 3 in total cumulative points receive payouts<div style="margin-top:8px;padding-top:6px;border-top:1px solid rgba(255,255,255,.1);font-size:11px;color:#8b949e"><strong style="color:#d29922">Tiebreakers:</strong> 1) Weekly tiebreaker for the Super Bowl 2) Closest guess to longest FG made in Super Bowl</div>'
     };
     var h='<div style="max-width:720px;margin:16px auto 0;padding:12px 16px;background:rgba(63,185,80,.08);border:1px solid rgba(63,185,80,.15);border-left:3px solid #3fb950;border-radius:8px;font-size:12px;line-height:1.8;color:#c9d1d9">';
     h+='<div style="font-size:14px;font-weight:800;color:#3fb950">Playoffs — '+(playoffNames[weekNum]||'Week '+weekNum)+'</div>';
@@ -862,18 +906,21 @@ function updateScoresBlurb(weekNum){
     h+='• More correct picks = H2H win<br>';
     h+='• H2H win = <strong style="color:#3fb950">+6 bonus points</strong><br>';
     h+='• H2H tie = <strong style="color:#d29922">+3 points each</strong>';
+    h+='<div style="margin-top:8px;padding-top:6px;border-top:1px solid rgba(255,255,255,.1);font-size:11px;color:#8b949e"><strong style="color:#d29922">Tiebreakers:</strong> 1) H2H record between tied 2) Highest single-week score 3) Most H2H wins across Wks 1–6</div>';
   } else if(seg===2){
     h+='<div style="font-size:14px;font-weight:800;color:'+segColor+'">Segment 2 - Week '+weekNum+'</div>';
     h+='<div style="font-size:10px;color:#8b949e;font-weight:600;margin-bottom:5px">H2H + Weighted Confidence</div>';
     h+='• More weighted points = H2H win<br>';
     h+='• H2H win = <strong style="color:#3fb950">+10 bonus points</strong><br>';
     h+='• H2H tie = <strong style="color:#d29922">+5 points each</strong>';
+    h+='<div style="margin-top:8px;padding-top:6px;border-top:1px solid rgba(255,255,255,.1);font-size:11px;color:#8b949e"><strong style="color:#d29922">Tiebreakers:</strong> 1) H2H record between tied 2) Highest single-week score 3) Most H2H wins across Wks 7–12</div>';
   } else {
     h+='<div style="font-size:14px;font-weight:800;color:'+segColor+'">Segment 3 - Week '+weekNum+'</div>';
     h+='<div style="font-size:10px;color:#8b949e;font-weight:600;margin-bottom:5px">Divisional Round-Robin</div>';
     h+='• More correct picks = H2H win<br>';
     h+='• H2H win = <strong style="color:#3fb950">+1 win</strong> to divisional record<br>';
     h+='• H2H tie = <strong style="color:#d29922">+.5 W / .5 L each</strong>';
+    h+='<div style="margin-top:8px;padding-top:6px;border-top:1px solid rgba(255,255,255,.1);font-size:11px;color:#8b949e"><strong style="color:#d29922">Tiebreakers:</strong> 1) H2H record vs tied 2) Most correct picks in H2H vs tied 3) Highest picks in one week vs tied 4) Most picks across Wks 13–18 5) Best single-week score</div>';
   }
   h+='</div>';
   el.innerHTML=h;
@@ -1212,26 +1259,49 @@ var nflWeek = currentWeek || 1;
 // Segment blurbs
 var NFL_BLURBS = {};
 function getNflBlurb(wk){
+  if(wk >= 19){
+    var playoffNames={19:'Wild Card Round',20:'Divisional Round',21:'Conference Championships',22:'Super Bowl'};
+    var h='<div style="font-size:15px;font-weight:800;color:#3fb950">Playoffs — '+(playoffNames[wk]||'Week '+wk)+'</div>';
+    if(wk===19){
+      h+='<div style="font-size:11px;color:#8b949e;font-weight:600;margin-bottom:6px">Week 19</div>';
+      h+='• All 8 qualified players pick all games ATS<br>• Assign confidence weights <b>1–4</b><br>• Correct picks earn their weighted value<br>• <b>Top 4</b> advance to the Finals';
+      h+='<div style="margin-top:8px;padding-top:6px;border-top:1px solid #30363d;font-size:11px;color:#8b949e"><b style="color:#d29922">Tiebreakers:</b> 1) Weekly tiebreaker 2) Total points in AFC WC games 3) Total points in NFC WC games</div>';
+    } else if(wk===20){
+      h+='<div style="font-size:11px;color:#8b949e;font-weight:600;margin-bottom:6px">Week 20</div>';
+      h+='• 4 advancing players carry Wild Card points<br>• Pick all Divisional games ATS<br>• Each correct pick = <b>2 points</b>';
+    } else if(wk===21){
+      h+='<div style="font-size:11px;color:#8b949e;font-weight:600;margin-bottom:6px">Week 21</div>';
+      h+='• Pick both Conference Championship games ATS<br>• Each correct pick = <b>4 points</b>';
+    } else {
+      h+='<div style="font-size:11px;color:#8b949e;font-weight:600;margin-bottom:6px">Week 22</div>';
+      h+='• Pick the Super Bowl ATS<br>• Correct pick = <b>8 points</b><br>• Top 3 in total cumulative points receive payouts';
+      h+='<div style="margin-top:8px;padding-top:6px;border-top:1px solid #30363d;font-size:11px;color:#8b949e"><b style="color:#d29922">Tiebreakers:</b> 1) Weekly tiebreaker for the Super Bowl 2) Closest guess to longest FG made in Super Bowl</div>';
+    }
+    return h;
+  }
   var seg=wk<=6?1:wk<=12?2:3;
   var segColor=seg===1?'#58a6ff':seg===2?'#bc8cff':'#d29922';
   var h='<div style="font-size:15px;font-weight:800;color:'+segColor+'">Segment '+seg+' - Week '+wk+'</div>';
   if(seg===1){
     h+='<div style="font-size:11px;color:#8b949e;font-weight:600;margin-bottom:6px">H2H + Points</div>';
     h+='• Pick every game against the spread<br>• Each correct pick = <b>1 point</b><br>• H2H win = <b>6 bonus points</b> · tie = 3 each<br>• Max <b>22 pts/week</b>';
+    h+='<div style="margin-top:8px;padding-top:6px;border-top:1px solid #30363d;font-size:11px;color:#8b949e"><b style="color:#d29922">Tiebreakers:</b> 1) H2H record between tied 2) Highest single-week score 3) Most H2H wins across Wks 1–6</div>';
   } else if(seg===2){
     h+='<div style="font-size:11px;color:#8b949e;font-weight:600;margin-bottom:6px">H2H + Weighted Confidence</div>';
     h+='• Choose <b>8 games</b> against the spread<br>• Rank confidence <b>8</b> (most) down to <b>1</b> (least)<br>• Correct picks earn their weighted value<br>• H2H win = <b>10 bonus points</b> · tie = 5 each<br>• Max <b>46 pts/week</b>';
+    h+='<div style="margin-top:8px;padding-top:6px;border-top:1px solid #30363d;font-size:11px;color:#8b949e"><b style="color:#d29922">Tiebreakers:</b> 1) H2H record between tied 2) Highest single-week score 3) Most H2H wins across Wks 7–12</div>';
   } else {
     h+='<div style="font-size:11px;color:#8b949e;font-weight:600;margin-bottom:6px">Divisional Round-Robin</div>';
     h+='• Pick every game against the spread<br>• Most correct picks <b>wins the H2H matchup</b><br>• Divisional round-robin — face each opponent <b>twice</b><br>• Standings by <b>win-loss record</b>';
+    h+='<div style="margin-top:8px;padding-top:6px;border-top:1px solid #30363d;font-size:11px;color:#8b949e"><b style="color:#d29922">Tiebreakers:</b> 1) H2H record vs tied 2) Most correct picks in H2H vs tied 3) Highest picks in one week vs tied 4) Most picks across Wks 13–18 5) Best single-week score</div>';
   }
   return h;
 }
 
 function nflBuildStrip(){
+  var maxWk = currentWeek >= 19 ? 22 : 18;
   var h='';
-  for(var w=1;w<=18;w++){
-    var seg=w<=6?1:w<=12?2:3;
+  for(var w=1;w<=maxWk;w++){
     h+='<button class="nfl-wk'+(w===nflWeek?' active':'')+'" onclick="nflRender('+w+')" data-wk="'+w+'">'+w+'<span class="wn">Wk</span></button>';
   }
   document.getElementById('nflStrip').innerHTML=h;
@@ -1254,10 +1324,33 @@ function nflRender(wk){
   // Blurb
   document.getElementById('nflBlurb').innerHTML=getNflBlurb(wk);
 
+  var byeEl=document.getElementById('nflBye');
+  
+  if(wk >= 19){
+    // Playoff weeks — use data from NFL Playoff Games sheet
+    byeEl.style.display='none';
+    var pg = (window._nflPlayoffGames || {})[wk] || [];
+    var h='';
+    if(pg.length === 0){
+      h='<div style="padding:20px;text-align:center;color:#484f58;font-size:13px;">No matchups entered yet for this week.<br>Update the NFL Playoff Games sheet.</div>';
+    } else {
+      for(var i=0;i<pg.length;i++){
+        var g=pg[i];
+        h+='<div class="nfl-mu">';
+        h+='<img src="'+nflLogo(g.a)+'" alt="'+g.a+'" title="'+(NFL_NAMES[g.a]||g.a)+'" '+logoStyle(g.a)+'>';
+        h+='<span class="nfl-at">@</span>';
+        h+='<img src="'+nflLogo(g.h)+'" alt="'+g.h+'" title="'+(NFL_NAMES[g.h]||g.h)+'" '+logoStyle(g.h)+'>';
+        h+='</div>';
+      }
+    }
+    document.getElementById('nflGrid').innerHTML=h;
+    return;
+  }
+
+  // Regular season weeks 1-18
   // Byes
   var byes=[];
   for(var t in NFL_SCHED){if(NFL_SCHED[t][wk-1]==='BYE')byes.push(t);}
-  var byeEl=document.getElementById('nflBye');
   if(byes.length>0){
     byes.sort();
     byeEl.style.display='block';
@@ -1283,8 +1376,9 @@ function nflRender(wk){
 }
 
 function nflChangeWeek(d){
+  var max = currentWeek >= 19 ? 22 : 18;
   var n=nflWeek+d;
-  if(n>=1&&n<=18)nflRender(n);
+  if(n>=1&&n<=max)nflRender(n);
 }
 
 // ============================================================
