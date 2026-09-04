@@ -254,9 +254,9 @@ tr:last-child td{border-bottom:none}
     <div class="card" style="padding:20px">
       <div style="font-size:16px;font-weight:800;color:#e6edf3;margin-bottom:4px;text-align:center">Join the Pools</div>
       <div style="font-size:12px;color:#8b949e;text-align:center;margin-bottom:16px">Click below to join each segment's CBS Sports pool</div>
-      <a class="pool-info-btn" href="https://picks.cbssports.com/football/pickem/pools/kbxw63b2ge3domzxhezds===/join?invited-by=ivxhi4tzhizdkmjqg44tenbr&via-medium=copy&ttag=FF26_cpy_invite_new_mt_opm&pool-join-key=doywcns2q0egt8fv00jw8zjzi3ip2u95&senderRole=m5a7nfa7gjekr7" target="_blank">Segment 1 — Weeks 1–6<span style="display:block;font-size:11px;color:#58a6ff;font-weight:500;margin-top:2px">H2H + Points</span></a>
-      <a class="pool-info-btn" href="https://picks.cbssports.com/football/pickem/pools/kbxw63b2ge3domzxhezta===/join?invited-by=ivxhi4tzhizdkmjqg44tenbx&via-medium=copy&ttag=FF26_cpy_invite_new_mt_opm&pool-join-key=k88oge8khziflykldnigh7pwbnpl9j40&senderRole=mta0nbaegaeor9" target="_blank">Segment 2 — Weeks 7–12<span style="display:block;font-size:11px;color:#bc8cff;font-weight:500;margin-top:2px">H2H + Weighted Confidence</span></a>
-      <a class="pool-info-btn" href="https://picks.cbssports.com/football/pickem/pools/kbxw63b2ge3domzxheztc===/join?invited-by=ivxhi4tzhizdkmjqg44tenby&via-medium=copy&ttag=FF26_cpy_invite_new_mt_opm&pool-join-key=ji1080lpufhluk8o2orziah12qcitcze&senderRole=mfaxniawgeewrr" target="_blank">Segment 3 — Weeks 13–18<span style="display:block;font-size:11px;color:#d29922;font-weight:500;margin-top:2px">Divisional Round-Robin</span></a>
+      <a class="pool-info-btn" style="border-left:3px solid #58a6ff" href="https://picks.cbssports.com/football/pickem/pools/kbxw63b2ge3domzxhezds===/join?invited-by=ivxhi4tzhizdkmjqg44tenbr&via-medium=copy&ttag=FF26_cpy_invite_new_mt_opm&pool-join-key=doywcns2q0egt8fv00jw8zjzi3ip2u95&senderRole=m5a7nfa7gjekr7" target="_blank"><div style="display:flex;justify-content:space-between;align-items:center">Segment 1 — Weeks 1–6<span style="font-size:11px;color:#58a6ff;font-weight:700;background:rgba(88,166,255,.1);padding:4px 10px;border-radius:6px">Click Here</span></div><span style="display:block;font-size:11px;color:#58a6ff;font-weight:500;margin-top:2px">H2H + Points</span></a>
+      <a class="pool-info-btn" style="border-left:3px solid #bc8cff" href="https://picks.cbssports.com/football/pickem/pools/kbxw63b2ge3domzxhezta===/join?invited-by=ivxhi4tzhizdkmjqg44tenbx&via-medium=copy&ttag=FF26_cpy_invite_new_mt_opm&pool-join-key=k88oge8khziflykldnigh7pwbnpl9j40&senderRole=mta0nbaegaeor9" target="_blank"><div style="display:flex;justify-content:space-between;align-items:center">Segment 2 — Weeks 7–12<span style="font-size:11px;color:#bc8cff;font-weight:700;background:rgba(188,140,255,.1);padding:4px 10px;border-radius:6px">Click Here</span></div><span style="display:block;font-size:11px;color:#bc8cff;font-weight:500;margin-top:2px">H2H + Weighted Confidence</span></a>
+      <a class="pool-info-btn" style="border-left:3px solid #d29922" href="https://picks.cbssports.com/football/pickem/pools/kbxw63b2ge3domzxheztc===/join?invited-by=ivxhi4tzhizdkmjqg44tenby&via-medium=copy&ttag=FF26_cpy_invite_new_mt_opm&pool-join-key=ji1080lpufhluk8o2orziah12qcitcze&senderRole=mfaxniawgeewrr" target="_blank"><div style="display:flex;justify-content:space-between;align-items:center">Segment 3 — Weeks 13–18<span style="font-size:11px;color:#d29922;font-weight:700;background:rgba(210,153,34,.1);padding:4px 10px;border-radius:6px">Click Here</span></div><span style="display:block;font-size:11px;color:#d29922;font-weight:500;margin-top:2px">Divisional Round-Robin</span></a>
     </div>
   </div>
   <div id="infoRules" style="display:none">
@@ -555,7 +555,7 @@ function load() {
     readUpdates(wb);
     
     render();
-    nflWeek = Math.min(currentWeek, 22);
+    nflWeek = currentWeek === 0 ? 1 : Math.min(currentWeek, 22);
     nflBuildStrip();
     nflRender(nflWeek);
     setTimeout(initStripScaling, 300);
@@ -663,6 +663,21 @@ function readPlayoffs(wb) {
       var ptsCell = wc[XLSX.utils.encode_cell({r:r, c:2})];
       var pts = ptsCell && typeof ptsCell.v === 'number' ? ptsCell.v : 0;
       if (name) playoffData.wc[name] = pts;
+    }
+    // Read WC tiebreaker data: col E=Weekly TB Rank, col F=AFC WC Pts, col G=NFC WC Pts
+    playoffData.wcTiebreakers = {};
+    for (var r = 4; r < 12; r++) {
+      var nameCell = wc[XLSX.utils.encode_cell({r:r, c:1})];
+      var name = nameCell ? String(nameCell.v || '') : '';
+      if (!name) continue;
+      var tbRank = wc[XLSX.utils.encode_cell({r:r, c:4})];
+      var afcPts = wc[XLSX.utils.encode_cell({r:r, c:5})];
+      var nfcPts = wc[XLSX.utils.encode_cell({r:r, c:6})];
+      playoffData.wcTiebreakers[name] = {
+        tbRank: tbRank && typeof tbRank.v === 'number' ? tbRank.v : 0,
+        afcPts: afcPts && typeof afcPts.v === 'number' ? afcPts.v : 0,
+        nfcPts: nfcPts && typeof nfcPts.v === 'number' ? nfcPts.v : 0
+      };
     }
   }
   
@@ -909,20 +924,23 @@ function showPoolsPopup(){
   h += '<button class="champ-close" onclick="closeChampPopup()">&times;</button>';
   h += '<div style="font-size:36px;margin-bottom:4px">&#127944;</div>';
   h += '<div style="font-size:12px;text-transform:uppercase;letter-spacing:3px;color:#58a6ff;font-weight:700;margin-bottom:6px">NFL Picks League</div>';
-  h += '<div style="font-size:24px;font-weight:900;color:#e6edf3;margin-bottom:6px">Join the Pools</div>';
-  h += '<div style="font-size:12px;color:#8b949e;margin-bottom:20px">Sign up for each segment below to get started</div>';
+  h += '<div style="font-size:24px;font-weight:900;color:#e6edf3;margin-bottom:6px">Welcome to the League!</div>';
+  h += '<div style="font-size:13px;color:#c9d1d9;margin-bottom:6px;line-height:1.6">A 22-week picks competition split into three segments, four divisions, and a playoff bracket. Compete head-to-head, climb the standings, and cash in.</div>';
+  h += '<div style="font-size:12px;color:#8b949e;margin-bottom:20px">Get started by joining each pool below.</div>';
   
-  h += '<a class="pool-btn" href="https://picks.cbssports.com/football/pickem/pools/kbxw63b2ge3domzxhezds===/join?invited-by=ivxhi4tzhizdkmjqg44tenbr&via-medium=copy&ttag=FF26_cpy_invite_new_mt_opm&pool-join-key=doywcns2q0egt8fv00jw8zjzi3ip2u95&senderRole=m5a7nfa7gjekr7" target="_blank">';
-  h += '<span style="color:#58a6ff;font-size:10px;font-weight:600;display:block;margin-bottom:2px">SEGMENT 1</span>';
-  h += 'Weeks 1–6<span>H2H + Points</span></a>';
+  h += '<div style="font-size:15px;font-weight:800;color:#e6edf3;margin-bottom:12px">Join the Pools</div>';
   
-  h += '<a class="pool-btn" href="https://picks.cbssports.com/football/pickem/pools/kbxw63b2ge3domzxhezta===/join?invited-by=ivxhi4tzhizdkmjqg44tenbx&via-medium=copy&ttag=FF26_cpy_invite_new_mt_opm&pool-join-key=k88oge8khziflykldnigh7pwbnpl9j40&senderRole=mta0nbaegaeor9" target="_blank">';
-  h += '<span style="color:#bc8cff;font-size:10px;font-weight:600;display:block;margin-bottom:2px">SEGMENT 2</span>';
-  h += 'Weeks 7–12<span>H2H + Weighted Confidence</span></a>';
+  h += '<a class="pool-btn" style="border-left:3px solid #58a6ff" href="https://picks.cbssports.com/football/pickem/pools/kbxw63b2ge3domzxhezds===/join?invited-by=ivxhi4tzhizdkmjqg44tenbr&via-medium=copy&ttag=FF26_cpy_invite_new_mt_opm&pool-join-key=doywcns2q0egt8fv00jw8zjzi3ip2u95&senderRole=m5a7nfa7gjekr7" target="_blank">';
+  h += '<div style="display:flex;justify-content:space-between;align-items:center"><span><span style="color:#58a6ff;font-size:10px;font-weight:600;display:block;margin-bottom:2px">SEGMENT 1</span>Weeks 1–6</span><span style="font-size:11px;color:#58a6ff;font-weight:700;background:rgba(88,166,255,.1);padding:4px 10px;border-radius:6px">Click Here</span></div>';
+  h += '<span>H2H + Points</span></a>';
   
-  h += '<a class="pool-btn" href="https://picks.cbssports.com/football/pickem/pools/kbxw63b2ge3domzxheztc===/join?invited-by=ivxhi4tzhizdkmjqg44tenby&via-medium=copy&ttag=FF26_cpy_invite_new_mt_opm&pool-join-key=ji1080lpufhluk8o2orziah12qcitcze&senderRole=mfaxniawgeewrr" target="_blank">';
-  h += '<span style="color:#d29922;font-size:10px;font-weight:600;display:block;margin-bottom:2px">SEGMENT 3</span>';
-  h += 'Weeks 13–18<span>Divisional Round-Robin</span></a>';
+  h += '<a class="pool-btn" style="border-left:3px solid #bc8cff" href="https://picks.cbssports.com/football/pickem/pools/kbxw63b2ge3domzxhezta===/join?invited-by=ivxhi4tzhizdkmjqg44tenbx&via-medium=copy&ttag=FF26_cpy_invite_new_mt_opm&pool-join-key=k88oge8khziflykldnigh7pwbnpl9j40&senderRole=mta0nbaegaeor9" target="_blank">';
+  h += '<div style="display:flex;justify-content:space-between;align-items:center"><span><span style="color:#bc8cff;font-size:10px;font-weight:600;display:block;margin-bottom:2px">SEGMENT 2</span>Weeks 7–12</span><span style="font-size:11px;color:#bc8cff;font-weight:700;background:rgba(188,140,255,.1);padding:4px 10px;border-radius:6px">Click Here</span></div>';
+  h += '<span>H2H + Weighted Confidence</span></a>';
+  
+  h += '<a class="pool-btn" style="border-left:3px solid #d29922" href="https://picks.cbssports.com/football/pickem/pools/kbxw63b2ge3domzxheztc===/join?invited-by=ivxhi4tzhizdkmjqg44tenby&via-medium=copy&ttag=FF26_cpy_invite_new_mt_opm&pool-join-key=ji1080lpufhluk8o2orziah12qcitcze&senderRole=mfaxniawgeewrr" target="_blank">';
+  h += '<div style="display:flex;justify-content:space-between;align-items:center"><span><span style="color:#d29922;font-size:10px;font-weight:600;display:block;margin-bottom:2px">SEGMENT 3</span>Weeks 13–18</span><span style="font-size:11px;color:#d29922;font-weight:700;background:rgba(210,153,34,.1);padding:4px 10px;border-radius:6px">Click Here</span></div>';
+  h += '<span>Divisional Round-Robin</span></a>';
   
   h += '</div>';
   overlay.innerHTML = h;
@@ -1114,6 +1132,16 @@ function renderSched(){
           o+='<div class="po-rank '+rankClass+'">'+(j+1)+'</div>';
           o+='<div class="po-info"><div class="po-name">'+pl.name+'</div>';
           o+='<div class="po-via">This week: '+wkPts+' pts</div>';
+          if(s.wk === 19){
+            // Check if tied with anyone on cumulative pts
+            var plCum19 = cumPts;
+            var isTied19 = false;
+            for(var tt=0;tt<players.length;tt++){if(tt!==j){var oc=players[tt].cumPts!==undefined?players[tt].cumPts:players[tt].pts;if(oc===plCum19)isTied19=true;}}
+            if(isTied19){
+              var wctb = (playoffData.wcTiebreakers||{})[pl.name]||{tbRank:0,afcPts:0,nfcPts:0};
+              o+='<div style="font-size:9px;color:#d29922;font-weight:600;margin-top:2px">TB: '+(wctb.tbRank||'—')+' · AFC: '+(wctb.afcPts||'—')+' · NFC: '+(wctb.nfcPts||'—')+'</div>';
+            }
+          }
           if(s.wk === 22){
             // Check if this player is tied with anyone
             var plCum = cumPts;
@@ -1417,10 +1445,22 @@ function renderPS() {
   if(cw < 19 || qualified.length < 8){
     o+='<tr><td colspan="4" style="padding:30px;color:#484f58;text-align:center;font-size:13px;">All 8 qualifiers must be determined before the Wild Card Round begins.<br>Qualifiers populate as segments are completed.</td></tr>';
   } else {
-    var r1=qualified.map(function(q){var wc=playoffData.wc[q.name]||0;return{name:q.name,via:q.via,pts:wc};});
+    var wcTb = playoffData.wcTiebreakers || {};
+    var r1=qualified.map(function(q){var wcp=playoffData.wc[q.name]||0;return{name:q.name,via:q.via,pts:wcp};});
     r1.sort(function(a,b){return b.pts-a.pts;});
+    // Check for ties
+    var wcTiedPts = {};
     for(var i=0;i<r1.length;i++){
-      o+='<tr><td class="'+rc(i)+'">'+(i+1)+'</td><td class="nm">'+r1[i].name+'</td><td class="wk" style="font-size:11px;color:#8b949e">'+r1[i].via+'</td><td class="tot">'+r1[i].pts+'</td></tr>';
+      if(!wcTiedPts[r1[i].pts]) wcTiedPts[r1[i].pts]=[];
+      wcTiedPts[r1[i].pts].push(r1[i].name);
+    }
+    var wcTiedNames = {};
+    for(var k in wcTiedPts){ if(wcTiedPts[k].length>1){ for(var x=0;x<wcTiedPts[k].length;x++) wcTiedNames[wcTiedPts[k][x]]=true; } }
+    
+    for(var i=0;i<r1.length;i++){
+      var tb = wcTb[r1[i].name]||{tbRank:0,afcPts:0,nfcPts:0};
+      var tbNote = wcTiedNames[r1[i].name] ? '<div style="font-size:9px;color:#d29922;font-weight:600">TB: '+(tb.tbRank||'—')+' · AFC: '+(tb.afcPts||'—')+' · NFC: '+(tb.nfcPts||'—')+'</div>' : '';
+      o+='<tr><td class="'+rc(i)+'">'+(i+1)+'</td><td class="nm">'+r1[i].name+tbNote+'</td><td class="wk" style="font-size:11px;color:#8b949e">'+r1[i].via+'</td><td class="tot">'+r1[i].pts+'</td></tr>';
     }
   }
   o+='</table></div></div>';
