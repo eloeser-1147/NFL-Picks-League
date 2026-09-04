@@ -19,8 +19,8 @@ body{font-family:'Inter',Arial,sans-serif;background:#0d1117;color:#e6edf3;min-h
 .tab-btn.active{color:#e6edf3;border-bottom-color:transparent}
 .tab-btn.active::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:3px;background:linear-gradient(90deg,#58a6ff,#3fb950);border-radius:2px}
 
-.seg-tabs{display:flex;justify-content:center;gap:20px;margin-bottom:10px}
-.seg-tab{padding:3px 4px;background:none;border:none;border-bottom:2px solid transparent;color:#8b949e;font-size:12px;font-weight:600;cursor:pointer}
+.seg-tabs{display:flex;justify-content:center;gap:16px;margin-bottom:8px}
+.seg-tab{padding:2px 2px;background:none;border:none;border-bottom:1px solid transparent;color:#8b949e;font-size:11px;font-weight:600;cursor:pointer}
 .seg-tab:hover{color:#e6edf3;border-bottom-color:#30363d}
 .seg-tab.active{color:#e6edf3;border-bottom-color:#58a6ff}
 .seg-panel{display:none}
@@ -2166,11 +2166,6 @@ function renderUpdates() {
   try { isOff = !!localStorage.getItem('nflPicksHideUpdates'); } catch(e){}
   
   var o = '';
-  // Toggle control
-  o += '<div class="update-toggle">';
-  o += '<span>Show update popup on page load</span>';
-  o += '<div class="toggle-sw'+(isOff?'':' on')+'" onclick="toggleUpdatePopup(this)"></div>';
-  o += '</div>';
   
   if (updates.length === 0) {
     o += '<div class="card"><div style="padding:16px;font-size:13px;line-height:1.7;color:#8b949e;text-align:center;"><p style="font-size:15px;margin-bottom:8px;">No updates at this time.</p><p>Check back weekly for standings updates, rule clarifications, and league news.</p></div></div>';
@@ -2185,6 +2180,13 @@ function renderUpdates() {
       o += '</div>';
     }
   }
+  
+  // Toggle control at the bottom
+  o += '<div class="update-toggle">';
+  o += '<span>Show update popup on page load</span>';
+  o += '<div class="toggle-sw'+(isOff?'':' on')+'" onclick="toggleUpdatePopup(this)"></div>';
+  o += '</div>';
+  
   el.innerHTML = o;
 }
 
