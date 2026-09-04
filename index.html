@@ -1854,6 +1854,50 @@ for (var w=1;w<=18;w++){
   }
 }
 
+// Schedule details: time, day, network per game (keyed by "AWAY-HOME")
+var NFL_DETAIL = {
+1:{
+'NE-SEA':{time:'8:20 PM',day:'Wed Sep 9',net:'NBC'},
+'SF-LAR':{time:'8:35 PM',day:'Thu Sep 10',net:'Netflix'},
+'CHI-CAR':{time:'1:00 PM',day:'Sun Sep 13',net:'FOX'},
+'TB-CIN':{time:'1:00 PM',day:'Sun Sep 13',net:'FOX'},
+'NO-DET':{time:'1:00 PM',day:'Sun Sep 13',net:'FOX'},
+'BUF-HOU':{time:'1:00 PM',day:'Sun Sep 13',net:'CBS'},
+'BAL-IND':{time:'1:00 PM',day:'Sun Sep 13',net:'CBS'},
+'CLE-JAX':{time:'1:00 PM',day:'Sun Sep 13',net:'CBS'},
+'ATL-PIT':{time:'1:00 PM',day:'Sun Sep 13',net:'FOX'},
+'NYJ-TEN':{time:'1:00 PM',day:'Sun Sep 13',net:'CBS'},
+'ARI-LAC':{time:'4:25 PM',day:'Sun Sep 13',net:'CBS'},
+'MIA-LV':{time:'4:25 PM',day:'Sun Sep 13',net:'FOX'},
+'GB-MIN':{time:'4:25 PM',day:'Sun Sep 13',net:'CBS'},
+'WAS-PHI':{time:'4:25 PM',day:'Sun Sep 13',net:'FOX'},
+'DAL-NYG':{time:'8:20 PM',day:'Sun Sep 13',net:'NBC'},
+'DEN-KC':{time:'8:15 PM',day:'Mon Sep 14',net:'ESPN'}
+}
+};
+
+// Enrich NFL_GAMES with schedule details and sort by day/time
+var dayOrder={'Wed':0,'Thu':1,'Fri':2,'Sat':3,'Sun':4,'Mon':5};
+var timeToMin=function(t){var p=t.match(/(\d+):(\d+)\s*(AM|PM)/i);if(!p)return 0;var h=parseInt(p[1]);var m=parseInt(p[2]);if(p[3].toUpperCase()==='PM'&&h!==12)h+=12;if(p[3].toUpperCase()==='AM'&&h===12)h=0;return h*60+m;};
+for(var w=1;w<=18;w++){
+  var det=NFL_DETAIL[w]||{};
+  for(var i=0;i<NFL_GAMES[w].length;i++){
+    var g=NFL_GAMES[w][i];
+    var key=g.a+'-'+g.h;
+    var d=det[key];
+    if(d){g.time=d.time;g.day=d.day;g.net=d.net;}
+  }
+  // Sort: by day of week, then by time
+  NFL_GAMES[w].sort(function(a,b){
+    var da=a.day?dayOrder[a.day.split(' ')[0]]||4:4;
+    var db=b.day?dayOrder[b.day.split(' ')[0]]||4:4;
+    if(da!==db)return da-db;
+    var ta=a.time?timeToMin(a.time):780;
+    var tb=b.time?timeToMin(b.time):780;
+    return ta-tb;
+  });
+}
+
 var nflWeek = currentWeek || 1;
 
 // Segment blurbs
@@ -1999,7 +2043,7 @@ function initStripScaling(){
           } else {
             var byes=[];for(var t in NFL_SCHED){if(NFL_SCHED[t][wk-1]==='BYE')byes.push(t);}
             if(byes.length>0){byes.sort();byeEl.style.display='block';var bh='<b>Bye Week</b><div class="nfl-bye-logos">';for(var i=0;i<byes.length;i++){bh+='<img src="'+nflLogo(byes[i])+'" alt="'+byes[i]+'" title="'+(NFL_NAMES[byes[i]]||byes[i])+'" '+logoStyle(byes[i])+'>';}bh+='</div>';byeEl.innerHTML=bh;}else{byeEl.style.display='none';}
-            var games=NFL_GAMES[wk]||[];var gh='';for(var i=0;i<games.length;i++){var g=games[i];gh+='<div class="nfl-game"><div class="nfl-game-time">'+(g.time||'TBD')+'</div><div class="nfl-game-teams"><div class="nfl-team"><img src="'+nflLogo(g.a)+'" alt="'+g.a+'" '+logoStyle(g.a)+'><span class="nfl-team-abbr">'+g.a+'</span></div><span class="nfl-game-at">@</span><div class="nfl-team"><img src="'+nflLogo(g.h)+'" alt="'+g.h+'" '+logoStyle(g.h)+'><span class="nfl-team-abbr">'+g.h+'</span></div></div></div>';}
+            var games=NFL_GAMES[wk]||[];var gh='';for(var i=0;i<games.length;i++){var g=games[i];gh+='<div class="nfl-game"><div class="nfl-game-time">'+(g.day?g.day+' · ':'')+(g.time||'TBD')+(g.net?' · '+g.net:'')+'</div><div class="nfl-game-teams"><div class="nfl-team"><img src="'+nflLogo(g.a)+'" alt="'+g.a+'" '+logoStyle(g.a)+'><span class="nfl-team-abbr">'+g.a+'</span></div><span class="nfl-game-at">@</span><div class="nfl-team"><img src="'+nflLogo(g.h)+'" alt="'+g.h+'" '+logoStyle(g.h)+'><span class="nfl-team-abbr">'+g.h+'</span></div></div></div>';}
             document.getElementById('nflGrid').innerHTML=gh;
           }
         }
@@ -2096,7 +2140,7 @@ function nflRender(wk){
   for(var i=0;i<games.length;i++){
     var g=games[i];
     h+='<div class="nfl-game">';
-    h+='<div class="nfl-game-time">'+(g.time||'TBD')+'</div>';
+    h+='<div class="nfl-game-time">'+(g.day?g.day+' · ':'')+(g.time||'TBD')+(g.net?' · '+g.net:'')+'</div>';
     h+='<div class="nfl-game-teams"><div class="nfl-team"><img src="'+nflLogo(g.a)+'" alt="'+g.a+'" '+logoStyle(g.a)+'><span class="nfl-team-abbr">'+g.a+'</span></div>';
     h+='<span class="nfl-game-at">@</span>';
     h+='<div class="nfl-team"><img src="'+nflLogo(g.h)+'" alt="'+g.h+'" '+logoStyle(g.h)+'><span class="nfl-team-abbr">'+g.h+'</span></div></div>';
