@@ -83,18 +83,15 @@ tr:last-child td{border-bottom:none}
 .wk-sel:focus{outline:none;border-color:#58a6ff;box-shadow:0 0 0 2px rgba(88,166,255,0.2)}
 .wk-sel option{background:#161b22;color:#e6edf3}
 .wk-seg{font-size:11px;color:#8b949e;margin-top:6px;font-weight:600}
-.mu-grid{display:flex;flex-direction:column;gap:8px;margin-bottom:8px}
-.mu{background:#161b22;border:1px solid #30363d;border-radius:10px;padding:12px 16px}
-.mu-row{display:flex;align-items:center}
-.mu-left,.mu-right{flex:1;display:flex;align-items:center;gap:10px;min-width:0}
-.mu-left{justify-content:flex-start}
-.mu-right{justify-content:flex-end;text-align:right;flex-direction:row-reverse}
-.mu-info{min-width:0;flex:1}
-.mu-right .mu-info{text-align:right}
-.mu-vs{flex-shrink:0;font-size:11px;font-weight:700;color:#484f58;padding:0 2px}
-.mu-sc{font-size:26px;font-weight:900;color:#8b949e;letter-spacing:-1px;flex-shrink:0;padding:0 14px}
+.mu-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px;max-width:720px;margin-left:auto;margin-right:auto}
+.mu{background:#161b22;border:1px solid #21262d;border-radius:10px;padding:0;overflow:hidden;cursor:pointer;transition:border-color .15s}
+.mu:hover{border-color:#30363d}
+.mu-player{display:flex;justify-content:space-between;align-items:center;padding:10px 14px}
+.mu-player+.mu-player{border-top:1px solid #21262d}
+.mu-name{font-size:14px;font-weight:800;color:#e6edf3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mu-sc{font-size:20px;font-weight:900;color:#8b949e;flex-shrink:0;min-width:30px;text-align:right}
 .mu-sc.mw{color:#3fb950}.mu-sc.ml{color:#f85149;opacity:.7}.mu-sc.mt{color:#d29922}
-.mu-name{font-size:22px;font-weight:800;color:#e6edf3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mu-final{font-size:8px;font-weight:800;color:#3fb950;text-transform:uppercase;letter-spacing:1.5px;text-align:center;padding:3px 0;border-top:1px solid #21262d;background:rgba(63,185,80,.06)}
 .mu-meta{font-size:10px;color:#6e7681;margin-top:2px;font-weight:500}
 .mu-meta .mu-seed{font-weight:700;color:#8b949e}
 /* Rules dropdown */
@@ -172,7 +169,7 @@ tr:last-child td{border-bottom:none}
 .champ-other-earn{color:#3fb950;font-weight:700}
 .confetti-piece{position:fixed;width:10px;height:10px;z-index:10000;pointer-events:none;animation:confetti-fall linear forwards}
 @keyframes confetti-fall{0%{opacity:1;transform:translateY(0) rotate(0deg)}100%{opacity:0;transform:translateY(100vh) rotate(720deg)}}
-@media(max-width:480px){.mu{padding:10px 12px}.mu-name{font-size:16px}.mu-sc{font-size:21px;padding:0 8px}.mu-meta{font-size:9px}.po-name{font-size:16px}.po-pts{font-size:22px}.champ-popup{padding:28px 18px 20px}.champ-pod.first .champ-pod-name{font-size:22px}.champ-pod.first .champ-pod-earn{font-size:18px}}
+@media(max-width:480px){.mu-grid{grid-template-columns:1fr}.mu-name{font-size:13px}.mu-sc{font-size:18px}.po-name{font-size:16px}.po-pts{font-size:22px}.champ-popup{padding:28px 18px 20px}.champ-pod.first .champ-pod-name{font-size:22px}.champ-pod.first .champ-pod-earn{font-size:18px}}
 @media(max-width:640px){.card-scroll{margin:0 -2px}.card-scroll::-webkit-scrollbar{height:4px}.card-scroll::-webkit-scrollbar-thumb{background:#30363d;border-radius:4px}.header h1{font-size:24px}.qg{grid-template-columns:1fr}td,th{padding:6px 8px;font-size:11px}.seg-tab{font-size:12px}.seg-tabs{gap:12px}}
 @media (max-width: 640px) {
   .wk-col { display: none !important; }
@@ -1470,7 +1467,7 @@ function renderSched(){
         }
       }
     } else {
-      // Regular week: matchup format
+      // Regular week: CBS-style matchup cards
       o+='<div class="mu-grid">';
       for(var j=0;j<s.mu.length;j++){
         var n1=s.mu[j][0],n2=s.mu[j][1];
@@ -1478,37 +1475,23 @@ function renderSched(){
         var name1=p1?p1.name:'Player '+n1;
         var name2=p2?p2.name:'Player '+n2;
         
-        var tp1=p1?(p1.t1+p1.t2+p1.p3):0;
-        var tp2=p2?(p2.t1+p2.t2+p2.p3):0;
-        var seed1=seedMap[n1]||'-';
-        var seed2=seedMap[n2]||'-';
-        var rec1W=p1?((p1.h1||0)+(p1.h2||0)+(p1.w3||0)):0;
-        var rec1L=p2?((p2.h1||0)+(p2.h2||0)+(p2.l3||0)):0;
-        var rec2W=p2?((p2.h1||0)+(p2.h2||0)+(p2.w3||0)):0;
-        var rec2L=p1?((p1.h1||0)+(p1.h2||0)+(p1.l3||0)):0;
-        
         var sc1=picks[s.wk]?picks[s.wk][n1]:'';
         var sc2=picks[s.wk]?picks[s.wk][n2]:'';
         if(sc1===undefined||sc1===null)sc1=0;
         if(sc2===undefined||sc2===null)sc2=0;
         
         var c1='',c2='';
+        var isFinal = weekPlayed[s.wk] && currentWeek > s.wk;
         if(sc1>0||sc2>0){
           if(sc1>sc2){c1='mw';c2='ml';}
           else if(sc2>sc1){c2='mw';c1='ml';}
           else{c1='mt';c2='mt';}
         }
         
-        o+='<div class="mu">';
-        o+='<div class="mu-row">';
-        o+='<div class="mu-left"><div class="mu-info"><div class="mu-name">'+name1+'</div>';
-        o+='<div class="mu-meta"><span class="mu-seed">#'+seed1+'</span> · '+rec1W+'-'+rec1L+' ('+tp1+')</div></div>';
-        o+='<div class="mu-sc '+c1+'">'+sc1+'</div></div>';
-        o+='<div class="mu-vs">vs</div>';
-        o+='<div class="mu-right"><div class="mu-info"><div class="mu-name">'+name2+'</div>';
-        o+='<div class="mu-meta"><span class="mu-seed">#'+seed2+'</span> · '+rec2W+'-'+rec2L+' ('+tp2+')</div></div>';
-        o+='<div class="mu-sc '+c2+'">'+sc2+'</div></div>';
-        o+='</div>';
+        o+='<div class="mu" onclick="showMatchupDetail('+s.wk+','+n1+','+n2+')">';
+        o+='<div class="mu-player"><span class="mu-name">'+name1+'</span><span class="mu-sc '+c1+'">'+sc1+'</span></div>';
+        o+='<div class="mu-player"><span class="mu-name">'+name2+'</span><span class="mu-sc '+c2+'">'+sc2+'</span></div>';
+        if(isFinal) o+='<div class="mu-final">Final</div>';
         o+='</div>';
       }
       o+='</div>';
@@ -2514,6 +2497,94 @@ function initStripScaling(){
   }
 }
 
+
+function showMatchupDetail(wk, n1, n2){
+  var overlay = document.getElementById('gameDetailOverlay');
+  var pm={};for(var i=0;i<P.length;i++)pm[P[i].num]=P[i];
+  var p1=pm[n1]||{name:'Player '+n1,t1:0,t2:0,p3:0,h1:0,h2:0,w3:0,l3:0,c1:0,c2:0,c3:0};
+  var p2=pm[n2]||{name:'Player '+n2,t1:0,t2:0,p3:0,h1:0,h2:0,w3:0,l3:0,c1:0,c2:0,c3:0};
+  
+  var sc1=picks[wk]?picks[wk][n1]:0;
+  var sc2=picks[wk]?picks[wk][n2]:0;
+  if(sc1===undefined||sc1===null)sc1=0;
+  if(sc2===undefined||sc2===null)sc2=0;
+  var isFinal = weekPlayed[wk] && currentWeek > wk;
+  
+  // Compute overall H2H record between these two
+  var h2h1=0, h2h2=0, h2hT=0;
+  var sched=window._sched||[];
+  for(var i=0;i<sched.length;i++){
+    var s=sched[i];
+    if(s.playoff)continue;
+    for(var j=0;j<s.mu.length;j++){
+      var m=s.mu[j];
+      if((m[0]===n1&&m[1]===n2)||(m[0]===n2&&m[1]===n1)){
+        if(!weekPlayed[s.wk]||currentWeek<=s.wk)continue;
+        var sa=picks[s.wk]?picks[s.wk][n1]:0;
+        var sb=picks[s.wk]?picks[s.wk][n2]:0;
+        if(sa>sb)h2h1++;else if(sb>sa)h2h2++;else h2hT++;
+      }
+    }
+  }
+  
+  // Overall correct picks
+  var oc1=p1.c1||0, oc2=p2.c1||0;
+  if(typeof p1.c2==='number')oc1+=p1.c2;
+  if(typeof p2.c2==='number')oc2+=p2.c2;
+  if(typeof p1.c3==='number')oc1+=p1.c3;
+  if(typeof p2.c3==='number')oc2+=p2.c3;
+  
+  // Overall H2H wins across all segs
+  var ow1=(p1.h1||0)+(p1.h2||0)+(p1.w3||0);
+  var ol1=(p1.h1!=null?6-(p1.h1||0):0)+(p1.h2!=null?6-(p1.h2||0):0)+(p1.l3||0);
+  var ow2=(p2.h1||0)+(p2.h2||0)+(p2.w3||0);
+  var ol2=(p2.h1!=null?6-(p2.h1||0):0)+(p2.h2!=null?6-(p2.h2||0):0)+(p2.l3||0);
+  
+  var c1='',c2='';
+  if(sc1>sc2){c1='mw';c2='ml';}else if(sc2>sc1){c2='mw';c1='ml';}else if(sc1>0){c1='mt';c2='mt';}
+  
+  var h='<div class="gd-popup" style="max-width:440px">';
+  h+='<button class="gd-close" onclick="document.getElementById(\'gameDetailOverlay\').style.display=\'none\'">&times;</button>';
+  
+  if(isFinal) h+='<div style="text-align:center;font-size:10px;font-weight:800;color:#3fb950;text-transform:uppercase;letter-spacing:2px;margin-bottom:6px">Final</div>';
+  
+  // Players + scores
+  h+='<div style="margin-bottom:14px">';
+  h+='<div class="mu-player" style="padding:8px 16px"><span class="mu-name" style="font-size:16px">'+p1.name+'</span><span class="mu-sc '+c1+'" style="font-size:24px">'+sc1+'</span></div>';
+  h+='<div class="mu-player" style="padding:8px 16px;border-top:1px solid #21262d"><span class="mu-name" style="font-size:16px">'+p2.name+'</span><span class="mu-sc '+c2+'" style="font-size:24px">'+sc2+'</span></div>';
+  h+='</div>';
+  
+  // Overall section
+  h+='<div class="gd-section-label" style="display:flex;justify-content:space-between;text-align:center"><span style="flex:1;color:#e6edf3;font-size:12px;font-weight:800">'+p1.name+'</span><span style="flex:1">Overall</span><span style="flex:1;color:#e6edf3;font-size:12px;font-weight:800">'+p2.name+'</span></div>';
+  h+='<div class="gd-rec-row"><span class="gd-rec-away">'+ow1+'-'+ol1+'</span><span class="gd-rec-label">Record</span><span class="gd-rec-home">'+ow2+'-'+ol2+'</span></div>';
+  h+='<div class="gd-rec-row"><span class="gd-rec-away">'+oc1+'</span><span class="gd-rec-label">Correct Picks</span><span class="gd-rec-home">'+oc2+'</span></div>';
+  h+='<div class="gd-rec-row"><span class="gd-rec-away">'+(p1.t1+p1.t2+p1.p3)+'</span><span class="gd-rec-label">Total Points</span><span class="gd-rec-home">'+(p2.t1+p2.t2+p2.p3)+'</span></div>';
+  
+  // Segment 1
+  h+='<div class="gd-section-label">Segment 1</div>';
+  h+='<div class="gd-rec-row"><span class="gd-rec-away">'+(p1.h1||0)+'-'+(6-(p1.h1||0))+'</span><span class="gd-rec-label">H2H Record</span><span class="gd-rec-home">'+(p2.h1||0)+'-'+(6-(p2.h1||0))+'</span></div>';
+  h+='<div class="gd-rec-row"><span class="gd-rec-away">'+p1.t1+'</span><span class="gd-rec-label">Points</span><span class="gd-rec-home">'+p2.t1+'</span></div>';
+  
+  // Segment 2
+  h+='<div class="gd-section-label">Segment 2</div>';
+  h+='<div class="gd-rec-row"><span class="gd-rec-away">'+(p1.h2||0)+'-'+(6-(p1.h2||0))+'</span><span class="gd-rec-label">H2H Record</span><span class="gd-rec-home">'+(p2.h2||0)+'-'+(6-(p2.h2||0))+'</span></div>';
+  h+='<div class="gd-rec-row"><span class="gd-rec-away">'+p1.t2+'</span><span class="gd-rec-label">Points</span><span class="gd-rec-home">'+p2.t2+'</span></div>';
+  
+  // Segment 3
+  h+='<div class="gd-section-label">Segment 3</div>';
+  h+='<div class="gd-rec-row"><span class="gd-rec-away">'+(p1.w3||0)+'-'+(p1.l3||0)+'</span><span class="gd-rec-label">Division Record</span><span class="gd-rec-home">'+(p2.w3||0)+'-'+(p2.l3||0)+'</span></div>';
+  h+='<div class="gd-rec-row"><span class="gd-rec-away">'+p1.p3+'</span><span class="gd-rec-label">Picks Correct</span><span class="gd-rec-home">'+p2.p3+'</span></div>';
+  
+  // H2H record
+  h+='<div class="gd-section-label">Head-to-Head</div>';
+  h+='<div class="gd-rec-row"><span class="gd-rec-away" style="font-size:16px;font-weight:900">'+h2h1+'</span><span class="gd-rec-label">Wins</span><span class="gd-rec-home" style="font-size:16px;font-weight:900">'+h2h2+'</span></div>';
+  if(h2hT>0) h+='<div class="gd-rec-row"><span class="gd-rec-away">'+h2hT+'</span><span class="gd-rec-label">Ties</span><span class="gd-rec-home">'+h2hT+'</span></div>';
+  
+  h+='</div>';
+  overlay.innerHTML=h;
+  overlay.style.display='flex';
+  overlay.onclick=function(e){if(e.target===overlay)overlay.style.display='none';};
+}
 
 function showGameDetail(wk, away, home){
   var overlay = document.getElementById('gameDetailOverlay');
