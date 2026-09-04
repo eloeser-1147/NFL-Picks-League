@@ -1095,20 +1095,40 @@ function renderSched(){
           o+='<div class="po-info"><div class="po-name">'+pl.name+'</div>';
           o+='<div class="po-via">This week: '+wkPts+' pts</div>';
           if(s.wk === 22){
-            var tbd = (playoffData.tiebreakers||{})[pl.name]||{sbTbRank:0,fgDiff:0};
-            o+='<div style="font-size:9px;color:#d29922;font-weight:600;margin-top:2px">TB Rank: '+(tbd.sbTbRank||'—')+' · FG Diff: '+(tbd.fgDiff||'—')+'</div>';
+            // Check if this player is tied with anyone
+            var plCum = cumPts;
+            var isTied = false;
+            for(var tt=0;tt<players.length;tt++){
+              if(tt!==j){
+                var otherCum = players[tt].cumPts!==undefined?players[tt].cumPts:players[tt].pts;
+                if(otherCum===plCum) isTied=true;
+              }
+            }
+            if(isTied){
+              var tbd = (playoffData.tiebreakers||{})[pl.name]||{sbTbRank:0,fgDiff:0};
+              o+='<div style="font-size:9px;color:#d29922;font-weight:600;margin-top:2px">TB Rank: '+(tbd.sbTbRank||'—')+' · FG Diff: '+(tbd.fgDiff||'—')+'</div>';
+            }
           }
           o+='</div>';
           o+='<div class="po-pts '+ptsClass+'">'+cumPts+'</div>';
           o+='</div>';
         }
         o+='</div>';
-        // Week 22: show tiebreaker gold box with the actual TB result
+        // Week 22: show tiebreaker gold box only if there's a tie
         if(s.wk === 22){
-          var tb = playoffData.tiebreakers || {};
-          o+='<div style="max-width:720px;margin:12px auto 0;padding:10px 16px;background:rgba(210,153,34,.08);border:1px solid rgba(210,153,34,.15);border-left:3px solid #d29922;border-radius:8px;font-size:12px;color:#c9d1d9">';
-          o+='<span style="font-weight:800;color:#d29922">Tiebreaker:</span> Super Bowl weekly tiebreaker rank, then closest guess to the longest FG made in the Super Bowl';
-          o+='</div>';
+          var anyTie = false;
+          for(var t1=0;t1<players.length-1;t1++){
+            for(var t2=t1+1;t2<players.length;t2++){
+              var c1t=players[t1].cumPts!==undefined?players[t1].cumPts:players[t1].pts;
+              var c2t=players[t2].cumPts!==undefined?players[t2].cumPts:players[t2].pts;
+              if(c1t===c2t) anyTie=true;
+            }
+          }
+          if(anyTie){
+            o+='<div style="max-width:720px;margin:12px auto 0;padding:10px 16px;background:rgba(210,153,34,.08);border:1px solid rgba(210,153,34,.15);border-left:3px solid #d29922;border-radius:8px;font-size:12px;color:#c9d1d9">';
+            o+='<span style="font-weight:800;color:#d29922">Tiebreaker:</span> Super Bowl weekly tiebreaker rank, then closest guess to the longest FG made in the Super Bowl';
+            o+='</div>';
+          }
         }
       }
     } else {
@@ -1397,10 +1417,20 @@ function renderPS() {
     o+='<tr><td colspan="7" style="padding:30px;color:#484f58;text-align:center;font-size:13px;">No players have qualified for Round 2.<br>The top 4 qualifiers from Round 1 will advance here once the Wild Card Round is complete.</td></tr>';
   } else {
     var tb = playoffData.tiebreakers || {};
+    // Check if any finalists are tied on total
+    var tiedTotals = {};
+    for(var i=0;i<finalists.length;i++){
+      var ft = finalists[i].total;
+      if(!tiedTotals[ft]) tiedTotals[ft]=[];
+      tiedTotals[ft].push(finalists[i].name);
+    }
+    var tiedNames = {};
+    for(var k in tiedTotals){ if(tiedTotals[k].length>1){ for(var x=0;x<tiedTotals[k].length;x++) tiedNames[tiedTotals[k][x]]=true; } }
+    
     for(var i=0;i<finalists.length;i++){
       var f=finalists[i];
       var t=tb[f.name]||{sbTbRank:0,fgDiff:0};
-      var tbNote = (cw >= 22) ? '<div style="font-size:9px;color:#d29922;font-weight:600">TB: '+(t.sbTbRank||'—')+' · FG Diff: '+(t.fgDiff||'—')+'</div>' : '';
+      var tbNote = (cw >= 22 && tiedNames[f.name]) ? '<div style="font-size:9px;color:#d29922;font-weight:600">TB: '+(t.sbTbRank||'—')+' · FG Diff: '+(t.fgDiff||'—')+'</div>' : '';
       o+='<tr><td class="'+rc(i)+'">'+(i+1)+'</td><td class="nm">'+f.name+tbNote+'</td><td class="wk">'+f.wc+'</td><td class="wk">'+f.div+'</td><td class="wk">'+f.champ+'</td><td class="wk">'+f.sb+'</td><td class="tot">'+f.total+'</td></tr>';
     }
   }
