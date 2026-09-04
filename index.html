@@ -12,12 +12,20 @@ body{font-family:'Inter',Arial,sans-serif;background:#0d1117;color:#e6edf3;min-h
 .header{text-align:center;padding:32px 24px 16px}
 .header h1{font-size:32px;font-weight:900;text-transform:uppercase;letter-spacing:-1px;background:linear-gradient(135deg,#58a6ff,#3fb950);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
 .status{font-size:11px;color:#484f58;margin-top:8px}
-.tab-bar{display:flex;gap:0;padding:0 16px;max-width:900px;margin:0 auto;border-bottom:1px solid #21262d;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none;margin-bottom:10px}
+.tab-bar{display:flex;gap:0;padding:0 16px;max-width:900px;margin:0 auto;border-bottom:1px solid #21262d;overflow-x:auto;scrollbar-width:none;-ms-overflow-style:none;margin-bottom:10px;position:relative}
 .tab-bar::-webkit-scrollbar{display:none}
 .tab-btn{padding:10px 14px;font-size:13px;font-weight:600;color:#8b949e;cursor:pointer;border:none;background:none;border-bottom:3px solid transparent;white-space:nowrap;font-family:'Inter',Arial,sans-serif;transition:color .15s;position:relative}
 .tab-btn:hover{color:#e6edf3}
 .tab-btn.active{color:#e6edf3;border-bottom-color:transparent}
-.tab-btn.active::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:3px;background:linear-gradient(90deg,#58a6ff,#3fb950);border-radius:2px}
+.tab-slider{position:absolute;bottom:-1px;height:3px;background:linear-gradient(90deg,#58a6ff,#3fb950);border-radius:2px;transition:left .3s ease,width .3s ease}
+.panels-wrap{overflow:hidden;position:relative}
+.panel{display:none;max-width:900px;margin:0 auto;padding:0 24px 40px;animation:panelIn .3s ease}
+.panel.active{display:block}
+.panel.slide-left{animation:slideLeft .3s ease}
+.panel.slide-right{animation:slideRight .3s ease}
+@keyframes slideLeft{from{transform:translateX(60px);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes slideRight{from{transform:translateX(-60px);opacity:0}to{transform:translateX(0);opacity:1}}
+@keyframes panelIn{from{opacity:0}to{opacity:1}}
 
 .seg-tabs{display:flex;justify-content:center;gap:16px;margin-bottom:8px}
 .seg-tab{padding:2px 2px;background:none;border:none;border-bottom:1px solid transparent;color:#8b949e;font-size:11px;font-weight:600;cursor:pointer}
@@ -252,12 +260,14 @@ tr:last-child td{border-bottom:none}
 <div id="champOverlay" class="champ-overlay" style="display:none"></div>
 <div id="gameDetailOverlay" class="champ-overlay" style="display:none"></div>
 <div class="tab-bar" id="tabBar">
-  <button class="tab-btn active" onclick="tabTo('nflsched',this)">Home</button>
-  <button class="tab-btn" onclick="tabTo('sched',this)">Scores</button>
-  <button class="tab-btn" onclick="tabTo('standings',this)">Standings</button>
-  <button class="tab-btn" onclick="tabTo('playersched',this)">Schedule</button>
-  <button class="tab-btn" onclick="tabTo('info',this)">Info</button>
+  <button class="tab-btn active" onclick="tabTo('nflsched',this,0)">Home</button>
+  <button class="tab-btn" onclick="tabTo('sched',this,1)">Scores</button>
+  <button class="tab-btn" onclick="tabTo('standings',this,2)">Standings</button>
+  <button class="tab-btn" onclick="tabTo('playersched',this,3)">Schedule</button>
+  <button class="tab-btn" onclick="tabTo('info',this,4)">Info</button>
+  <div class="tab-slider" id="tabSlider"></div>
 </div>
+<div class="panels-wrap">
 <div class="panel active" id="nflsched">
   <div class="nfl-week-strip" id="nflStrip"></div>
   <div class="nfl-grid" id="nflGrid"></div>
@@ -450,6 +460,7 @@ tr:last-child td{border-bottom:none}
     </div>
   </div>
 </div>
+</div>
 <div id="status" style="text-align:center;padding:40px 24px 20px;font-size:10px;color:#30363d">Loading...</div>
 <script>
 var P = []; // all players
@@ -459,10 +470,25 @@ var weekPlayed = {}; // WC and Finals scores from Excel
 
 window.onload = function() { nflBuildStrip(); nflRender(1); load(); setInterval(load, 300000); };
 
-function show(id) {
+var _currentTabIdx = 0;
+var _tabIds = ['nflsched','sched','standings','playersched','info'];
+
+function positionSlider(btn){
+  var slider = document.getElementById('tabSlider');
+  var bar = document.getElementById('tabBar');
+  if(!slider||!bar||!btn)return;
+  var barRect = bar.getBoundingClientRect();
+  var btnRect = btn.getBoundingClientRect();
+  slider.style.left = (btnRect.left - barRect.left + bar.scrollLeft) + 'px';
+  slider.style.width = btnRect.width + 'px';
+}
+
+function show(id, direction) {
   var panels = document.querySelectorAll('.panel');
   for (var i=0;i<panels.length;i++) panels[i].className='panel';
-  document.getElementById(id).className='panel active';
+  var target = document.getElementById(id);
+  var slideClass = direction === 'left' ? ' slide-left' : direction === 'right' ? ' slide-right' : '';
+  target.className='panel active' + slideClass;
 }
 
 function showRule(id, el) {
@@ -504,20 +530,26 @@ document.addEventListener('click', function(e) {
   if(sw && !sw.contains(e.target)) sw.classList.remove('open');
 });
 
-function tabTo(id, btn) {
-  show(id);
+function tabTo(id, btn, idx) {
+  if(typeof idx === 'undefined') idx = _tabIds.indexOf(id);
+  var direction = idx > _currentTabIdx ? 'left' : idx < _currentTabIdx ? 'right' : '';
+  _currentTabIdx = idx;
+  show(id, direction);
   var btns = document.querySelectorAll('.tab-btn');
   for (var i=0;i<btns.length;i++) btns[i].className='tab-btn';
   if(btn) btn.className='tab-btn active';
+  positionSlider(btn);
   if(id==='sched'){
     setTimeout(function(){
-      var idx=window._sbDefaultIdx||0;
+      var sidx=window._sbDefaultIdx||0;
       var strip=document.getElementById('sbStrip');
-      var b=strip&&strip.querySelector('[data-sb="'+idx+'"]');
+      var b=strip&&strip.querySelector('[data-sb="'+sidx+'"]');
       if(b)b.scrollIntoView({behavior:'auto',inline:'center',block:'nearest'});
     },50);
   }
 }
+window.addEventListener('load',function(){setTimeout(function(){positionSlider(document.querySelector('.tab-btn.active'));},100);});
+window.addEventListener('resize',function(){positionSlider(document.querySelector('.tab-btn.active'));});
 
 function showInfo(id, el) {
   document.getElementById('infoRules').style.display='none';
