@@ -2179,8 +2179,8 @@ for(var w=1;w<=18;w++){
   }
   // Sort: by day of week, then by time
   NFL_GAMES[w].sort(function(a,b){
-    var da=a.day?dayOrder[a.day.split(' ')[0]]||4:4;
-    var db=b.day?dayOrder[b.day.split(' ')[0]]||4:4;
+    var da=a.day?(dayOrder[a.day.split(' ')[0]]!==undefined?dayOrder[a.day.split(' ')[0]]:4):4;
+    var db=b.day?(dayOrder[b.day.split(' ')[0]]!==undefined?dayOrder[b.day.split(' ')[0]]:4):4;
     if(da!==db)return da-db;
     var ta=a.time?timeToMin(a.time):780;
     var tb=b.time?timeToMin(b.time):780;
