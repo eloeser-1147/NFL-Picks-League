@@ -2530,8 +2530,8 @@ function showGameDetail(wk, away, home){
     h += '<div style="text-align:center;font-size:11px;color:#8b949e;margin-bottom:4px">Spread: <strong style="color:#c9d1d9">'+spreadStr+'</strong></div>';
   }
   
-  // Record section - team abbrs in the ribbon
-  h += '<div class="gd-section-label"><span style="float:left;color:#e6edf3;font-size:13px">'+away+'</span>Record<span style="float:right;color:#e6edf3;font-size:13px">'+home+'</span></div>';
+  // Record section - team abbrs centered over their columns
+  h += '<div class="gd-section-label" style="display:flex;justify-content:space-between;text-align:center"><span style="flex:1;color:#e6edf3;font-size:13px;font-weight:800">'+away+'</span><span style="flex:1">Record</span><span style="flex:1;color:#e6edf3;font-size:13px;font-weight:800">'+home+'</span></div>';
   h += '<div class="gd-rec-row"><span class="gd-rec-away">'+ar.w+'-'+ar.l+'</span><span class="gd-rec-label">Overall</span><span class="gd-rec-home">'+hr.w+'-'+hr.l+'</span></div>';
   h += '<div class="gd-rec-row"><span class="gd-rec-away">'+ar.hw+'-'+ar.hl+'</span><span class="gd-rec-label">Home</span><span class="gd-rec-home">'+hr.hw+'-'+hr.hl+'</span></div>';
   h += '<div class="gd-rec-row"><span class="gd-rec-away">'+ar.aw+'-'+ar.al+'</span><span class="gd-rec-label">Away</span><span class="gd-rec-home">'+hr.aw+'-'+hr.al+'</span></div>';
@@ -2539,7 +2539,7 @@ function showGameDetail(wk, away, home){
   // ATS section
   var atsA = ar.atsW+'-'+ar.atsL+(ar.atsP?'-'+ar.atsP:'');
   var atsH = hr.atsW+'-'+hr.atsL+(hr.atsP?'-'+hr.atsP:'');
-  h += '<div class="gd-section-label"><span style="float:left;color:#e6edf3;font-size:13px">'+away+'</span>Against the Spread<span style="float:right;color:#e6edf3;font-size:13px">'+home+'</span></div>';
+  h += '<div class="gd-section-label">Against the Spread</div>';
   h += '<div class="gd-rec-row"><span class="gd-rec-away">'+atsA+'</span><span class="gd-rec-label">Overall</span><span class="gd-rec-home">'+atsH+'</span></div>';
   var hatsA = ar.hatsW+'-'+ar.hatsL;
   var hatsH = hr.hatsW+'-'+hr.hatsL;
