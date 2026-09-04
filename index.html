@@ -428,6 +428,25 @@ function showRule(id, el) {
   document.getElementById('ruleDDLabel').textContent = el ? el.textContent : '';
   document.getElementById('ruleDDWrap').classList.remove('open');
 }
+
+function defaultRulesTab(){
+  var ruleMap, label;
+  if(currentWeek === 0){ ruleMap='rStandard'; label='House Rules'; }
+  else if(currentWeek <= 6){ ruleMap='rSeg1'; label='Weeks 1–6'; }
+  else if(currentWeek <= 12){ ruleMap='rSeg2'; label='Weeks 7–12'; }
+  else if(currentWeek <= 18){ ruleMap='rSeg3'; label='Weeks 13–18'; }
+  else { ruleMap='rPlayoffs'; label='Playoffs'; }
+  
+  var panels = document.querySelectorAll('.rule-content');
+  for(var i=0;i<panels.length;i++) panels[i].style.display='none';
+  var target = document.getElementById(ruleMap);
+  if(target) target.style.display='block';
+  document.getElementById('ruleDDLabel').textContent = label;
+  var items = document.querySelectorAll('#ruleDDMenu .rule-dd-item');
+  for(var i=0;i<items.length;i++){
+    items[i].className = items[i].textContent===label ? 'rule-dd-item active' : 'rule-dd-item';
+  }
+}
 // Close dropdown when clicking outside
 document.addEventListener('click', function(e) {
   var wrap = document.getElementById('ruleDDWrap');
@@ -845,6 +864,7 @@ function render(){
   }
   renderSched();
   renderS1();renderS2();renderS3();renderAll();renderPS();renderQualifiers();renderPlayerSched();renderUpdates();
+  defaultRulesTab();
   // Show playoff tab only when week >= 19
   var pt=document.getElementById('playoffDDItem');
   if(pt) pt.style.display = currentWeek >= 19 ? '' : 'none';
@@ -1277,8 +1297,11 @@ function renderS1(){
   var o='<div class="card"><div class="card-scroll"><table><tr><th>#</th><th style="text-align:left">Player</th>';
   for(var i=0;i<6;i++)o+='<th class="wk-col">'+wn[i]+'</th>';
   o+='<th>H2H W</th><th class="wk-col">Best</th><th>Total Pts</th></tr>';
+  var s1done = currentWeek > 6;
   for(var i=0;i<s.length;i++){
-    o+='<tr><td class="'+rc(i)+'">'+(i+1)+'</td><td class="nm">'+s[i].name+'</td>';
+    var isWinner = s1done && i === 0;
+    var nameStyle = isWinner ? ' style="color:#d29922"' : '';
+    o+='<tr><td class="'+rc(i)+'">'+(i+1)+'</td><td class="nm"'+nameStyle+'>'+s[i].name+(isWinner?' <span style="font-size:9px;color:#d29922;font-weight:700">★</span>':'')+'</td>';
     for(var w=0;w<6;w++){var val=s[i].rp1[w];o+='<td class="wk wk-col">'+(val==='-'?'-':val)+'</td>';}
     var nums=s[i].rp1.filter(function(x){return typeof x==='number';});
     var bw=nums.length>0?Math.max.apply(null,nums):'-';
@@ -1302,8 +1325,11 @@ function renderS2(){
   var o='<div class="card"><div class="card-scroll"><table><tr><th>#</th><th style="text-align:left">Player</th>';
   for(var i=0;i<6;i++)o+='<th class="wk-col">'+wn[i]+'</th>';
   o+='<th>H2H W</th><th class="wk-col">Best</th><th>Total Pts</th></tr>';
+  var s2done = currentWeek > 12;
   for(var i=0;i<s.length;i++){
-    o+='<tr><td class="'+rc(i)+'">'+(i+1)+'</td><td class="nm">'+s[i].name+'</td>';
+    var isWinner = s2done && i === 0;
+    var nameStyle = isWinner ? ' style="color:#d29922"' : '';
+    o+='<tr><td class="'+rc(i)+'">'+(i+1)+'</td><td class="nm"'+nameStyle+'>'+s[i].name+(isWinner?' <span style="font-size:9px;color:#d29922;font-weight:700">★</span>':'')+'</td>';
     for(var w=0;w<6;w++){var val=s[i].rp2[w];o+='<td class="wk wk-col">'+(val==='-'?'-':val)+'</td>';}
     var nums=s[i].rp2.filter(function(x){return typeof x==='number';});
     var bw=nums.length>0?Math.max.apply(null,nums):'-';
@@ -1320,8 +1346,13 @@ function renderS3(){
     o+='<div class="dl">'+divs[d].n+'</div><table><tr><th>#</th><th style="text-align:left">Player</th>';
     for(var i=0;i<6;i++)o+='<th>'+wn[i]+'</th>';
     o+='<th>W</th><th>L</th><th>Picks</th></tr>';
+    var s3done = currentWeek >= 19;
+    var autoQuals = window._autoQualNames || [];
     for(var i=0;i<s.length;i++){
-      o+='<tr><td class="'+rc(i)+'">'+(i+1)+'</td><td class="nm">'+s[i].name+'</td>';
+      // Check if this player is an auto-qualifier (div winner after pass-downs)
+      var isDivWinner = s3done && autoQuals.indexOf(s[i].name) >= 0;
+      var nameStyle = isDivWinner ? ' style="color:#d29922"' : '';
+      o+='<tr><td class="'+rc(i)+'">'+(i+1)+'</td><td class="nm"'+nameStyle+'>'+s[i].name+(isDivWinner?' <span style="font-size:9px;color:#d29922;font-weight:700">★</span>':'')+'</td>';
       for(var w=0;w<6;w++){var r=s[i].r3[w];var cl=r==='W'?'w':r==='L'?'l':r==='T'?'t':'wk';o+='<td class="'+cl+'">'+r+'</td>';}
       o+='<td class="w">'+s[i].w3+'</td><td class="l">'+s[i].l3+'</td><td>'+s[i].p3+'</td></tr>';
     }o+='</table>';
@@ -1458,19 +1489,28 @@ function renderQualifiers() {
   var o='<div class="card">';
   o+='<div style="padding:12px 16px;background:linear-gradient(135deg,#1a3a5c,#1a4a1e);border-radius:8px 8px 0 0;text-align:center"><div style="font-size:14px;font-weight:800;color:#e6edf3">Playoff Qualifiers</div></div>';
   
-  if(cw < 19 || qualifiers.length === 0){
+  // Filter qualifiers based on when they've actually been determined
+  var visibleQualifiers = [];
+  var colorMap={'Weeks 1-6':'#58a6ff','Weeks 7-12':'#bc8cff','Div A':'#d29922','Div B':'#d29922','Div C':'#d29922','Div D':'#d29922','Wild Card 1':'#8b949e','Wild Card 2':'#8b949e'};
+  
+  for(var i=0;i<qualifiers.length;i++){
+    var q=qualifiers[i];
+    var show = false;
+    if(q.via === 'Weeks 1-6' && cw > 6) show = true;
+    if(q.via === 'Weeks 7-12' && cw > 12) show = true;
+    if((q.via === 'Div A' || q.via === 'Div B' || q.via === 'Div C' || q.via === 'Div D') && cw >= 19) show = true;
+    if((q.via === 'Wild Card 1' || q.via === 'Wild Card 2') && cw >= 19) show = true;
+    if(show) visibleQualifiers.push(q);
+  }
+  
+  if(visibleQualifiers.length === 0){
     o+='<div style="padding:30px;color:#484f58;text-align:center;font-size:13px;">No qualifiers yet. Players qualify as segments complete.</div>';
   } else {
     o+='<div class="card-scroll"><table><tr><th style="text-align:left">Player</th><th>Qualified Via</th><th style="text-align:right">Earnings</th></tr>';
     
-    var colorMap={'Weeks 1-6':'#58a6ff','Weeks 7-12':'#bc8cff','Div A':'#d29922','Div B':'#d29922','Div C':'#d29922','Div D':'#d29922','Wild Card 1':'#8b949e','Wild Card 2':'#8b949e'};
-    
-    for(var i=0;i<qualifiers.length;i++){
-      var q=qualifiers[i];
+    for(var i=0;i<visibleQualifiers.length;i++){
+      var q=visibleQualifiers[i];
       var color=colorMap[q.via]||'#8b949e';
-      // Pull earnings from the Excel Earnings Tracker
-      // Only show segment + division earnings from weeks 1-18
-      // Playoff earnings only display after week 22 is complete
       var e = earnings[q.name];
       var earn = 0;
       if(e){
