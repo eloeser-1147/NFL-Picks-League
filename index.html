@@ -83,14 +83,14 @@ tr:last-child td{border-bottom:none}
 .wk-sel:focus{outline:none;border-color:#58a6ff;box-shadow:0 0 0 2px rgba(88,166,255,0.2)}
 .wk-sel option{background:#161b22;color:#e6edf3}
 .wk-seg{font-size:11px;color:#8b949e;margin-top:6px;font-weight:600}
-.mu-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;max-width:720px;margin-left:auto;margin-right:auto}
+.mu-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:8px;max-width:720px;margin-left:auto;margin-right:auto}
 .mu{background:#161b22;border:1px solid #21262d;border-radius:10px;padding:0;overflow:hidden;cursor:pointer;transition:border-color .15s}
 .mu:hover{border-color:#30363d}
-.mu-player{display:flex;justify-content:space-between;align-items:center;padding:6px 10px}
+.mu-player{display:flex;justify-content:space-between;align-items:center;padding:8px 12px}
 .mu-player+.mu-player{border-top:1px solid #21262d}
-.mu-name{font-size:12px;font-weight:700;color:#e6edf3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mu-sc{font-size:16px;font-weight:900;color:#8b949e;flex-shrink:0;min-width:24px;text-align:right}
-.mu-sc.mw{color:#3fb950}.mu-sc.ml{color:#f85149;opacity:.7}.mu-sc.mt{color:#d29922}
+.mu-name{font-size:13px;font-weight:800;color:#e6edf3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.mu-sc{font-size:18px;font-weight:900;color:#8b949e;flex-shrink:0;min-width:28px;text-align:right}
+.mu-sc.mw{color:#e6edf3}.mu-sc.ml{color:#8b949e;opacity:.6}.mu-sc.mt{color:#d29922}
 .mu-final{font-size:7px;font-weight:800;color:#3fb950;text-transform:uppercase;letter-spacing:1.5px;text-align:center;padding:2px 0;border-top:1px solid #21262d;background:rgba(63,185,80,.06)}
 .mu-meta{font-size:10px;color:#6e7681;margin-top:2px;font-weight:500}
 .mu-meta .mu-seed{font-weight:700;color:#8b949e}
@@ -2548,44 +2548,44 @@ function showMatchupDetail(wk, n1, n2){
   var h='<div class="gd-popup" style="max-width:420px">';
   h+='<button class="gd-close" onclick="document.getElementById(\'gameDetailOverlay\').style.display=\'none\'">&times;</button>';
   
-  h+='<div style="text-align:center;font-size:10px;color:#8b949e;font-weight:600;margin-bottom:4px">Week '+wk+'</div>';
+  h+='<div style="text-align:center;font-size:14px;color:#8b949e;font-weight:800;margin-bottom:4px">Week '+wk+'</div>';
   if(isFinal) h+='<div style="text-align:center;font-size:10px;font-weight:800;color:#3fb950;text-transform:uppercase;letter-spacing:2px;margin-bottom:6px">Final</div>';
   
-  // Players side by side like game detail
+  // Players side by side
   h+='<div class="gd-teams">';
   h+='<div class="gd-team">';
-  h+='<div class="gd-team-name">'+p1.name+'</div>';
+  h+='<div class="gd-team-name" style="font-size:16px;font-weight:900">'+p1.name+'</div>';
   h+='<div class="gd-score" '+c1+'>'+sc1+'</div>';
   h+='</div>';
   h+='<div class="gd-vs">vs</div>';
   h+='<div class="gd-team">';
-  h+='<div class="gd-team-name">'+p2.name+'</div>';
+  h+='<div class="gd-team-name" style="font-size:16px;font-weight:900">'+p2.name+'</div>';
   h+='<div class="gd-score" '+c2+'>'+sc2+'</div>';
   h+='</div>';
   h+='</div>';
   
-  // Overall
-  h+='<div class="gd-section-label" style="display:flex;justify-content:space-between;text-align:center"><span style="flex:1;color:#e6edf3;font-size:12px;font-weight:800">'+p1.name+'</span><span style="flex:1">Overall</span><span style="flex:1;color:#e6edf3;font-size:12px;font-weight:800">'+p2.name+'</span></div>';
+  // Overall - no player names in ribbon
+  h+='<div class="gd-section-label">Overall</div>';
   h+='<div class="gd-rec-row"><span class="gd-rec-away">'+ow1+'-'+ol1+'</span><span class="gd-rec-label">Record</span><span class="gd-rec-home">'+ow2+'-'+ol2+'</span></div>';
   h+='<div class="gd-rec-row"><span class="gd-rec-away">'+tp1+'</span><span class="gd-rec-label">Total Points</span><span class="gd-rec-home">'+tp2+'</span></div>';
   
-  // Segment 1
-  h+='<div class="gd-section-label">Segment 1</div>';
-  h+='<div class="gd-rec-row"><span class="gd-rec-away">'+(s1done?(p1.h1||0)+'-'+(6-(p1.h1||0)):'0-0')+'</span><span class="gd-rec-label">H2H Record</span><span class="gd-rec-home">'+(s1done?(p2.h1||0)+'-'+(6-(p2.h1||0)):'0-0')+'</span></div>';
+  // Segment 1 - blue
+  h+='<div class="gd-section-label" style="color:#58a6ff">Segment 1</div>';
+  h+='<div class="gd-rec-row"><span class="gd-rec-away">'+(s1done?(p1.h1||0)+'-'+(6-(p1.h1||0)):'0-0')+'</span><span class="gd-rec-label">Record</span><span class="gd-rec-home">'+(s1done?(p2.h1||0)+'-'+(6-(p2.h1||0)):'0-0')+'</span></div>';
   h+='<div class="gd-rec-row"><span class="gd-rec-away">'+(s1done?p1.t1:0)+'</span><span class="gd-rec-label">Points</span><span class="gd-rec-home">'+(s1done?p2.t1:0)+'</span></div>';
   
-  // Segment 2
-  h+='<div class="gd-section-label">Segment 2</div>';
-  h+='<div class="gd-rec-row"><span class="gd-rec-away">'+(s2done?(p1.h2||0)+'-'+(6-(p1.h2||0)):'0-0')+'</span><span class="gd-rec-label">H2H Record</span><span class="gd-rec-home">'+(s2done?(p2.h2||0)+'-'+(6-(p2.h2||0)):'0-0')+'</span></div>';
+  // Segment 2 - purple
+  h+='<div class="gd-section-label" style="color:#bc8cff">Segment 2</div>';
+  h+='<div class="gd-rec-row"><span class="gd-rec-away">'+(s2done?(p1.h2||0)+'-'+(6-(p1.h2||0)):'0-0')+'</span><span class="gd-rec-label">Record</span><span class="gd-rec-home">'+(s2done?(p2.h2||0)+'-'+(6-(p2.h2||0)):'0-0')+'</span></div>';
   h+='<div class="gd-rec-row"><span class="gd-rec-away">'+(s2done?p1.t2:0)+'</span><span class="gd-rec-label">Points</span><span class="gd-rec-home">'+(s2done?p2.t2:0)+'</span></div>';
   
-  // Segment 3
-  h+='<div class="gd-section-label">Segment 3</div>';
-  h+='<div class="gd-rec-row"><span class="gd-rec-away">'+(s3done?(p1.w3||0)+'-'+(p1.l3||0):'0-0')+'</span><span class="gd-rec-label">Division Record</span><span class="gd-rec-home">'+(s3done?(p2.w3||0)+'-'+(p2.l3||0):'0-0')+'</span></div>';
+  // Segment 3 - gold
+  h+='<div class="gd-section-label" style="color:#d29922">Segment 3</div>';
+  h+='<div class="gd-rec-row"><span class="gd-rec-away">'+(s3done?(p1.w3||0)+'-'+(p1.l3||0):'0-0')+'</span><span class="gd-rec-label">Record</span><span class="gd-rec-home">'+(s3done?(p2.w3||0)+'-'+(p2.l3||0):'0-0')+'</span></div>';
   h+='<div class="gd-rec-row"><span class="gd-rec-away">'+(s3done?p1.p3:0)+'</span><span class="gd-rec-label">Picks Correct</span><span class="gd-rec-home">'+(s3done?p2.p3:0)+'</span></div>';
   
-  // H2H
-  h+='<div class="gd-section-label">Head-to-Head</div>';
+  // H2H - green
+  h+='<div class="gd-section-label" style="color:#3fb950">Head-to-Head</div>';
   h+='<div class="gd-rec-row"><span class="gd-rec-away" style="font-size:16px;font-weight:900">'+h2h1+'</span><span class="gd-rec-label">Wins</span><span class="gd-rec-home" style="font-size:16px;font-weight:900">'+h2h2+'</span></div>';
   if(h2hT>0) h+='<div class="gd-rec-row"><span class="gd-rec-away">'+h2hT+'</span><span class="gd-rec-label">Ties</span><span class="gd-rec-home">'+h2hT+'</span></div>';
   
