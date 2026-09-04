@@ -2059,7 +2059,7 @@ function initStripScaling(){
             var pg = (window._nflPlayoffGames || {})[wk] || [];
             var gh='';
             if(pg.length===0){gh='<div style="padding:20px;text-align:center;color:#484f58;font-size:13px;">No matchups entered yet.</div>';}
-            else{for(var i=0;i<pg.length;i++){var g=pg[i];gh+='<div class="nfl-game"><div class="nfl-game-top"><span class="nfl-game-time">Playoffs</span>'</div><div class="nfl-game-teams"><div class="nfl-team"><img src="'+nflLogo(g.a)+'" alt="'+g.a+'" '+logoStyle(g.a)+'><span class="nfl-team-abbr">'+g.a+'</span></div><span class="nfl-game-at">@</span><div class="nfl-team"><img src="'+nflLogo(g.h)+'" alt="'+g.h+'" '+logoStyle(g.h)+'><span class="nfl-team-abbr">'+g.h+'</span></div></div></div>';}}
+            else{for(var i=0;i<pg.length;i++){var g=pg[i];gh+='<div class="nfl-game"><div class="nfl-game-top"><span class="nfl-game-time">Playoffs</span></div><div class="nfl-game-teams"><div class="nfl-team"><img src="'+nflLogo(g.a)+'" alt="'+g.a+'" '+logoStyle(g.a)+'><span class="nfl-team-abbr">'+g.a+'</span></div><span class="nfl-game-at">@</span><div class="nfl-team"><img src="'+nflLogo(g.h)+'" alt="'+g.h+'" '+logoStyle(g.h)+'><span class="nfl-team-abbr">'+g.h+'</span></div></div></div>';}}
             document.getElementById('nflGrid').innerHTML=gh;
           } else {
             var byes=[];for(var t in NFL_SCHED){if(NFL_SCHED[t][wk-1]==='BYE')byes.push(t);}
@@ -2132,7 +2132,7 @@ function nflRender(wk){
       for(var i=0;i<pg.length;i++){
         var g=pg[i];
         h+='<div class="nfl-game">';
-        h+='<div class="nfl-game-top"><span class="nfl-game-time">Playoffs</span>'</div>';
+        h+='<div class="nfl-game-top"><span class="nfl-game-time">Playoffs</span></div>';
         h+='<div class="nfl-game-teams"><div class="nfl-team"><img src="'+nflLogo(g.a)+'" alt="'+g.a+'" '+logoStyle(g.a)+'><span class="nfl-team-abbr">'+g.a+'</span></div>';
         h+='<span class="nfl-game-at">@</span>';
         h+='<div class="nfl-team"><img src="'+nflLogo(g.h)+'" alt="'+g.h+'" '+logoStyle(g.h)+'><span class="nfl-team-abbr">'+g.h+'</span></div></div>';
