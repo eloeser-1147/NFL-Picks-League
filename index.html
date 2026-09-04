@@ -83,14 +83,14 @@ tr:last-child td{border-bottom:none}
 .wk-sel:focus{outline:none;border-color:#58a6ff;box-shadow:0 0 0 2px rgba(88,166,255,0.2)}
 .wk-sel option{background:#161b22;color:#e6edf3}
 .wk-seg{font-size:11px;color:#8b949e;margin-top:6px;font-weight:600}
-.mu-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:8px;max-width:600px;margin-left:auto;margin-right:auto}
-.mu{background:#161b22;border:1px solid #21262d;border-radius:10px;padding:0;overflow:hidden;cursor:pointer;transition:border-color .15s}
+.mu-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:10px;padding:0 10px}
+.mu{background:#161b22;border:1px solid #21262d;border-radius:8px;padding:8px 10px;cursor:pointer;transition:border-color .15s}
 .mu:hover{border-color:#30363d}
-.mu-player{display:flex;justify-content:space-between;align-items:center;padding:8px 12px}
-.mu-name{font-size:13px;font-weight:800;color:#e6edf3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.mu-sc{font-size:18px;font-weight:900;color:#8b949e;flex-shrink:0;min-width:28px;text-align:right}
+.mu-player{display:flex;justify-content:space-between;align-items:center;padding:2px 0}
+.mu-name{font-size:12px;font-weight:700;color:#e6edf3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;flex:1}
+.mu-sc{font-size:14px;font-weight:900;color:#8b949e;flex-shrink:0;text-align:right;padding-left:8px}
 .mu-sc.mw{color:#e6edf3}.mu-sc.ml{color:#8b949e;opacity:.6}.mu-sc.mt{color:#d29922}
-.mu-final{font-size:7px;font-weight:800;color:#3fb950;text-transform:uppercase;letter-spacing:1.5px;text-align:center;padding:2px 0;border-top:1px solid #21262d;background:rgba(63,185,80,.06)}
+.mu-final{font-size:7px;font-weight:800;color:#3fb950;text-transform:uppercase;letter-spacing:1.5px;text-align:center;padding:3px 0;margin-top:4px;border-top:1px solid #21262d}
 .mu-meta{font-size:10px;color:#6e7681;margin-top:2px;font-weight:500}
 .mu-meta .mu-seed{font-weight:700;color:#8b949e}
 /* Rules dropdown */
@@ -168,7 +168,7 @@ tr:last-child td{border-bottom:none}
 .champ-other-earn{color:#3fb950;font-weight:700}
 .confetti-piece{position:fixed;width:10px;height:10px;z-index:10000;pointer-events:none;animation:confetti-fall linear forwards}
 @keyframes confetti-fall{0%{opacity:1;transform:translateY(0) rotate(0deg)}100%{opacity:0;transform:translateY(100vh) rotate(720deg)}}
-@media(max-width:480px){.mu-grid{grid-template-columns:1fr}.mu-name{font-size:13px}.mu-sc{font-size:18px}.po-name{font-size:16px}.po-pts{font-size:22px}.champ-popup{padding:28px 18px 20px}.champ-pod.first .champ-pod-name{font-size:22px}.champ-pod.first .champ-pod-earn{font-size:18px}}
+@media(max-width:480px){.mu-grid{gap:6px;padding:0 4px}.mu{padding:6px 8px}.mu-name{font-size:11px}.mu-sc{font-size:13px}.po-name{font-size:16px}.po-pts{font-size:22px}.champ-popup{padding:28px 18px 20px}.champ-pod.first .champ-pod-name{font-size:22px}.champ-pod.first .champ-pod-earn{font-size:18px}}
 @media(max-width:640px){.card-scroll{margin:0 -2px}.card-scroll::-webkit-scrollbar{height:4px}.card-scroll::-webkit-scrollbar-thumb{background:#30363d;border-radius:4px}.header h1{font-size:24px}.qg{grid-template-columns:1fr}td,th{padding:6px 8px;font-size:11px}.seg-tab{font-size:12px}.seg-tabs{gap:12px}}
 @media (max-width: 640px) {
   .wk-col { display: none !important; }
