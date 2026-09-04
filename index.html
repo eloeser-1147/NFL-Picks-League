@@ -202,23 +202,22 @@ tr:last-child td{border-bottom:none}
 .nfl-game{background:#161b22;border:1px solid #21262d;border-radius:10px;overflow:hidden;padding:10px 16px 12px;cursor:pointer;transition:border-color .15s,background .15s}
 .nfl-game:hover{border-color:#30363d;background:#1c2333}
 .nfl-game:active{background:#21262d}
-.gd-popup{background:#0d1117;border:1px solid #30363d;border-radius:16px;padding:24px;max-width:400px;width:90%;position:relative}
+.gd-popup{background:#0d1117;border:1px solid #30363d;border-radius:16px;padding:24px;max-width:420px;width:92%;position:relative;box-shadow:0 0 40px rgba(88,166,255,.15),0 0 80px rgba(63,185,80,.08),inset 0 0 30px rgba(88,166,255,.03)}
 .gd-close{position:absolute;top:12px;right:16px;background:none;border:none;color:#8b949e;font-size:22px;cursor:pointer}
-.gd-teams{display:flex;justify-content:space-around;align-items:center;margin-bottom:16px}
+.gd-teams{display:flex;justify-content:space-around;align-items:center;margin:8px 0 16px}
 .gd-team{text-align:center}
-.gd-team img{width:56px;height:56px;object-fit:contain;margin-bottom:6px}
-.gd-team-name{font-size:11px;color:#8b949e;font-weight:600}
-.gd-team-abbr{font-size:18px;font-weight:900;color:#e6edf3}
-.gd-score{font-size:28px;font-weight:900;color:#e6edf3;margin-top:4px}
+.gd-team img{width:60px;height:60px;object-fit:contain;margin-bottom:8px}
+.gd-team-name{font-size:13px;color:#e6edf3;font-weight:700}
+.gd-score{font-size:32px;font-weight:900;color:#e6edf3;margin-top:6px}
 .gd-vs{font-size:12px;color:#484f58;font-weight:700;padding:0 12px}
-.gd-time{text-align:center;font-size:11px;color:#8b949e;margin-bottom:16px;font-weight:600}
-.gd-records{border-top:1px solid #21262d;padding-top:14px}
-.gd-rec-row{display:flex;justify-content:space-between;padding:4px 0;font-size:12px}
-.gd-rec-label{color:#8b949e;font-weight:600;flex:1;text-align:center}
+.gd-time{text-align:center;font-size:11px;color:#8b949e;margin-bottom:6px;font-weight:600}
+.gd-section-label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:#58a6ff;text-align:center;padding:10px 0 6px;border-top:1px solid #21262d;margin-top:8px}
+.gd-rec-header{display:flex;justify-content:space-between;padding:4px 0 6px;font-size:13px;font-weight:800;border-bottom:1px solid #21262d;margin-bottom:2px}
+.gd-rec-header span{flex:1;text-align:center;color:#8b949e}
+.gd-rec-row{display:flex;justify-content:space-between;padding:3px 0;font-size:12px}
+.gd-rec-label{color:#8b949e;font-weight:600;flex:1;text-align:center;font-size:11px}
 .gd-rec-away{color:#e6edf3;font-weight:700;flex:1;text-align:center}
 .gd-rec-home{color:#e6edf3;font-weight:700;flex:1;text-align:center}
-.gd-rec-header{display:flex;justify-content:space-between;padding:4px 0 8px;font-size:10px;text-transform:uppercase;letter-spacing:1px;border-bottom:1px solid #21262d;margin-bottom:4px}
-.gd-rec-header span{flex:1;text-align:center;color:#484f58;font-weight:700}
 .nfl-game-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px}
 .nfl-game-time{font-size:11px;color:#8b949e;font-weight:600}
 .nfl-day-ribbon{grid-column:1/-1;padding:10px 8px 6px;font-size:13px;font-weight:800;color:#8b949e;border-bottom:1px solid #21262d;margin:8px 0 0;text-transform:uppercase;letter-spacing:1px}
@@ -2258,6 +2257,14 @@ for(var w=1;w<=18;w++){
     var d=det[key];
     if(d){g.time=d.time;g.day=d.day;g.net=d.net;}
   }
+  // Also enrich from Excel NFL Schedule data (overrides hardcoded times if available)
+  var exScores = window._nflScores || {};
+  for(var i=0;i<NFL_GAMES[w].length;i++){
+    var g=NFL_GAMES[w][i];
+    var ek=w+'-'+g.a+'-'+g.h;
+    var ed=exScores[ek];
+    if(ed && ed.time && ed.time!=='TBD'){g.time=ed.time;if(ed.day&&ed.day!=='TBD')g.day=ed.day;}
+  }
   // Sort: by day of week, then by time
   NFL_GAMES[w].sort(function(a,b){
     var da=a.day?(dayOrder[a.day.split(' ')[0]]!==undefined?dayOrder[a.day.split(' ')[0]]:4):4;
@@ -2487,40 +2494,42 @@ function showGameDetail(wk, away, home){
   h += '<div class="gd-team">';
   h += '<img src="'+nflLogo(away)+'" alt="'+away+'" '+logoStyle(away)+'>';
   h += '<div class="gd-team-name">'+(NFL_NAMES[away]||away)+'</div>';
-  h += '<div class="gd-team-abbr">'+away+'</div>';
-  h += '<div class="gd-score"'+('')+'>'+aSc+'</div>';
+  h += '<div class="gd-score">'+aSc+'</div>';
   h += '</div>';
   h += '<div class="gd-vs">'+(hasScore?'FINAL':'@')+'</div>';
   h += '<div class="gd-team">';
   h += '<img src="'+nflLogo(home)+'" alt="'+home+'" '+logoStyle(home)+'>';
   h += '<div class="gd-team-name">'+(NFL_NAMES[home]||home)+'</div>';
-  h += '<div class="gd-team-abbr">'+home+'</div>';
-  h += '<div class="gd-score"'+('')+'>'+hSc+'</div>';
+  h += '<div class="gd-score">'+hSc+'</div>';
   h += '</div>';
   h += '</div>';
   
   // Spread line
   if(gd.spread !== null){
     var spreadStr = gd.spread > 0 ? away+' +'+gd.spread : gd.spread < 0 ? home+' '+gd.spread : 'PK';
-    h += '<div style="text-align:center;font-size:11px;color:#8b949e;margin-bottom:12px">Spread: <strong style="color:#c9d1d9">'+spreadStr+'</strong></div>';
+    h += '<div style="text-align:center;font-size:11px;color:#8b949e;margin-bottom:4px">Spread: <strong style="color:#c9d1d9">'+spreadStr+'</strong></div>';
   }
   
-  // Records table
-  h += '<div class="gd-records">';
-  h += '<div class="gd-rec-header"><span>'+away+'</span><span>RECORD</span><span>'+home+'</span></div>';
+  // Record section
+  h += '<div class="gd-section-label">Record</div>';
+  h += '<div class="gd-rec-header"><span>'+away+'</span><span></span><span>'+home+'</span></div>';
   h += '<div class="gd-rec-row"><span class="gd-rec-away">'+ar.w+'-'+ar.l+'</span><span class="gd-rec-label">Overall</span><span class="gd-rec-home">'+hr.w+'-'+hr.l+'</span></div>';
-  h += '<div class="gd-rec-row"><span class="gd-rec-away">'+ar.aw+'-'+ar.al+'</span><span class="gd-rec-label">Away</span><span class="gd-rec-home">'+hr.hw+'-'+hr.hl+'</span></div>';
-  h += '<div class="gd-rec-row"><span class="gd-rec-away">'+ar.hw+'-'+ar.hl+'</span><span class="gd-rec-label">Home</span><span class="gd-rec-home">'+hr.aw+'-'+hr.al+'</span></div>';
+  h += '<div class="gd-rec-row"><span class="gd-rec-away">'+ar.hw+'-'+ar.hl+'</span><span class="gd-rec-label">Home</span><span class="gd-rec-home">'+hr.hw+'-'+hr.hl+'</span></div>';
+  h += '<div class="gd-rec-row"><span class="gd-rec-away">'+ar.aw+'-'+ar.al+'</span><span class="gd-rec-label">Away</span><span class="gd-rec-home">'+hr.aw+'-'+hr.al+'</span></div>';
+  
+  // ATS section
   var atsA = ar.atsW+'-'+ar.atsL+(ar.atsP?'-'+ar.atsP:'');
   var atsH = hr.atsW+'-'+hr.atsL+(hr.atsP?'-'+hr.atsP:'');
-  h += '<div class="gd-rec-row"><span class="gd-rec-away">'+atsA+'</span><span class="gd-rec-label">ATS</span><span class="gd-rec-home">'+atsH+'</span></div>';
-  var aatsA = ar.aatsW+'-'+ar.aatsL;
-  var hatsH = hr.hatsW+'-'+hr.hatsL;
-  h += '<div class="gd-rec-row"><span class="gd-rec-away">'+aatsA+'</span><span class="gd-rec-label">Away ATS</span><span class="gd-rec-home">'+hatsH+'</span></div>';
+  h += '<div class="gd-section-label">Against the Spread</div>';
+  h += '<div class="gd-rec-header"><span>'+away+'</span><span></span><span>'+home+'</span></div>';
+  h += '<div class="gd-rec-row"><span class="gd-rec-away">'+atsA+'</span><span class="gd-rec-label">Overall</span><span class="gd-rec-home">'+atsH+'</span></div>';
   var hatsA = ar.hatsW+'-'+ar.hatsL;
+  var hatsH = hr.hatsW+'-'+hr.hatsL;
+  h += '<div class="gd-rec-row"><span class="gd-rec-away">'+hatsA+'</span><span class="gd-rec-label">Home</span><span class="gd-rec-home">'+hatsH+'</span></div>';
+  var aatsA = ar.aatsW+'-'+ar.aatsL;
   var aatsH = hr.aatsW+'-'+hr.aatsL;
-  h += '<div class="gd-rec-row"><span class="gd-rec-away">'+hatsA+'</span><span class="gd-rec-label">Home ATS</span><span class="gd-rec-home">'+aatsH+'</span></div>';
-  h += '</div></div>';
+  h += '<div class="gd-rec-row"><span class="gd-rec-away">'+aatsA+'</span><span class="gd-rec-label">Away</span><span class="gd-rec-home">'+aatsH+'</span></div>';
+  h += '</div>';
   
   overlay.innerHTML = h;
   overlay.style.display = 'flex';
