@@ -198,15 +198,24 @@ tr:last-child td{border-bottom:none}
 .nfl-bye b{color:#8b949e;font-weight:600;display:block;margin-bottom:6px}
 .nfl-bye-logos{display:flex;flex-wrap:wrap;justify-content:center;gap:8px;margin-top:4px}
 .nfl-bye-logos img{width:28px;height:28px;object-fit:contain;opacity:.5}
-.nfl-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:6px;max-width:720px;margin:0 auto}
+.nfl-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:720px;margin:0 auto;padding:0 8px}
+.nfl-game{background:#161b22;border:1px solid #21262d;border-radius:10px;overflow:hidden}
+.nfl-game-time{font-size:10px;color:#8b949e;font-weight:600;padding:5px 10px;border-bottom:1px solid #21262d;text-align:center}
+.nfl-game-day{grid-column:1/-1;font-size:13px;font-weight:800;color:#e6edf3;padding:8px 0 2px;margin:0}
+.nfl-team-row{display:flex;align-items:center;padding:7px 10px;gap:8px}
+.nfl-team-row+.nfl-team-row{border-top:1px solid #21262d}
+.nfl-team-row img{width:22px;height:22px;object-fit:contain}
+.nfl-team-abbr{font-size:13px;font-weight:800;color:#e6edf3}
 .nfl-mu{background:#161b22;border:1px solid #21262d;border-radius:8px;display:flex;align-items:center;justify-content:center;gap:4px;padding:10px 4px}
 .nfl-mu img{width:36px;height:36px;object-fit:contain}
 .nfl-mu .nfl-at{font-size:9px;font-weight:700;color:#484f58}
 @media(max-width:640px){
-  .nfl-grid{grid-template-columns:repeat(3,1fr);gap:5px}
-  .nfl-mu{padding:8px 3px;gap:3px}
-  .nfl-mu img{width:32px;height:32px}
-  .nfl-wk{min-width:46px;padding:6px 0;font-size:11px}
+  .nfl-grid{grid-template-columns:1fr 1fr;gap:8px;padding:0 6px}
+  .nfl-game{border-radius:8px}
+  .nfl-team-row{padding:6px 8px;gap:6px}
+  .nfl-team-row img{width:20px;height:20px}
+  .nfl-team-abbr{font-size:12px}
+  .nfl-wk{min-width:40px;padding:4px 0;font-size:10px}
   .nfl-blurb{font-size:11px;padding:8px 12px}
 }
 
@@ -1071,7 +1080,7 @@ function showUpdatesPopup(){
   var overlay = document.getElementById('champOverlay');
   var h = '<div class="champ-popup pools-popup" style="border-color:#58a6ff">';
   h += '<button class="champ-close" onclick="closeChampPopup()">&times;</button>';
-  h += '<div style="font-size:10px;text-transform:uppercase;letter-spacing:2px;color:#58a6ff;font-weight:700;margin-bottom:4px">Week ' + (priorWk >= 1 ? priorWk : '') + ' Update</div>';
+  h += '<div style="font-size:10px;text-transform:uppercase;letter-spacing:2px;color:#58a6ff;font-weight:700;margin-bottom:4px">Week ' + currentWeek + ' Update</div>';
   if(u.title) h += '<div style="font-size:20px;font-weight:900;color:#e6edf3;margin-bottom:10px">' + u.title + '</div>';
   if(u.msg) h += '<div style="font-size:13px;color:#c9d1d9;line-height:1.7;margin-bottom:16px">' + u.msg + '</div>';
   h += '<div style="font-size:11px;color:#484f58;text-align:center;margin-top:8px">You can turn off this popup in <strong style="color:#8b949e">Info → Updates</strong></div>';
@@ -1984,12 +1993,12 @@ function initStripScaling(){
             var pg = (window._nflPlayoffGames || {})[wk] || [];
             var gh='';
             if(pg.length===0){gh='<div style="padding:20px;text-align:center;color:#484f58;font-size:13px;">No matchups entered yet.</div>';}
-            else{for(var i=0;i<pg.length;i++){var g=pg[i];gh+='<div class="nfl-mu"><img src="'+nflLogo(g.a)+'" alt="'+g.a+'" title="'+(NFL_NAMES[g.a]||g.a)+'" '+logoStyle(g.a)+'><span class="nfl-at">@</span><img src="'+nflLogo(g.h)+'" alt="'+g.h+'" title="'+(NFL_NAMES[g.h]||g.h)+'" '+logoStyle(g.h)+'></div>';}}
+            else{for(var i=0;i<pg.length;i++){var g=pg[i];gh+='<div class="nfl-game"><div class="nfl-game-time">Playoffs</div><div class="nfl-team-row"><img src="'+nflLogo(g.a)+'" alt="'+g.a+'" '+logoStyle(g.a)+'><span class="nfl-team-abbr">'+g.a+'</span></div><div class="nfl-team-row"><img src="'+nflLogo(g.h)+'" alt="'+g.h+'" '+logoStyle(g.h)+'><span class="nfl-team-abbr">'+g.h+'</span></div></div>';}}
             document.getElementById('nflGrid').innerHTML=gh;
           } else {
             var byes=[];for(var t in NFL_SCHED){if(NFL_SCHED[t][wk-1]==='BYE')byes.push(t);}
             if(byes.length>0){byes.sort();byeEl.style.display='block';var bh='<b>Bye Week</b><div class="nfl-bye-logos">';for(var i=0;i<byes.length;i++){bh+='<img src="'+nflLogo(byes[i])+'" alt="'+byes[i]+'" title="'+(NFL_NAMES[byes[i]]||byes[i])+'" '+logoStyle(byes[i])+'>';}bh+='</div>';byeEl.innerHTML=bh;}else{byeEl.style.display='none';}
-            var games=NFL_GAMES[wk]||[];var gh='';for(var i=0;i<games.length;i++){var g=games[i];gh+='<div class="nfl-mu"><img src="'+nflLogo(g.a)+'" alt="'+g.a+'" title="'+(NFL_NAMES[g.a]||g.a)+'" '+logoStyle(g.a)+'><span class="nfl-at">@</span><img src="'+nflLogo(g.h)+'" alt="'+g.h+'" title="'+(NFL_NAMES[g.h]||g.h)+'" '+logoStyle(g.h)+'></div>';}
+            var games=NFL_GAMES[wk]||[];var gh='';for(var i=0;i<games.length;i++){var g=games[i];gh+='<div class="nfl-game"><div class="nfl-game-time">'+(g.time||'TBD')+'</div><div class="nfl-team-row"><img src="'+nflLogo(g.a)+'" alt="'+g.a+'" '+logoStyle(g.a)+'><span class="nfl-team-abbr">'+g.a+'</span></div><div class="nfl-team-row"><img src="'+nflLogo(g.h)+'" alt="'+g.h+'" '+logoStyle(g.h)+'><span class="nfl-team-abbr">'+g.h+'</span></div></div>';}
             document.getElementById('nflGrid').innerHTML=gh;
           }
         }
@@ -2054,10 +2063,10 @@ function nflRender(wk){
     } else {
       for(var i=0;i<pg.length;i++){
         var g=pg[i];
-        h+='<div class="nfl-mu">';
-        h+='<img src="'+nflLogo(g.a)+'" alt="'+g.a+'" title="'+(NFL_NAMES[g.a]||g.a)+'" '+logoStyle(g.a)+'>';
-        h+='<span class="nfl-at">@</span>';
-        h+='<img src="'+nflLogo(g.h)+'" alt="'+g.h+'" title="'+(NFL_NAMES[g.h]||g.h)+'" '+logoStyle(g.h)+'>';
+        h+='<div class="nfl-game">';
+        h+='<div class="nfl-game-time">Playoffs</div>';
+        h+='<div class="nfl-team-row"><img src="'+nflLogo(g.a)+'" alt="'+g.a+'" '+logoStyle(g.a)+'><span class="nfl-team-abbr">'+g.a+'</span></div>';
+        h+='<div class="nfl-team-row"><img src="'+nflLogo(g.h)+'" alt="'+g.h+'" '+logoStyle(g.h)+'><span class="nfl-team-abbr">'+g.h+'</span></div>';
         h+='</div>';
       }
     }
@@ -2079,15 +2088,15 @@ function nflRender(wk){
   }
   else{byeEl.style.display='none';}
 
-  // Games
+  // Games - CBS style cards (away on top, home below)
   var games=NFL_GAMES[wk]||[];
   var h='';
   for(var i=0;i<games.length;i++){
     var g=games[i];
-    h+='<div class="nfl-mu">';
-    h+='<img src="'+nflLogo(g.a)+'" alt="'+g.a+'" title="'+(NFL_NAMES[g.a]||g.a)+'" '+logoStyle(g.a)+'>';
-    h+='<span class="nfl-at">@</span>';
-    h+='<img src="'+nflLogo(g.h)+'" alt="'+g.h+'" title="'+(NFL_NAMES[g.h]||g.h)+'" '+logoStyle(g.h)+'>';
+    h+='<div class="nfl-game">';
+    h+='<div class="nfl-game-time">'+(g.time||'TBD')+'</div>';
+    h+='<div class="nfl-team-row"><img src="'+nflLogo(g.a)+'" alt="'+g.a+'" '+logoStyle(g.a)+'><span class="nfl-team-abbr">'+g.a+'</span></div>';
+    h+='<div class="nfl-team-row"><img src="'+nflLogo(g.h)+'" alt="'+g.h+'" '+logoStyle(g.h)+'><span class="nfl-team-abbr">'+g.h+'</span></div>';
     h+='</div>';
   }
   document.getElementById('nflGrid').innerHTML=h;
@@ -2174,7 +2183,7 @@ function renderUpdates() {
     for (var i = 0; i < updates.length; i++) {
       var u = updates[i];
       o += '<div class="card" style="margin-bottom:10px;padding:14px 16px;">';
-      var priorWk = currentWeek - 1 - i;
+      var priorWk = currentWeek;
       if (priorWk >= 1) o += '<div style="font-size:10px;color:#58a6ff;font-weight:600;margin-bottom:4px;">Week ' + priorWk + '</div>';
       if (u.title) o += '<div style="font-size:15px;font-weight:800;color:#e6edf3;margin-bottom:6px;">' + u.title + '</div>';
       if (u.msg) o += '<div style="font-size:13px;color:#c9d1d9;line-height:1.7;">' + u.msg + '</div>';
