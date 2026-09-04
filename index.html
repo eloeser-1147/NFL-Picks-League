@@ -19,8 +19,8 @@ body{font-family:'Inter',Arial,sans-serif;background:#0d1117;color:#e6edf3;min-h
 .tab-btn.active{color:#e6edf3;border-bottom-color:transparent}
 .tab-btn.active::after{content:'';position:absolute;bottom:-1px;left:0;right:0;height:3px;background:linear-gradient(90deg,#58a6ff,#3fb950);border-radius:2px}
 
-.seg-tabs{display:flex;justify-content:center;gap:20px;margin-bottom:16px}
-.seg-tab{padding:6px 4px;background:none;border:none;border-bottom:2px solid transparent;color:#8b949e;font-size:14px;font-weight:600;cursor:pointer}
+.seg-tabs{display:flex;justify-content:center;gap:20px;margin-bottom:10px}
+.seg-tab{padding:3px 4px;background:none;border:none;border-bottom:2px solid transparent;color:#8b949e;font-size:12px;font-weight:600;cursor:pointer}
 .seg-tab:hover{color:#e6edf3;border-bottom-color:#30363d}
 .seg-tab.active{color:#e6edf3;border-bottom-color:#58a6ff}
 .seg-panel{display:none}
@@ -1723,7 +1723,11 @@ function renderQualifiers() {
       var e = earnings[q.name];
       var earn = 0;
       if(e){
-        earn = (e.segment || 0) + (e.division || 0);
+        // Segment $ only after week 6 (first segment can be done)
+        if(cw > 6) earn += (e.segment || 0);
+        // Division $ only after week 18 (all divisions complete)
+        if(cw >= 19) earn += (e.division || 0);
+        // Playoff $ only after week 22
         if(cw > 22) earn += (e.playoff || 0);
       }
       o+='<tr>';
