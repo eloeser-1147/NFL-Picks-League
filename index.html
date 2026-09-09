@@ -18,7 +18,7 @@ body{font-family:'Inter',Arial,sans-serif;background:#0d1117;color:#e6edf3;min-h
 .tab-btn:hover{color:#e6edf3}
 .tab-btn.active{color:#e6edf3;border-bottom-color:transparent}
 .tab-slider{position:absolute;bottom:-1px;height:3px;background:linear-gradient(90deg,#58a6ff,#3fb950);border-radius:2px;transition:left .3s ease,width .3s ease}
-.panels-wrap{overflow:hidden;position:relative}
+.panels-wrap{position:relative}
 .panel{display:none;max-width:900px;margin:0 auto;padding:0 24px 40px;will-change:transform,opacity}
 .panel.active{display:block}
 .panel.slide-left{animation:slideLeft .25s cubic-bezier(.4,0,.2,1)}
@@ -1424,7 +1424,6 @@ function renderSched(){
       if(currentWeek < showThreshold){
         o+='<div style="padding:30px;color:#484f58;text-align:center;font-size:13px;">No scores yet for this playoff week.</div>';
       } else {
-        // Build round-by-round data for each player from _playoffWeeks
         var allPW = window._playoffWeeks || {};
         var roundNames = {19:'Wild Card',20:'Divisional',21:'Championship',22:'Super Bowl'};
         
@@ -1434,35 +1433,13 @@ function renderSched(){
           var cumPts = pl.cumPts !== undefined ? pl.cumPts : pl.pts;
           var wkPts = pl.pts;
           var ptsClass = j===0?'top':j<4?'mid':'low';
-          var cardId = 'poCard_'+s.wk+'_'+j;
           
-          o+='<div class="mu" onclick="event.stopPropagation();var d=document.getElementById(\''+cardId+'\');d.style.display=d.style.display===\'none\'?\'block\':\'none\'" style="cursor:pointer">';
-          
-          // Top row: name + cumulative pts
+          o+='<div class="mu" onclick="showPlayoffDetail(\''+pl.name.replace(/'/g,"\\'")+'\','+s.wk+')">';
           o+='<div class="mu-player">';
           o+='<span class="mu-name" style="font-size:16px;font-weight:800">'+pl.name+'</span>';
           o+='<span class="mu-sc po-pts '+ptsClass+'" style="font-size:22px">'+cumPts+'</span>';
           o+='</div>';
-          
-          // Subtext: this week's points
           o+='<div style="font-size:11px;color:#6e7681;font-weight:500;margin-top:2px">This week: '+wkPts+' pts</div>';
-          
-          // Expandable round-by-round breakdown
-          o+='<div id="'+cardId+'" style="display:none;border-top:1px solid #21262d;margin-top:10px;padding-top:8px">';
-          for(var rw=19;rw<=s.wk;rw++){
-            var rdPlayers = allPW[rw] || [];
-            var rdPts = 0;
-            for(var rp=0;rp<rdPlayers.length;rp++){if(rdPlayers[rp].name===pl.name){rdPts=rdPlayers[rp].pts;break;}}
-            var rdColor = rw===s.wk ? '#e6edf3' : '#8b949e';
-            o+='<div style="display:flex;justify-content:space-between;padding:3px 0;font-size:12px;color:'+rdColor+'">';
-            o+='<span>'+roundNames[rw]+'</span>';
-            o+='<span style="font-weight:700">'+rdPts+'</span>';
-            o+='</div>';
-          }
-          o+='<div style="display:flex;justify-content:space-between;padding:6px 0 0;font-size:13px;font-weight:800;color:#e6edf3;border-top:1px solid #21262d;margin-top:4px">';
-          o+='<span>Total</span><span>'+cumPts+'</span></div>';
-          o+='</div>';
-          
           o+='</div>';
         }
         o+='</div>';
@@ -2595,6 +2572,54 @@ function showMatchupDetail(wk, n1, n2){
   h+='<div class="gd-section-label" style="color:#3fb950">Head-to-Head</div>';
   h+='<div class="gd-rec-row"><span class="gd-rec-away" style="font-size:16px;font-weight:900">'+h2h1+'</span><span class="gd-rec-label">Wins</span><span class="gd-rec-home" style="font-size:16px;font-weight:900">'+h2h2+'</span></div>';
   if(h2hT>0) h+='<div class="gd-rec-row"><span class="gd-rec-away">'+h2hT+'</span><span class="gd-rec-label">Ties</span><span class="gd-rec-home">'+h2hT+'</span></div>';
+  
+  h+='</div>';
+  overlay.innerHTML=h;
+  overlay.style.display='flex';
+  overlay.onclick=function(e){if(e.target===overlay)overlay.style.display='none';};
+}
+
+function showPlayoffDetail(playerName, throughWk){
+  var overlay = document.getElementById('gameDetailOverlay');
+  var allPW = window._playoffWeeks || {};
+  var roundNames = {19:'Wild Card',20:'Divisional',21:'Championship',22:'Super Bowl'};
+  var roundColors = {19:'#58a6ff',20:'#bc8cff',21:'#d29922',22:'#3fb950'};
+  
+  // Gather this player's data across all playoff rounds up to throughWk
+  var totalPts = 0;
+  var rounds = [];
+  for(var rw=19;rw<=throughWk;rw++){
+    var rdPlayers = allPW[rw] || [];
+    var rdPts = 0;
+    for(var rp=0;rp<rdPlayers.length;rp++){if(rdPlayers[rp].name===playerName){rdPts=rdPlayers[rp].pts;break;}}
+    totalPts += rdPts;
+    rounds.push({wk:rw,name:roundNames[rw],pts:rdPts,color:roundColors[rw]});
+  }
+  
+  var h='<div class="gd-popup" style="max-width:380px">';
+  h+='<button class="gd-close" onclick="document.getElementById(\'gameDetailOverlay\').style.display=\'none\'">&times;</button>';
+  
+  // Player name header
+  h+='<div style="text-align:center;margin-bottom:16px">';
+  h+='<div style="font-size:20px;font-weight:900;color:#e6edf3">'+playerName+'</div>';
+  h+='<div style="font-size:11px;color:#8b949e;font-weight:600;margin-top:4px">Playoff Breakdown</div>';
+  h+='</div>';
+  
+  // Round-by-round rows
+  for(var i=0;i<rounds.length;i++){
+    var rd = rounds[i];
+    h+='<div class="gd-section-label" style="color:'+rd.color+'">'+rd.name+'</div>';
+    h+='<div class="gd-rec-row">';
+    h+='<span class="gd-rec-label" style="flex:1;text-align:left;font-size:13px;color:#c9d1d9">Week '+rd.wk+' Points</span>';
+    h+='<span style="font-size:18px;font-weight:800;color:#e6edf3">'+rd.pts+'</span>';
+    h+='</div>';
+  }
+  
+  // Total at bottom
+  h+='<div style="margin-top:12px;padding:14px 16px;background:rgba(63,185,80,0.06);border:1px solid rgba(63,185,80,0.12);border-radius:8px;display:flex;justify-content:space-between;align-items:center">';
+  h+='<span style="font-size:14px;font-weight:800;color:#e6edf3;text-transform:uppercase;letter-spacing:1px">Total</span>';
+  h+='<span style="font-size:28px;font-weight:900;color:#3fb950">'+totalPts+'</span>';
+  h+='</div>';
   
   h+='</div>';
   overlay.innerHTML=h;
