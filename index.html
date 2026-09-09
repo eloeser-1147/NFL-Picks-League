@@ -1424,6 +1424,10 @@ function renderSched(){
       if(currentWeek < showThreshold){
         o+='<div style="padding:30px;color:#484f58;text-align:center;font-size:13px;">No scores yet for this playoff week.</div>';
       } else {
+        // Build round-by-round data for each player from _playoffWeeks
+        var allPW = window._playoffWeeks || {};
+        var roundNames = {19:'Wild Card',20:'Divisional',21:'Championship',22:'Super Bowl'};
+        
         o+='<div class="mu-grid">';
         for(var j=0;j<players.length;j++){
           var pl = players[j];
@@ -1431,39 +1435,34 @@ function renderSched(){
           var wkPts = pl.pts;
           var ptsClass = j===0?'top':j<4?'mid':'low';
           var rankClass = j===0?'r1':j===1?'r2':j===2?'r3':'';
+          var cardId = 'poCard_'+s.wk+'_'+j;
           
-          o+='<div class="po-card">';
-          o+='<div class="po-rank '+rankClass+'">'+(j+1)+'</div>';
+          o+='<div class="po-card" style="flex-wrap:wrap;cursor:pointer" onclick="var d=document.getElementById(\''+cardId+'\');d.style.display=d.style.display===\'none\'?\'block\':\'none\'">';
+          o+='<div style="display:flex;align-items:center;justify-content:space-between;width:100%">';
           o+='<div class="po-info"><div class="po-name">'+pl.name+'</div>';
           o+='<div class="po-via">This week: '+wkPts+' pts</div>';
-          if(s.wk === 19){
-            // Check if tied with anyone on cumulative pts
-            var plCum19 = cumPts;
-            var isTied19 = false;
-            for(var tt=0;tt<players.length;tt++){if(tt!==j){var oc=players[tt].cumPts!==undefined?players[tt].cumPts:players[tt].pts;if(oc===plCum19)isTied19=true;}}
-            if(isTied19){
-              var wctb = (playoffData.wcTiebreakers||{})[pl.name]||{tbRank:0,afcPts:0,nfcPts:0};
-              o+='<div style="font-size:9px;color:#d29922;font-weight:600;margin-top:2px">TB: '+(wctb.tbRank||'—')+' · AFC: '+(wctb.afcPts||'—')+' · NFC: '+(wctb.nfcPts||'—')+'</div>';
-            }
-          }
-          if(s.wk === 22){
-            // Check if this player is tied with anyone
-            var plCum = cumPts;
-            var isTied = false;
-            for(var tt=0;tt<players.length;tt++){
-              if(tt!==j){
-                var otherCum = players[tt].cumPts!==undefined?players[tt].cumPts:players[tt].pts;
-                if(otherCum===plCum) isTied=true;
-              }
-            }
-            if(isTied){
-              var tbd = (playoffData.tiebreakers||{})[pl.name]||{sbTbRank:0,fgDiff:0};
-              o+='<div style="font-size:9px;color:#d29922;font-weight:600;margin-top:2px">TB Rank: '+(tbd.sbTbRank||'—')+' · FG Diff: '+(tbd.fgDiff||'—')+'</div>';
-            }
-          }
           o+='</div>';
           o+='<div class="po-pts '+ptsClass+'">'+cumPts+'</div>';
           o+='</div>';
+          
+          // Expandable round-by-round breakdown
+          o+='<div id="'+cardId+'" style="display:none;width:100%;border-top:1px solid #30363d;margin-top:10px;padding-top:10px">';
+          var runTotal = 0;
+          for(var rw=19;rw<=s.wk;rw++){
+            var rdPlayers = allPW[rw] || [];
+            var rdPts = 0;
+            for(var rp=0;rp<rdPlayers.length;rp++){if(rdPlayers[rp].name===pl.name){rdPts=rdPlayers[rp].pts;break;}}
+            runTotal += rdPts;
+            var rdColor = rw===s.wk ? '#e6edf3' : '#8b949e';
+            o+='<div style="display:flex;justify-content:space-between;padding:4px 0;font-size:12px;color:'+rdColor+'">';
+            o+='<span>'+roundNames[rw]+'</span>';
+            o+='<span style="font-weight:700">'+rdPts+' pts</span>';
+            o+='</div>';
+          }
+          // Total at bottom
+          o+='<div style="display:flex;justify-content:space-between;padding:8px 0 2px;font-size:13px;font-weight:800;color:#e6edf3;border-top:1px solid #30363d;margin-top:6px">';
+          o+='<span>Total</span><span>'+cumPts+'</span></div>';
+          o+='</div></div>';
         }
         o+='</div>';
         // Week 22: show tiebreaker gold box only if there's a tie
@@ -2550,9 +2549,7 @@ function showMatchupDetail(wk, n1, n2){
   if(s3done){ow1+=(p1.w3||0);ol1+=(p1.l3||0);ow2+=(p2.w3||0);ol2+=(p2.l3||0);tp1+=p1.p3;tp2+=p2.p3;}
   
   var c1='',c2='';
-  if(sc1>sc2){c1='style="color:#3fb950"';c2='style="color:#f85149;opacity:.7"';}
-  else if(sc2>sc1){c2='style="color:#3fb950"';c1='style="color:#f85149;opacity:.7"';}
-  else if(sc1>0){c1='style="color:#d29922"';c2='style="color:#d29922"';}
+  if(sc1>0||sc2>0){c1='style="color:#e6edf3"';c2='style="color:#e6edf3"';}
   
   var h='<div class="gd-popup" style="max-width:420px">';
   h+='<button class="gd-close" onclick="document.getElementById(\'gameDetailOverlay\').style.display=\'none\'">&times;</button>';
