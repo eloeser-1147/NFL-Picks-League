@@ -388,10 +388,10 @@ tr:last-child td{border-bottom:none}
       <p>• Tied → weekly tiebreaker decides</p>
       <p>• Same tiebreaker → <strong>.5 W / .5 L</strong> each</p></div>
     <div class="rule-sec"><div class="rule-sec-title" style="color:#d29922">Divisions</div>
-      <p>• <strong>2 divisions of 5</strong> players</p>
-      <p>• Face each division opponent at least <strong>once</strong> over 6 weeks</p>
+      <p>• <strong>4 divisions of 4</strong> players</p>
+      <p>• Face each division opponent <strong>twice</strong> over 6 weeks</p>
       <p>• Standings determined by <strong>win-loss record</strong></p></div>
-    <div class="rule-prize">2 division winners → auto playoff entry + <span style="color:#3fb950;font-weight:800;">$10 each</span></div>
+    <div class="rule-prize">4 division winners → auto playoff entry + <span style="color:#3fb950;font-weight:800;">$10 each</span></div>
     <div class="rule-tb"><div class="rule-sec-title" style="color:#8b949e">Tiebreakers</div>
       <p>1. H2H record vs. tied opponents</p>
       <p>2. Most correct picks in H2H matchups vs. tied</p>
@@ -401,16 +401,16 @@ tr:last-child td{border-bottom:none}
   </div>
 
   <div class="rule-content" id="rPlayoffs" style="display:none">
-    <div class="rule-subtitle" style="background:#1a4a1e">Playoff Format — 6 Players</div>
-    <div class="rule-sec"><div class="rule-sec-title" style="color:#3fb950">Auto-Qualifiers (4)</div>
+    <div class="rule-subtitle" style="background:#1a4a1e">Playoff Format — 8 Players</div>
+    <div class="rule-sec"><div class="rule-sec-title" style="color:#3fb950">Auto-Qualifiers (6)</div>
       <p>• Weeks 1–6 segment winner</p>
       <p>• Weeks 7–12 segment winner</p>
-      <p>• 2 division winners from Weeks 13–18</p></div>
+      <p>• 4 division winners from Weeks 13–18</p></div>
     <div class="rule-sec"><div class="rule-sec-title" style="color:#d29922">Wild Card (2)</div>
       <p>• Top 2 overall season point totals among non-qualified players</p></div>
     <div style="border-top:2px solid #30363d"></div>
     <div class="rule-sec"><div class="rule-sec-title" style="color:#58a6ff">Wild Card Round</div>
-      <p>• All 6 players pick all games ATS</p>
+      <p>• All 8 players pick all games ATS</p>
       <p>• Assign confidence weights <strong>1–4</strong></p>
       <p>• <strong>Top 4</strong> in weighted points advance</p></div>
     <div class="rule-sec"><div class="rule-sec-title" style="color:#bc8cff">Final Rounds (4 Players)</div>
@@ -420,7 +420,7 @@ tr:last-child td{border-bottom:none}
       <p>• <strong>Championship:</strong> 4 pts per correct pick</p>
       <p>• <strong>Super Bowl:</strong> 8 pts for correct pick</p>
       <p>• Top 3 in total cumulative points receive payouts</p></div>
-    <div class="rule-prize">1st: <span style="color:#3fb950;font-weight:800;">$125</span> · 2nd: <span style="color:#3fb950;font-weight:800;">$30</span> · 3rd: <span style="color:#3fb950;font-weight:800;">$25</span></div>
+    <div class="rule-prize">1st: <span style="color:#3fb950;font-weight:800;">$200</span> · 2nd: <span style="color:#3fb950;font-weight:800;">$75</span> · 3rd: <span style="color:#3fb950;font-weight:800;">$35</span></div>
     <div class="rule-tb"><div class="rule-sec-title" style="color:#8b949e">Qualification Tiebreakers</div>
       <p>1. H2H record (if applicable)</p>
       <p>2. Best overall record Weeks 1–18</p></div>
@@ -438,10 +438,10 @@ tr:last-child td{border-bottom:none}
     <div class="rule-sec" style="font-size:13px;line-height:2.2">
       Weeks 1–6 Winner <span style="float:right;color:#3fb950;font-weight:700;">$25</span><br>
       Weeks 7–12 Winner <span style="float:right;color:#3fb950;font-weight:700;">$25</span><br>
-      Division Winners (×2) <span style="float:right;color:#3fb950;font-weight:700;">$10 ea.</span><br>
-      <span style="border-top:1px solid #30363d;display:block;margin:4px 0;padding-top:4px;">Playoff 1st <span style="float:right;color:#3fb950;font-weight:700;">$125</span></span>
-      Playoff 2nd <span style="float:right;color:#3fb950;font-weight:700;">$30</span><br>
-      Playoff 3rd <span style="float:right;color:#3fb950;font-weight:700;">$25</span>
+      Division Winners (×4) <span style="float:right;color:#3fb950;font-weight:700;">$10 ea.</span><br>
+      <span style="border-top:1px solid #30363d;display:block;margin:4px 0;padding-top:4px;">Playoff 1st <span style="float:right;color:#3fb950;font-weight:700;">$200</span></span>
+      Playoff 2nd <span style="float:right;color:#3fb950;font-weight:700;">$75</span><br>
+      Playoff 3rd <span style="float:right;color:#3fb950;font-weight:700;">$35</span>
     </div>
   </div>
 
@@ -599,12 +599,12 @@ function load() {
     // Read roster + current week
     var roster = wb.Sheets['Roster'];
     var names = {};
-    if(roster){for(var i=3;i<=12;i++){var c=roster['B'+i];names[i-2]=c?c.v:'Player '+(i-2);}
-      var cwCell=roster['B14'];if(cwCell&&(typeof cwCell.v==='number'||cwCell.v===0))currentWeek=parseInt(cwCell.v)||0;}
+    if(roster){for(var i=3;i<=14;i++){var c=roster['B'+i];names[i-2]=c?c.v:'Player '+(i-2);}
+      var cwCell=roster['B20'];if(cwCell&&(typeof cwCell.v==='number'||cwCell.v===0))currentWeek=parseInt(cwCell.v)||0;}
     
     // Read helper data
     P = [];
-    for(var i=2;i<=11;i++){
+    for(var i=2;i<=13;i++){
       var pn = i-1;
       P.push({
         num: pn,
@@ -666,7 +666,7 @@ function readPicks(wb) {
         continue;
       }
       // Detect player row
-      if (curWeek > 0 && typeof av === 'number' && av >= 1 && av <= 10) {
+      if (curWeek > 0 && typeof av === 'number' && av >= 1 && av <= 16) {
         var cc = ws[XLSX.utils.encode_cell({r:r,c:2})];
         var val = 0;
         if (cc) {
@@ -699,7 +699,7 @@ function readPlayoffPicture(wb) {
   var pp = wb.Sheets['Playoff Picture'];
   if (!pp) { window._ppQualifiers = []; return; }
   var qualifiers = [];
-  // Rows 17-22 (0-indexed: 16-21): #, Player, Qualified Via
+  // Rows 19-26 (0-indexed: 18-25): #, Player, Qualified Via
   for (var r = 16; r < 22; r++) {
     var numCell = pp[XLSX.utils.encode_cell({r:r, c:0})];
     var nameCell = pp[XLSX.utils.encode_cell({r:r, c:1})];
@@ -712,7 +712,7 @@ function readPlayoffPicture(wb) {
   
   // Also read auto-qualifier details (rows 5-10) for earnings
   var autoQ = [];
-  for (var r = 4; r < 8; r++) {
+  for (var r = 4; r < 9; r++) {
     var spotCell = pp[XLSX.utils.encode_cell({r:r, c:0})];
     var nameCell = pp[XLSX.utils.encode_cell({r:r, c:1})];
     var prizeCell = pp[XLSX.utils.encode_cell({r:r, c:2})];
@@ -731,7 +731,7 @@ function readPlayoffs(wb) {
   // Read Playoff Wild Card sheet
   var wc = wb.Sheets['Playoff Wild Card'];
   if (wc) {
-    for (var r = 4; r < 10; r++) {
+    for (var r = 4; r < 12; r++) {
       var name = '';
       var nameCell = wc[XLSX.utils.encode_cell({r:r, c:1})];
       if (nameCell) name = String(nameCell.v || '');
@@ -822,7 +822,7 @@ function readEarnings(wb) {
   if (!pp) { window._earnings = {}; return; }
   var earnings = {};
   // Earnings Tracker rows 30-45 (0-indexed: 29-44): A=#, B=Player, C=Segment$, D=Division$, E=Playoff$, F=Total
-  for (var r = 25; r < 35; r++) {
+  for (var r = 25; r < 37; r++) {
     var nameCell = pp[XLSX.utils.encode_cell({r:r, c:1})];
     var segCell = pp[XLSX.utils.encode_cell({r:r, c:2})];
     var divCell = pp[XLSX.utils.encode_cell({r:r, c:3})];
@@ -982,7 +982,7 @@ function readOverallStandings(wb) {
   var st = wb.Sheets['Standings'];
   window._overallStandings = [];
   if (!st) return;
-  for (var r = 47; r < 57; r++) {
+  for (var r = 70; r < 82; r++) {
     var rankCell = st[XLSX.utils.encode_cell({r:r, c:0})];
     var nameCell = st[XLSX.utils.encode_cell({r:r, c:1})];
     var s1Cell = st[XLSX.utils.encode_cell({r:r, c:2})];
@@ -1003,7 +1003,7 @@ function readOverallStandings(wb) {
   window._autoQualNames = [];
   window._cashWinners = {};
   if (!pp) return;
-  for (var r = 4; r < 8; r++) {
+  for (var r = 4; r < 9; r++) {
     var qCell = pp[XLSX.utils.encode_cell({r:r, c:4})]; // col E = Playoff Qualifier
     var name = qCell ? String(qCell.v || '') : '';
     if (name) window._autoQualNames.push(name);
@@ -1019,6 +1019,8 @@ function readOverallStandings(wb) {
       if(label.indexOf('Seg 2')>=0) window._cashWinners.seg2 = cashName;
       if(label.indexOf('Div A')>=0) window._cashWinners.divA = cashName;
       if(label.indexOf('Div B')>=0) window._cashWinners.divB = cashName;
+      if(label.indexOf('Div C')>=0) window._cashWinners.divC = cashName;
+      if(label.indexOf('Div D')>=0) window._cashWinners.divD = cashName;
     }
   }
 }
@@ -1129,8 +1131,8 @@ function showTransitionPopup(){
     h += '<strong style="color:#d29922">Divisional Round-Robin</strong><br>';
     h += '• Pick every game against the spread<br>';
     h += '• Most correct picks <strong>wins the H2H matchup</strong><br>';
-    h += '• Face each divisional opponent at least <strong>once</strong><br>';
-    h += '• <strong>2 division winners</strong> auto-qualify for playoffs</div>';
+    h += '• Face each of your 3 divisional opponents <strong>twice</strong><br>';
+    h += '• <strong>3 division winners</strong> auto-qualify for playoffs</div>';
     
   } else if(cw === 19){
     // Seg 3 / Regular season complete → Playoffs begin
@@ -1138,10 +1140,10 @@ function showTransitionPopup(){
     h += '<button class="champ-close" onclick="closeChampPopup()">&times;</button>';
     h += '<div style="font-size:10px;text-transform:uppercase;letter-spacing:3px;color:#d29922;font-weight:700;margin-bottom:8px">Regular Season Complete</div>';
     h += '<div style="font-size:14px;color:#8b949e;margin-bottom:8px">Division Winners</div>';
-    var divLabels = ['Div A','Div B'];
+    var divLabels = ['Div A','Div B','Div C'];
     h += '<div style="display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:16px">';
     for(var i=0;i<autoQuals.length;i++){
-      if(i < 2) continue; // skip seg1/seg2 winners, show div winners
+      if(i < 2 || i > 4) continue; // skip seg1/seg2 winners, show 3 div winners
       var dlbl = divLabels[i-2] || '';
       h += '<div style="padding:6px 14px;background:rgba(210,153,34,.08);border:1px solid rgba(210,153,34,.2);border-radius:8px;text-align:center">';
       h += '<div style="font-size:9px;color:#d29922;font-weight:600">'+dlbl+'</div>';
@@ -1186,7 +1188,7 @@ function showTransitionPopup(){
     h += '• Pick the Super Bowl ATS<br>';
     h += '• Correct pick = <strong style="color:#3fb950">8 points</strong><br>';
     h += '• Top 3 in total cumulative points win payouts<br>';
-    h += '• 1st: <strong style="color:#3fb950">$125</strong> · 2nd: <strong style="color:#3fb950">$30</strong> · 3rd: <strong style="color:#3fb950">$25</strong></div>';
+    h += '• 1st: <strong style="color:#3fb950">$150</strong> · 2nd: <strong style="color:#3fb950">$45</strong> · 3rd: <strong style="color:#3fb950">$25</strong></div>';
   }
   
   h += '<div style="font-size:11px;color:#484f58;text-align:center;margin-top:8px">You can turn off this popup in <strong style="color:#8b949e">Info → Updates</strong></div>';
@@ -1220,7 +1222,7 @@ function showPoolsPopup(){
   h += '<div style="font-size:36px;margin-bottom:4px">&#127944;</div>';
   h += '<div style="font-size:12px;text-transform:uppercase;letter-spacing:3px;color:#58a6ff;font-weight:700;margin-bottom:6px">NFL Picks League</div>';
   h += '<div style="font-size:24px;font-weight:900;color:#e6edf3;margin-bottom:6px">Welcome to the League!</div>';
-  h += '<div style="font-size:13px;color:#c9d1d9;margin-bottom:6px;line-height:1.6">A 22-week picks competition split into three segments, two divisions, and a playoff bracket. Compete head-to-head, climb the standings, and cash in.</div>';
+  h += '<div style="font-size:13px;color:#c9d1d9;margin-bottom:6px;line-height:1.6">A 22-week picks competition split into three segments, four divisions, and a playoff bracket. Compete head-to-head, climb the standings, and cash in.</div>';
   h += '<div style="font-size:12px;color:#8b949e;margin-bottom:20px">Get started by joining each pool below.</div>';
   
   h += '<div style="font-size:15px;font-weight:800;color:#e6edf3;margin-bottom:12px">Join the Pools</div>';
@@ -1340,29 +1342,22 @@ function launchConfetti(){
 
 // ===== SCHEDULE =====
 function renderSched(){
-  var A=[1,2,3,4,5],B=[6,7,8,9,10];
-  // Inter-division matchups: latin square rotation
-  function interDiv(offset){
-    var weeks=[];
-    for(var r=0;r<5;r++){var mu=[];for(var i=0;i<5;i++){mu.push([A[i],B[(i+r+offset)%5]]);}weeks.push(mu);}
-    // Week 6/12: reverse of first week in this set
-    weeks.push(weeks[0].map(function(m){return [m[1],m[0]];}));
-    return weeks;
+  var A=[1,2,3,4],B=[5,6,7,8],C=[9,10,11,12],D=[13,14,15,16];
+  function mr(g1,g2,g3,g4){
+    var pm=[[0,1,2,3],[1,0,3,2],[2,3,0,1],[3,2,1,0]],out=[];
+    for(var p=0;p<4;p++){var m=[];for(var i=0;i<4;i++)m.push([g1[i],g2[pm[p][i]]]);for(var i=0;i<4;i++)m.push([g3[i],g4[pm[p][i]]]);out.push(m);}
+    return out;
   }
-  var seg1=interDiv(0), seg2=interDiv(2);
-  // Intra-division round-robin for 5 players (with cross-div bye match)
-  function divRR(players){
-    var ext=[0].concat(players.slice());var n=players.length;var rounds=[];
-    for(var rd=0;rd<n;rd++){var pairs=[];var bye=null;
-      for(var i=0;i<=Math.floor(n/2);i++){var a=ext[i],b=ext[n-i];if(a===0)bye=b;else if(b===0)bye=a;else pairs.push([a,b]);}
-      rounds.push({m:pairs,bye:bye});ext=[ext[0],ext[ext.length-1]].concat(ext.slice(1,ext.length-1));}
-    return rounds;
-  }
-  var rrA=divRR(A), rrB=divRR(B);
+  var r1=mr(A,B,C,D),r2=mr(A,C,B,D),r3=mr(A,D,B,C);
+  function ds(m){var f=m[0],ro=m.slice(1),rr=[];for(var i=0;i<3;i++){var c=[f].concat(ro);rr.push([[c[0],c[3]],[c[1],c[2]]]);ro=[ro[ro.length-1]].concat(ro.slice(0,ro.length-1));}return rr.concat(rr);}
+  var da=ds(A),db=ds(B),dc=ds(C),dd=ds(D);
+  
   var sched=[];
-  for(var i=0;i<6;i++)sched.push({wk:i+1,seg:'Segment 1',mu:seg1[i]});
-  for(var i=0;i<6;i++)sched.push({wk:i+7,seg:'Segment 2',mu:seg2[i]});
-  for(var i=0;i<6;i++){var ra=rrA[i%5],rb=rrB[i%5];var mu=ra.m.concat(rb.m);mu.push([ra.bye,rb.bye]);sched.push({wk:i+13,seg:'Division',mu:mu});}
+  for(var i=0;i<4;i++)sched.push({wk:i+1,seg:'Segment 1',mu:r1[i]});
+  for(var i=0;i<2;i++)sched.push({wk:i+5,seg:'Segment 1',mu:r2[i]});
+  for(var i=2;i<4;i++)sched.push({wk:i+5,seg:'Segment 2',mu:r2[i]});
+  for(var i=0;i<4;i++)sched.push({wk:i+9,seg:'Segment 2',mu:r3[i]});
+  for(var i=0;i<6;i++)sched.push({wk:i+13,seg:'Division',mu:da[i].concat(db[i]).concat(dc[i]).concat(dd[i])});
   
   // Add playoff weeks 19-22 when currentWeek >= 19
   var playoffWeekNames = {19:'Wild Card',20:'Divisional',21:'Championship',22:'Super Bowl'};
@@ -1655,7 +1650,7 @@ function renderS2(){
   o+='</table></div></div>';document.getElementById('s2').innerHTML=o;
 }
 function renderS3(){
-  var divs=[{n:'Division A',p:P.filter(function(x){return x.num<=5})},{n:'Division B',p:P.filter(function(x){return x.num>=6})}];
+  var divs=[{n:'Division A',p:P.filter(function(x){return x.num<=4})},{n:'Division B',p:P.filter(function(x){return x.num>=5&&x.num<=8})},{n:'Division C',p:P.filter(function(x){return x.num>=9&&x.num<=12})}];
   var wn=['W13','W14','W15','W16','W17','W18'];
   var o='<div class="card"><div class="card-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">';
   for(var d=0;d<divs.length;d++){
@@ -1665,7 +1660,7 @@ function renderS3(){
     o+='<th>W</th><th>L</th><th>Picks</th></tr>';
     var s3done = currentWeek >= 19;
     var cw = window._cashWinners || {};
-    var divCashMap = {'Division A':cw.divA,'Division B':cw.divB};
+    var divCashMap = {'Division A':cw.divA,'Division B':cw.divB,'Division C':cw.divC,'Division D':cw.divD};
     var divCashWinner = divCashMap[divs[d].n] || '';
     for(var i=0;i<s.length;i++){
       var isDivWinner = s3done && divCashWinner && s[i].name === divCashWinner;
@@ -1690,7 +1685,7 @@ function renderAll(){
   if(cw > 6 && autoQuals[0]) removeSet[autoQuals[0]] = true;   // Seg 1 winner
   if(cw > 12 && autoQuals[1]) removeSet[autoQuals[1]] = true;  // Seg 2 winner
   if(cw >= 19){
-    for(var i=2;i<autoQuals.length;i++){                        // Div A-B winners
+    for(var i=2;i<autoQuals.length;i++){                        // Div A-D winners
       if(autoQuals[i]) removeSet[autoQuals[i]] = true;
     }
   }
@@ -1712,15 +1707,15 @@ function renderPS() {
   // Build qualifier list - only from confirmed qualifiers
   var s1 = P.slice().sort(function(a,b){return b.t1-a.t1;});
   var s2 = P.slice().sort(function(a,b){return b.t2-a.t2;});
-  var dv = [P.filter(function(x){return x.num<=5}),P.filter(function(x){return x.num>=6})];
-  var dn = ['Div A','Div B'];
+  var dv = [P.filter(function(x){return x.num<=4}),P.filter(function(x){return x.num>=5&&x.num<=8}),P.filter(function(x){return x.num>=9&&x.num<=12}),P.filter(function(x){return x.num>=13})];
+  var dn = ['Div A','Div B','Div C','Div D'];
   var qualSet = new Set();
   var qualified = [];
   
   if (cw > 6) { var q=s1.find(function(p){return !qualSet.has(p.num);})||s1[0]; qualSet.add(q.num); qualified.push({name:q.name,num:q.num,via:'Weeks 1-6 Winner'}); }
   if (cw > 12) { var q=s2.find(function(p){return !qualSet.has(p.num);})||s2[0]; qualSet.add(q.num); qualified.push({name:q.name,num:q.num,via:'Weeks 7-12 Winner'}); }
   if (cw >= 18) {
-    for(var i=0;i<2;i++){var ds=dv[i].slice().sort(function(a,b){return b.w3-a.w3||b.p3-a.p3;});var q=ds.find(function(p){return !qualSet.has(p.num);})||ds[0];qualSet.add(q.num);qualified.push({name:q.name,num:q.num,via:dn[i]+' Winner'});}
+    for(var i=0;i<4;i++){var ds=dv[i].slice().sort(function(a,b){return b.w3-a.w3||b.p3-a.p3;});var q=ds.find(function(p){return !qualSet.has(p.num);})||ds[0];qualSet.add(q.num);qualified.push({name:q.name,num:q.num,via:dn[i]+' Winner'});}
     var os=P.slice().sort(function(a,b){return(b.t1+b.t2+b.p3)-(a.t1+a.t2+a.p3);});
     var wcs=os.filter(function(p){return !qualSet.has(p.num);}).slice(0,2);
     wcs.forEach(function(p){qualSet.add(p.num);qualified.push({name:p.name,num:p.num,via:'Wild Card'});});
@@ -1737,8 +1732,8 @@ function renderPS() {
   o+='<div class="card">';
   o+='<div class="card-scroll"><table><tr><th>#</th><th style="text-align:left">Player</th><th>Qualified Via</th><th>WC Pts</th></tr>';
   
-  if(cw < 19 || qualified.length < 6){
-    o+='<tr><td colspan="4" style="padding:30px;color:#484f58;text-align:center;font-size:13px;">All 6 qualifiers must be determined before the Wild Card Round begins.<br>Qualifiers populate as segments are completed.</td></tr>';
+  if(cw < 19 || qualified.length < 8){
+    o+='<tr><td colspan="4" style="padding:30px;color:#484f58;text-align:center;font-size:13px;">All 8 qualifiers must be determined before the Wild Card Round begins.<br>Qualifiers populate as segments are completed.</td></tr>';
   } else {
     var wcTb = playoffData.wcTiebreakers || {};
     var r1=qualified.map(function(q){var wcp=playoffData.wc[q.name]||0;return{name:q.name,via:q.via,pts:wcp};});
@@ -1763,7 +1758,7 @@ function renderPS() {
   // Round 1 rules
   o+='<div style="max-width:720px;margin:14px auto 0;padding:12px 16px;background:rgba(63,185,80,.08);border:1px solid rgba(63,185,80,.15);border-left:3px solid #3fb950;border-radius:8px;font-size:11px;line-height:1.8;color:#c9d1d9">';
   o+='<div style="font-size:13px;font-weight:800;color:#3fb950;margin-bottom:4px">Round 1 — Wild Card Rules</div>';
-  o+='• All 6 qualified players participate<br>';
+  o+='• All 8 qualified players participate<br>';
   o+='• Pick all games against the spread<br>';
   o+='• Assign confidence weights <strong>1–4</strong><br>';
   o+='• Correct picks earn their weighted value<br>';
@@ -1826,14 +1821,14 @@ function renderQualifiers() {
   
   // Filter qualifiers based on when they've actually been determined
   var visibleQualifiers = [];
-  var colorMap={'Weeks 1-6':'#58a6ff','Weeks 7-12':'#bc8cff','Div A':'#d29922','Div B':'#d29922','Wild Card 1':'#8b949e','Wild Card 2':'#8b949e'};
+  var colorMap={'Weeks 1-6':'#58a6ff','Weeks 7-12':'#bc8cff','Div A':'#d29922','Div B':'#d29922','Div C':'#d29922','Wild Card 1':'#8b949e','Wild Card 2':'#8b949e'};
   
   for(var i=0;i<qualifiers.length;i++){
     var q=qualifiers[i];
     var show = false;
     if(q.via === 'Weeks 1-6' && cw > 6) show = true;
     if(q.via === 'Weeks 7-12' && cw > 12) show = true;
-    if((q.via === 'Div A' || q.via === 'Div B') && cw >= 19) show = true;
+    if((q.via === 'Div A' || q.via === 'Div B' || q.via === 'Div C' || false) && cw >= 19) show = true;
     if((q.via === 'Wild Card 1' || q.via === 'Wild Card 2') && cw >= 19) show = true;
     if(show) visibleQualifiers.push(q);
   }
@@ -1868,16 +1863,23 @@ function renderQualifiers() {
 }
 
 function renderPlayerSched() {
-  // Build the same schedule data (10 players, 2 divisions)
-  var A=[1,2,3,4,5],B=[6,7,8,9,10];
-  function interDiv(offset){var weeks=[];for(var r=0;r<5;r++){var mu=[];for(var i=0;i<5;i++){mu.push([A[i],B[(i+r+offset)%5]]);}weeks.push(mu);}weeks.push(weeks[0].map(function(m){return [m[1],m[0]];}));return weeks;}
-  var seg1=interDiv(0),seg2=interDiv(2);
-  function divRR(players){var ext=[0].concat(players.slice());var n=players.length;var rounds=[];for(var rd=0;rd<n;rd++){var pairs=[];var bye=null;for(var i=0;i<=Math.floor(n/2);i++){var a=ext[i],b=ext[n-i];if(a===0)bye=b;else if(b===0)bye=a;else pairs.push([a,b]);}rounds.push({m:pairs,bye:bye});ext=[ext[0],ext[ext.length-1]].concat(ext.slice(1,ext.length-1));}return rounds;}
-  var rrA=divRR(A),rrB=divRR(B);
+  // Build the same schedule data
+  var A=[1,2,3,4],B=[5,6,7,8],C=[9,10,11,12],D=[13,14,15,16];
+  function mr(g1,g2,g3,g4){
+    var pm=[[0,1,2,3],[1,0,3,2],[2,3,0,1],[3,2,1,0]],out=[];
+    for(var p=0;p<4;p++){var m=[];for(var i=0;i<4;i++)m.push([g1[i],g2[pm[p][i]]]);for(var i=0;i<4;i++)m.push([g3[i],g4[pm[p][i]]]);out.push(m);}
+    return out;
+  }
+  var r1=mr(A,B,C,D),r2=mr(A,C,B,D),r3=mr(A,D,B,C);
+  function ds(m){var f=m[0],ro=m.slice(1),rr=[];for(var i=0;i<3;i++){var c=[f].concat(ro);rr.push([[c[0],c[3]],[c[1],c[2]]]);ro=[ro[ro.length-1]].concat(ro.slice(0,ro.length-1));}return rr.concat(rr);}
+  var da=ds(A),db=ds(B),dc=ds(C),dd=ds(D);
+  
   var sched=[];
-  for(var i=0;i<6;i++)sched.push({wk:i+1,seg:'Segment 1',mu:seg1[i]});
-  for(var i=0;i<6;i++)sched.push({wk:i+7,seg:'Segment 2',mu:seg2[i]});
-  for(var i=0;i<6;i++){var ra=rrA[i%5],rb=rrB[i%5];var mu=ra.m.concat(rb.m);mu.push([ra.bye,rb.bye]);sched.push({wk:i+13,seg:'Division',mu:mu});}
+  for(var i=0;i<4;i++)sched.push({wk:i+1,seg:'Segment 1',mu:r1[i]});
+  for(var i=0;i<2;i++)sched.push({wk:i+5,seg:'Segment 1',mu:r2[i]});
+  for(var i=2;i<4;i++)sched.push({wk:i+5,seg:'Segment 2',mu:r2[i]});
+  for(var i=0;i<4;i++)sched.push({wk:i+9,seg:'Segment 2',mu:r3[i]});
+  for(var i=0;i<6;i++)sched.push({wk:i+13,seg:'Division',mu:da[i].concat(db[i]).concat(dc[i]).concat(dd[i])});
   
   // Player lookup
   var pm={};for(var i=0;i<P.length;i++)pm[P[i].num]=P[i];
