@@ -641,7 +641,7 @@ function load() {
       // Re-render current view without rebuilding strip or scrolling
       nflRenderGrid(nflWeek);
     }
-    document.getElementById('status').textContent='v1.0 | Updated: '+new Date().toLocaleString();
+    document.getElementById('status').textContent='v1.1 | Updated: '+new Date().toLocaleString();
   })
   .catch(function(e){document.getElementById('status').textContent='Could not load file';});
 }
@@ -2851,9 +2851,6 @@ function buildGameCard(wk, g, gsc, gt){
   }
   h+='</div>';
   return h;
-}
-  }
-  document.getElementById('nflGrid').innerHTML=h;
 }
 
 function nflChangeWeek(d){
