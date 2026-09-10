@@ -641,7 +641,7 @@ function load() {
       // Re-render current view without rebuilding strip or scrolling
       nflRenderGrid(nflWeek);
     }
-    document.getElementById('status').textContent='v1.8 | Updated: '+new Date().toLocaleString();
+    document.getElementById('status').textContent='v1.9 | Updated: '+new Date().toLocaleString();
   })
   .catch(function(e){document.getElementById('status').textContent='Could not load file';});
 }
@@ -2810,11 +2810,10 @@ function nflRenderGrid(wk){
 function buildGameCard(wk, g, gsc, gt){
   var isFinal=gsc.aSc!==null&&gsc.hSc!==null;
   var h='<div class="nfl-game" onclick="showGameDetail('+wk+',\''+g.a+'\',\''+g.h+'\')">';
-  h+='<div class="nfl-game-top"><span class="nfl-game-time">'+(isFinal?'':gt)+'</span>';
-  if(isFinal) h+='<span style="font-size:9px;font-weight:800;color:#3fb950;text-transform:uppercase;letter-spacing:1px">Final</span>';
-  h+='</div>';
+  if(!isFinal){
+    h+='<div class="nfl-game-top"><span class="nfl-game-time">'+gt+'</span></div>';
+  }
   if(isFinal){
-    // Spread cover text in top-left
     var coverText='';
     if(gsc.spread!==null){
       var absSpread=Math.abs(gsc.spread);
@@ -2823,7 +2822,11 @@ function buildGameCard(wk, g, gsc, gt){
       var margin=gsc.spread>0?(gsc.hSc-gsc.aSc):(gsc.aSc-gsc.hSc);
       coverText=margin===absSpread?'Push — '+absSpread:(margin>absSpread?favTeam+' covered '+absSpread:dogTeam+' covered +'+absSpread);
     }
-    if(coverText) h+='<div style="font-size:8px;color:#6e7681;font-weight:600;margin-bottom:2px">'+coverText+'</div>';
+    // Replace the game-top row: cover text left, FINAL right
+    h+='<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:4px">';
+    h+='<span style="font-size:8px;color:#6e7681;font-weight:600">'+(coverText||'')+'</span>';
+    h+='<span style="font-size:9px;font-weight:800;color:#3fb950;text-transform:uppercase;letter-spacing:1px">Final</span>';
+    h+='</div>';
     h+='<div class="nfl-game-teams" style="justify-content:center;gap:12px">';
     h+='<div style="text-align:center;flex:1"><img src="'+nflLogo(g.a)+'" alt="'+g.a+'" '+logoStyle(g.a)+' style="width:36px;height:36px">';
     h+='<div style="font-size:14px;font-weight:900;color:'+(gsc.aSc>=gsc.hSc?'#e6edf3':'#6e7681')+';margin-top:1px">'+gsc.aSc+'</div></div>';
