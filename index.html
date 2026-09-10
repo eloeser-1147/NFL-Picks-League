@@ -1199,18 +1199,90 @@ function showTransitionPopup(){
 
 function showUpdatesPopup(){
   var updates = window._updates || [];
-  if(updates.length === 0) return;
-  var u = updates[0]; // most recent update
-  var priorWk = currentWeek - 1;
+  if(updates.length > 0){
+    var u = updates[0]; // most recent update
+    var overlay = document.getElementById('champOverlay');
+    var h = '<div class="champ-popup pools-popup" style="border-color:#58a6ff">';
+    h += '<button class="champ-close" onclick="closeChampPopup()">&times;</button>';
+    h += '<div style="font-size:10px;text-transform:uppercase;letter-spacing:2px;color:#58a6ff;font-weight:700;margin-bottom:4px">Week ' + currentWeek + ' Update</div>';
+    if(u.title) h += '<div style="font-size:20px;font-weight:900;color:#e6edf3;margin-bottom:10px">' + u.title + '</div>';
+    if(u.msg) h += '<div style="font-size:13px;color:#c9d1d9;line-height:1.7;margin-bottom:16px">' + u.msg + '</div>';
+    h += '<div style="font-size:11px;color:#484f58;text-align:center;margin-top:8px">You can turn off this popup in <strong style="color:#8b949e">Info → Updates</strong></div>';
+    h += '</div>';
+    overlay.innerHTML = h;
+    overlay.style.display = 'flex';
+    return;
+  }
+  // No updates — show latest finalized game
+  showLatestFinalPopup();
+}
+
+function showLatestFinalPopup(){
+  var sc = window._nflScores || {};
+  var latestKey = null;
+  var latestWk = 0;
+  // Find the most recent finalized game (highest week, last in list)
+  for(var key in sc){
+    var g = sc[key];
+    if(g.aSc !== null && g.hSc !== null){
+      var parts = key.split('-');
+      var wk = parseInt(parts[0]);
+      if(wk >= latestWk){ latestWk = wk; latestKey = key; }
+    }
+  }
+  if(!latestKey) return;
+  
+  var parts = latestKey.split('-');
+  var wk = parseInt(parts[0]);
+  var away = parts[1];
+  var home = parts[2];
+  var gsc = sc[latestKey];
+  var aSc = gsc.aSc;
+  var hSc = gsc.hSc;
+  var spread = gsc.spread;
+  
+  // Build spread cover text
+  var coverText = '';
+  if(spread !== null){
+    var absSpread = Math.abs(spread);
+    var favTeam = spread > 0 ? home : away;
+    var dogTeam = spread > 0 ? away : home;
+    var margin = spread > 0 ? (hSc - aSc) : (aSc - hSc);
+    if(margin === absSpread) coverText = 'Push — spread: ' + absSpread;
+    else if(margin > absSpread) coverText = favTeam + ' covered ' + absSpread;
+    else coverText = dogTeam + ' covered +' + absSpread;
+  }
+  
+  var winTeam = aSc > hSc ? away : home;
+  var winSc = Math.max(aSc, hSc);
+  var loseSc = Math.min(aSc, hSc);
   
   var overlay = document.getElementById('champOverlay');
-  var h = '<div class="champ-popup pools-popup" style="border-color:#58a6ff">';
+  var h = '<div class="champ-popup pools-popup" style="border-color:#3fb950;max-width:360px">';
   h += '<button class="champ-close" onclick="closeChampPopup()">&times;</button>';
-  h += '<div style="font-size:10px;text-transform:uppercase;letter-spacing:2px;color:#58a6ff;font-weight:700;margin-bottom:4px">Week ' + currentWeek + ' Update</div>';
-  if(u.title) h += '<div style="font-size:20px;font-weight:900;color:#e6edf3;margin-bottom:10px">' + u.title + '</div>';
-  if(u.msg) h += '<div style="font-size:13px;color:#c9d1d9;line-height:1.7;margin-bottom:16px">' + u.msg + '</div>';
-  h += '<div style="font-size:11px;color:#484f58;text-align:center;margin-top:8px">You can turn off this popup in <strong style="color:#8b949e">Info → Updates</strong></div>';
+  h += '<div style="text-align:center">';
+  h += '<div style="font-size:10px;text-transform:uppercase;letter-spacing:2px;color:#3fb950;font-weight:700;margin-bottom:12px">Latest Final — Week ' + wk + '</div>';
+  
+  // Teams side by side with logos and scores
+  h += '<div style="display:flex;justify-content:center;align-items:center;gap:16px;margin-bottom:12px">';
+  h += '<div style="text-align:center;flex:1;min-width:0">';
+  h += '<img src="' + nflLogo(away) + '" alt="' + away + '" ' + logoStyle(away) + ' style="width:48px;height:48px;margin-bottom:6px">';
+  h += '<div style="font-size:14px;font-weight:800;color:#e6edf3;word-wrap:break-word">' + (NFL_NAMES[away]||away) + '</div>';
+  h += '<div style="font-size:28px;font-weight:900;color:' + (aSc >= hSc ? '#e6edf3' : '#8b949e') + ';margin-top:4px">' + aSc + '</div>';
   h += '</div>';
+  h += '<div style="font-size:11px;color:#484f58;font-weight:700;flex-shrink:0">@</div>';
+  h += '<div style="text-align:center;flex:1;min-width:0">';
+  h += '<img src="' + nflLogo(home) + '" alt="' + home + '" ' + logoStyle(home) + ' style="width:48px;height:48px;margin-bottom:6px">';
+  h += '<div style="font-size:14px;font-weight:800;color:#e6edf3;word-wrap:break-word">' + (NFL_NAMES[home]||home) + '</div>';
+  h += '<div style="font-size:28px;font-weight:900;color:' + (hSc >= aSc ? '#e6edf3' : '#8b949e') + ';margin-top:4px">' + hSc + '</div>';
+  h += '</div>';
+  h += '</div>';
+  
+  if(coverText){
+    h += '<div style="font-size:11px;color:#8b949e;padding:8px 12px;background:rgba(255,255,255,.03);border-radius:8px;border:1px solid #21262d">' + coverText + '</div>';
+  }
+  
+  h += '</div></div>';
   overlay.innerHTML = h;
   overlay.style.display = 'flex';
 }
