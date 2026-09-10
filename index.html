@@ -630,10 +630,17 @@ function load() {
     readUpdates(wb);
     
     render();
-    nflWeek = currentWeek === 0 ? 1 : Math.min(currentWeek, 22);
-    nflBuildStrip();
-    nflRender(nflWeek);
-    setTimeout(initStripScaling, 300);
+    var newNflWk = currentWeek === 0 ? 1 : Math.min(currentWeek, 22);
+    if(!window._nflInitDone){
+      nflWeek = newNflWk;
+      nflBuildStrip();
+      nflRender(nflWeek);
+      setTimeout(initStripScaling, 300);
+      window._nflInitDone = true;
+    } else {
+      // Re-render current view without rebuilding strip or scrolling
+      nflRenderGrid(nflWeek);
+    }
     document.getElementById('status').textContent='v1.0 | Updated: '+new Date().toLocaleString();
   })
   .catch(function(e){document.getElementById('status').textContent='Could not load file';});
@@ -2501,20 +2508,7 @@ function initStripScaling(){
             if(wn) wn.textContent = isActive ? 'Week' : 'Wk';
           }
           document.getElementById('nflBlurb').innerHTML=getNflBlurb(wk);
-          var byeEl=document.getElementById('nflBye');
-          if(wk >= 19){
-            byeEl.style.display='none';
-            var pg = (window._nflPlayoffGames || {})[wk] || [];
-            var gh='';
-            if(pg.length===0){gh='<div style="padding:20px;text-align:center;color:#484f58;font-size:13px;">No matchups entered yet.</div>';}
-            else{var sc=window._nflScores||{};var ld2='';for(var i=0;i<pg.length;i++){var g=pg[i];var sk=wk+'-'+g.a+'-'+g.h;var gsc=sc[sk]||{aSc:null,hSc:null};var asc=gsc.aSc!==null?gsc.aSc:'';var hsc=gsc.hSc!==null?gsc.hSc:'';var gt=gsc.time||'TBD';var gday=gsc.day||'';if(gday&&gday!=='TBD'&&gday!==ld2){gh+='<div class="nfl-day-ribbon">'+gday+'</div>';ld2=gday;}gh+='<div class="nfl-game" onclick="showGameDetail('+wk+',\''+g.a+'\',\''+g.h+'\')">';gh+='<div class="nfl-game-top"><span class="nfl-game-time">'+gt+'</span></div><div class="nfl-game-teams"><div class="nfl-team"><img src="'+nflLogo(g.a)+'" alt="'+g.a+'" '+logoStyle(g.a)+'><span class="nfl-team-abbr">'+g.a+'</span>'+(asc!==''?'<span style="font-size:14px;font-weight:900;color:#e6edf3;margin-left:auto;padding-left:6px">'+asc+'</span>':'')+'</div><span class="nfl-game-at">@</span><div class="nfl-team"><img src="'+nflLogo(g.h)+'" alt="'+g.h+'" '+logoStyle(g.h)+'><span class="nfl-team-abbr">'+g.h+'</span>'+(hsc!==''?'<span style="font-size:14px;font-weight:900;color:#e6edf3;margin-left:auto;padding-left:6px">'+hsc+'</span>':'')+'</div></div></div>';}}
-            document.getElementById('nflGrid').innerHTML=gh;
-          } else {
-            var byes=[];for(var t in NFL_SCHED){if(NFL_SCHED[t][wk-1]==='BYE')byes.push(t);}
-            if(byes.length>0){byes.sort();byeEl.style.display='block';var bh='<b>Bye Week</b><div class="nfl-bye-logos">';for(var i=0;i<byes.length;i++){bh+='<img src="'+nflLogo(byes[i])+'" alt="'+byes[i]+'" title="'+(NFL_NAMES[byes[i]]||byes[i])+'" '+logoStyle(byes[i])+'>';}bh+='</div>';byeEl.innerHTML=bh;}else{byeEl.style.display='none';}
-            var games=NFL_GAMES[wk]||[];var sc=window._nflScores||{};var gh='';var ld='';for(var i=0;i<games.length;i++){var g=games[i];var dl=g.day||'';if(dl&&dl!==ld){gh+='<div class="nfl-day-ribbon">'+dl+'</div>';ld=dl;}var sk=wk+'-'+g.a+'-'+g.h;var gsc=sc[sk]||{aSc:null,hSc:null,spread:null};var isFinal=gsc.aSc!==null&&gsc.hSc!==null;gh+='<div class="nfl-game" onclick="showGameDetail('+wk+',\''+g.a+'\',\''+g.h+'\')" style="'+(isFinal?'padding:12px 16px 14px':'')+'">';gh+='<div class="nfl-game-top"><span class="nfl-game-time">'+(isFinal?'':g.time||'TBD')+'</span>'+(isFinal?'<span style="font-size:10px;font-weight:800;color:#3fb950;text-transform:uppercase;letter-spacing:1px">Final</span>':'')+'</div>';gh+='<div class="nfl-game-teams" style="'+(isFinal?'flex-direction:column;gap:4px':'')+'">'; if(isFinal){gh+='<div style="display:flex;align-items:center;justify-content:space-between;width:100%"><div class="nfl-team"><img src="'+nflLogo(g.a)+'" alt="'+g.a+'" '+logoStyle(g.a)+'><span class="nfl-team-abbr">'+g.a+'</span></div><span style="font-size:16px;font-weight:900;color:'+(gsc.aSc>gsc.hSc?'#e6edf3':'#8b949e')+'">'+gsc.aSc+'</span></div>';gh+='<div style="display:flex;align-items:center;justify-content:space-between;width:100%"><div class="nfl-team"><img src="'+nflLogo(g.h)+'" alt="'+g.h+'" '+logoStyle(g.h)+'><span class="nfl-team-abbr">'+g.h+'</span></div><span style="font-size:16px;font-weight:900;color:'+(gsc.hSc>gsc.aSc?'#e6edf3':'#8b949e')+'">'+gsc.hSc+'</span></div>';if(gsc.spread!==null){var diff=gsc.aSc-gsc.hSc;var favTeam=gsc.spread>0?g.h:g.a;var dogTeam=gsc.spread>0?g.a:g.h;var absSpread=Math.abs(gsc.spread);var margin=gsc.spread>0?(gsc.hSc-gsc.aSc):(gsc.aSc-gsc.hSc);var covered=margin>absSpread;var push=margin===absSpread;var coverTeam=covered?favTeam:(push?'':dogTeam);var coverText=push?'Push — spread: '+absSpread:(covered?favTeam+' covered '+absSpread:dogTeam+' covered +'+absSpread);gh+='<div style="font-size:10px;color:#6e7681;text-align:center;margin-top:6px;padding-top:6px;border-top:1px solid #21262d">'+coverText+'</div>';}}else{gh+='<div class="nfl-team"><img src="'+nflLogo(g.a)+'" alt="'+g.a+'" '+logoStyle(g.a)+'><span class="nfl-team-abbr">'+g.a+'</span></div><span class="nfl-game-at">@</span><div class="nfl-team"><img src="'+nflLogo(g.h)+'" alt="'+g.h+'" '+logoStyle(g.h)+'><span class="nfl-team-abbr">'+g.h+'</span></div>';}gh+='</div></div>';}
-            document.getElementById('nflGrid').innerHTML=gh;
-          }
+          nflRenderGrid(wk);
         }
       }
       // Settle correction
@@ -2771,18 +2765,16 @@ function showGameDetail(wk, away, home){
 
 function nflRender(wk){
   nflWeek=wk;
-
-  // Rebuild strip so active button gets wide style + "Week" label
   nflBuildStrip();
   nflScrollToWeek(wk);
-
-  // Blurb
   document.getElementById('nflBlurb').innerHTML=getNflBlurb(wk);
+  nflRenderGrid(wk);
+}
 
+function nflRenderGrid(wk){
   var byeEl=document.getElementById('nflBye');
   
   if(wk >= 19){
-    // Playoff weeks — use data from NFL Playoff Games sheet
     byeEl.style.display='none';
     var pg = (window._nflPlayoffGames || {})[wk] || [];
     var h='';
@@ -2799,58 +2791,67 @@ function nflRender(wk){
         var hsc=gsc.hSc!==null?gsc.hSc:'';
         var gt=gsc.time||'TBD';
         var gday=gsc.day||'';
-        if(gday && gday!=='TBD' && gday!==lastDay){
-          h+='<div class="nfl-day-ribbon">'+gday+'</div>';
-          lastDay=gday;
-        }
-        h+='<div class="nfl-game" onclick="showGameDetail('+wk+',\''+g.a+'\',\''+g.h+'\')">';
-        h+='<div class="nfl-game-top"><span class="nfl-game-time">'+gt+'</span></div>';
-        h+='<div class="nfl-game-teams"><div class="nfl-team"><img src="'+nflLogo(g.a)+'" alt="'+g.a+'" '+logoStyle(g.a)+'><span class="nfl-team-abbr">'+g.a+'</span>';
-        if(asc!=='') h+='<span style="font-size:14px;font-weight:900;color:#e6edf3;margin-left:auto;padding-left:6px">'+asc+'</span>';
-        h+='</div>';
-        h+='<span class="nfl-game-at">@</span>';
-        h+='<div class="nfl-team"><img src="'+nflLogo(g.h)+'" alt="'+g.h+'" '+logoStyle(g.h)+'><span class="nfl-team-abbr">'+g.h+'</span>';
-        if(hsc!=='') h+='<span style="font-size:14px;font-weight:900;color:#e6edf3;margin-left:auto;padding-left:6px">'+hsc+'</span>';
-        h+='</div></div>';
-        h+='</div>';
+        if(gday && gday!=='TBD' && gday!==lastDay){ h+='<div class="nfl-day-ribbon">'+gday+'</div>'; lastDay=gday; }
+        h+=buildGameCard(wk, g, gsc, gt);
       }
     }
     document.getElementById('nflGrid').innerHTML=h;
     return;
   }
 
-  // Regular season weeks 1-18
-  // Byes
   var byes=[];
   for(var t in NFL_SCHED){if(NFL_SCHED[t][wk-1]==='BYE')byes.push(t);}
   if(byes.length>0){
-    byes.sort();
-    byeEl.style.display='block';
+    byes.sort(); byeEl.style.display='block';
     var bh='<b>Bye Week</b><div class="nfl-bye-logos">';
     for(var i=0;i<byes.length;i++){bh+='<img src="'+nflLogo(byes[i])+'" alt="'+byes[i]+'" title="'+(NFL_NAMES[byes[i]]||byes[i])+'" '+logoStyle(byes[i])+'>';}
-    bh+='</div>';
-    byeEl.innerHTML=bh;
-  }
-  else{byeEl.style.display='none';}
+    bh+='</div>'; byeEl.innerHTML=bh;
+  } else { byeEl.style.display='none'; }
 
-  // Games grouped by day with day ribbon headers
   var games=NFL_GAMES[wk]||[];
-  var h='';
-  var lastDay='';
+  var sc=window._nflScores||{};
+  var gh=''; var ld='';
   for(var i=0;i<games.length;i++){
-    var g=games[i];
-    var dayLabel=g.day||'';
-    if(dayLabel && dayLabel!==lastDay){
-      h+='<div class="nfl-day-ribbon">'+dayLabel+'</div>';
-      lastDay=dayLabel;
+    var g=games[i]; var dl=g.day||'';
+    if(dl && dl!==ld){ gh+='<div class="nfl-day-ribbon">'+dl+'</div>'; ld=dl; }
+    var sk=wk+'-'+g.a+'-'+g.h;
+    var gsc=sc[sk]||{aSc:null,hSc:null,spread:null};
+    gh+=buildGameCard(wk, g, gsc, g.time||'TBD');
+  }
+  document.getElementById('nflGrid').innerHTML=gh;
+}
+
+function buildGameCard(wk, g, gsc, gt){
+  var isFinal=gsc.aSc!==null&&gsc.hSc!==null;
+  var h='<div class="nfl-game" onclick="showGameDetail('+wk+',\''+g.a+'\',\''+g.h+'\')">';
+  h+='<div class="nfl-game-top"><span class="nfl-game-time">'+(isFinal?'':gt)+'</span>';
+  if(isFinal) h+='<span style="font-size:9px;font-weight:800;color:#3fb950;text-transform:uppercase;letter-spacing:1px">Final</span>';
+  h+='</div>';
+  if(isFinal){
+    // Horizontal layout: away logo+abbr, score under | @ | home logo+abbr, score under
+    h+='<div class="nfl-game-teams" style="justify-content:center;gap:12px">';
+    h+='<div style="text-align:center;flex:1"><div class="nfl-team" style="justify-content:center"><img src="'+nflLogo(g.a)+'" alt="'+g.a+'" '+logoStyle(g.a)+'><span class="nfl-team-abbr">'+g.a+'</span></div>';
+    h+='<div style="font-size:18px;font-weight:900;color:'+(gsc.aSc>=gsc.hSc?'#e6edf3':'#6e7681')+';margin-top:4px">'+gsc.aSc+'</div></div>';
+    h+='<span class="nfl-game-at" style="align-self:flex-start;margin-top:8px">@</span>';
+    h+='<div style="text-align:center;flex:1"><div class="nfl-team" style="justify-content:center"><img src="'+nflLogo(g.h)+'" alt="'+g.h+'" '+logoStyle(g.h)+'><span class="nfl-team-abbr">'+g.h+'</span></div>';
+    h+='<div style="font-size:18px;font-weight:900;color:'+(gsc.hSc>=gsc.aSc?'#e6edf3':'#6e7681')+';margin-top:4px">'+gsc.hSc+'</div></div>';
+    h+='</div>';
+    if(gsc.spread!==null){
+      var absSpread=Math.abs(gsc.spread);
+      var favTeam=gsc.spread>0?g.h:g.a;
+      var dogTeam=gsc.spread>0?g.a:g.h;
+      var margin=gsc.spread>0?(gsc.hSc-gsc.aSc):(gsc.aSc-gsc.hSc);
+      var coverText=margin===absSpread?'Push — spread: '+absSpread:(margin>absSpread?favTeam+' covered '+absSpread:dogTeam+' covered +'+absSpread);
+      h+='<div style="font-size:10px;color:#6e7681;text-align:center;margin-top:6px;padding-top:6px;border-top:1px solid #21262d">'+coverText+'</div>';
     }
-    
-    h+='<div class="nfl-game" onclick="showGameDetail('+wk+',\''+g.a+'\',\''+g.h+'\')">';
-    h+='<div class="nfl-game-top"><span class="nfl-game-time">'+(g.time||'TBD')+'</span></div>';
+  } else {
     h+='<div class="nfl-game-teams"><div class="nfl-team"><img src="'+nflLogo(g.a)+'" alt="'+g.a+'" '+logoStyle(g.a)+'><span class="nfl-team-abbr">'+g.a+'</span></div>';
     h+='<span class="nfl-game-at">@</span>';
     h+='<div class="nfl-team"><img src="'+nflLogo(g.h)+'" alt="'+g.h+'" '+logoStyle(g.h)+'><span class="nfl-team-abbr">'+g.h+'</span></div></div>';
-    h+='</div>';
+  }
+  h+='</div>';
+  return h;
+}
   }
   document.getElementById('nflGrid').innerHTML=h;
 }
