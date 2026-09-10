@@ -641,7 +641,7 @@ function load() {
       // Re-render current view without rebuilding strip or scrolling
       nflRenderGrid(nflWeek);
     }
-    document.getElementById('status').textContent='v1.7 | Updated: '+new Date().toLocaleString();
+    document.getElementById('status').textContent='v1.8 | Updated: '+new Date().toLocaleString();
   })
   .catch(function(e){document.getElementById('status').textContent='Could not load file';});
 }
@@ -1270,9 +1270,9 @@ function showLatestFinalPopup(){
   h += '<div style="text-align:center">';
   h += '<div style="font-size:12px;font-weight:800;color:#8b949e;margin-bottom:4px">Week ' + wk + '</div>';
   h += '<div style="display:flex;justify-content:center;align-items:center;gap:10px">';
-  h += '<div style="text-align:center;flex:1"><img src="' + nflLogo(away) + '" alt="' + away + '" ' + logoStyle(away) + ' style="width:52px;height:52px"><div style="font-size:22px;font-weight:900;color:' + (aSc >= hSc ? '#e6edf3' : '#6e7681') + '">' + aSc + '</div></div>';
+  h += '<div style="text-align:center;flex:1"><img src="' + nflLogo(away) + '" alt="' + away + '" ' + logoStyle(away) + ' style="width:52px;height:52px"><div style="font-size:11px;font-weight:700;color:#e6edf3;margin-top:1px">' + (NFL_NAMES[away]||away) + '</div><div style="font-size:22px;font-weight:900;color:' + (aSc >= hSc ? '#e6edf3' : '#6e7681') + '">' + aSc + '</div></div>';
   h += '<div style="font-size:9px;color:#484f58;font-weight:700">@</div>';
-  h += '<div style="text-align:center;flex:1"><img src="' + nflLogo(home) + '" alt="' + home + '" ' + logoStyle(home) + ' style="width:52px;height:52px"><div style="font-size:22px;font-weight:900;color:' + (hSc >= aSc ? '#e6edf3' : '#6e7681') + '">' + hSc + '</div></div>';
+  h += '<div style="text-align:center;flex:1"><img src="' + nflLogo(home) + '" alt="' + home + '" ' + logoStyle(home) + ' style="width:52px;height:52px"><div style="font-size:11px;font-weight:700;color:#e6edf3;margin-top:1px">' + (NFL_NAMES[home]||home) + '</div><div style="font-size:22px;font-weight:900;color:' + (hSc >= aSc ? '#e6edf3' : '#6e7681') + '">' + hSc + '</div></div>';
   h += '</div>';
   if(coverText){ h += '<div style="font-size:9px;color:#6e7681;margin-top:4px;padding-top:4px;border-top:1px solid #21262d">' + coverText + '</div>'; }
   h += '</div></div>';
@@ -2814,21 +2814,23 @@ function buildGameCard(wk, g, gsc, gt){
   if(isFinal) h+='<span style="font-size:9px;font-weight:800;color:#3fb950;text-transform:uppercase;letter-spacing:1px">Final</span>';
   h+='</div>';
   if(isFinal){
-    h+='<div class="nfl-game-teams" style="justify-content:center;gap:12px">';
-    h+='<div style="text-align:center;flex:1"><img src="'+nflLogo(g.a)+'" alt="'+g.a+'" '+logoStyle(g.a)+' style="width:36px;height:36px">';
-    h+='<div style="font-size:14px;font-weight:900;color:'+(gsc.aSc>=gsc.hSc?'#e6edf3':'#6e7681')+';margin-top:2px">'+gsc.aSc+'</div></div>';
-    h+='<span class="nfl-game-at" style="margin-top:4px">@</span>';
-    h+='<div style="text-align:center;flex:1"><img src="'+nflLogo(g.h)+'" alt="'+g.h+'" '+logoStyle(g.h)+' style="width:36px;height:36px">';
-    h+='<div style="font-size:14px;font-weight:900;color:'+(gsc.hSc>=gsc.aSc?'#e6edf3':'#6e7681')+';margin-top:2px">'+gsc.hSc+'</div></div>';
-    h+='</div>';
+    // Spread cover text in top-left
+    var coverText='';
     if(gsc.spread!==null){
       var absSpread=Math.abs(gsc.spread);
       var favTeam=gsc.spread>0?g.h:g.a;
       var dogTeam=gsc.spread>0?g.a:g.h;
       var margin=gsc.spread>0?(gsc.hSc-gsc.aSc):(gsc.aSc-gsc.hSc);
-      var coverText=margin===absSpread?'Push — spread: '+absSpread:(margin>absSpread?favTeam+' covered '+absSpread:dogTeam+' covered +'+absSpread);
-      h+='<div style="font-size:10px;color:#6e7681;text-align:center;margin-top:6px;padding-top:6px;border-top:1px solid #21262d">'+coverText+'</div>';
+      coverText=margin===absSpread?'Push — '+absSpread:(margin>absSpread?favTeam+' covered '+absSpread:dogTeam+' covered +'+absSpread);
     }
+    if(coverText) h+='<div style="font-size:8px;color:#6e7681;font-weight:600;margin-bottom:2px">'+coverText+'</div>';
+    h+='<div class="nfl-game-teams" style="justify-content:center;gap:12px">';
+    h+='<div style="text-align:center;flex:1"><img src="'+nflLogo(g.a)+'" alt="'+g.a+'" '+logoStyle(g.a)+' style="width:36px;height:36px">';
+    h+='<div style="font-size:14px;font-weight:900;color:'+(gsc.aSc>=gsc.hSc?'#e6edf3':'#6e7681')+';margin-top:1px">'+gsc.aSc+'</div></div>';
+    h+='<span class="nfl-game-at" style="margin-top:4px">@</span>';
+    h+='<div style="text-align:center;flex:1"><img src="'+nflLogo(g.h)+'" alt="'+g.h+'" '+logoStyle(g.h)+' style="width:36px;height:36px">';
+    h+='<div style="font-size:14px;font-weight:900;color:'+(gsc.hSc>=gsc.aSc?'#e6edf3':'#6e7681')+';margin-top:1px">'+gsc.hSc+'</div></div>';
+    h+='</div>';
   } else {
     h+='<div class="nfl-game-teams"><div class="nfl-team"><img src="'+nflLogo(g.a)+'" alt="'+g.a+'" '+logoStyle(g.a)+'><span class="nfl-team-abbr">'+g.a+'</span></div>';
     h+='<span class="nfl-game-at">@</span>';
