@@ -641,7 +641,7 @@ function load() {
       // Re-render current view without rebuilding strip or scrolling
       nflRenderGrid(nflWeek);
     }
-    document.getElementById('status').textContent='v2.1 | Updated: '+new Date().toLocaleString();
+    document.getElementById('status').textContent='v2.2 | Updated: '+new Date().toLocaleString();
   })
   .catch(function(e){document.getElementById('status').textContent='Could not load file';});
 }
@@ -2828,11 +2828,9 @@ function buildGameCard(wk, g, gsc, gt){
     h+='<span style="font-size:9px;font-weight:800;color:#3fb950;text-transform:uppercase;letter-spacing:1px">Final</span>';
     h+='</div>';
     h+='<div class="nfl-game-teams" style="justify-content:center;gap:12px;align-items:flex-start">';
-    h+='<div style="text-align:center;flex:1"><img src="'+nflLogo(g.a)+'" alt="'+g.a+'" '+logoStyle(g.a)+' style="width:36px;height:36px">';
-    h+='<div style="font-size:16px;font-weight:900;color:'+(gsc.aSc>=gsc.hSc?'#e6edf3':'#6e7681')+'">'+gsc.aSc+'</div></div>';
+    h+='<div style="text-align:center;flex:1"><img src="'+nflLogo(g.a)+'" alt="'+g.a+'" '+logoStyle(g.a)+' style="width:36px;height:36px"><div style="border-top:1px solid #21262d;margin-top:2px;padding-top:2px"><span style="font-size:16px;font-weight:900;color:'+(gsc.aSc>=gsc.hSc?'#e6edf3':'#6e7681')+'">'+gsc.aSc+'</span></div></div>';
     h+='<span class="nfl-game-at" style="margin-top:10px">@</span>';
-    h+='<div style="text-align:center;flex:1"><img src="'+nflLogo(g.h)+'" alt="'+g.h+'" '+logoStyle(g.h)+' style="width:36px;height:36px">';
-    h+='<div style="font-size:16px;font-weight:900;color:'+(gsc.hSc>=gsc.aSc?'#e6edf3':'#6e7681')+'">'+gsc.hSc+'</div></div>';
+    h+='<div style="text-align:center;flex:1"><img src="'+nflLogo(g.h)+'" alt="'+g.h+'" '+logoStyle(g.h)+' style="width:36px;height:36px"><div style="border-top:1px solid #21262d;margin-top:2px;padding-top:2px"><span style="font-size:16px;font-weight:900;color:'+(gsc.hSc>=gsc.aSc?'#e6edf3':'#6e7681')+'">'+gsc.hSc+'</span></div></div>';
     h+='</div>';
   } else {
     h+='<div class="nfl-game-teams"><div class="nfl-team"><img src="'+nflLogo(g.a)+'" alt="'+g.a+'" '+logoStyle(g.a)+'><span class="nfl-team-abbr">'+g.a+'</span></div>';
