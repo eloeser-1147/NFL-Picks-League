@@ -214,12 +214,12 @@ tr:last-child td{border-bottom:none}
 .gd-popup::before{content:'';position:absolute;inset:-2px;border-radius:17px;background:linear-gradient(135deg,#58a6ff,#3fb950);z-index:-1}
 .gd-popup::after{content:'';position:absolute;inset:0;border-radius:16px;background:#0d1117;z-index:-1}
 .gd-close{position:absolute;top:12px;right:16px;background:none;border:none;color:#8b949e;font-size:22px;cursor:pointer}
-.gd-teams{display:flex;justify-content:space-around;align-items:center;margin:8px 0 16px}
-.gd-team{text-align:center}
+.gd-teams{display:flex;justify-content:center;align-items:center;margin:8px 0 16px}
+.gd-team{text-align:center;flex:1;min-width:0;max-width:45%}
 .gd-team img{width:60px;height:60px;object-fit:contain;margin-bottom:8px}
-.gd-team-name{font-size:13px;color:#e6edf3;font-weight:700}
+.gd-team-name{font-size:13px;color:#e6edf3;font-weight:700;word-wrap:break-word;overflow-wrap:break-word}
 .gd-score{font-size:32px;font-weight:900;color:#e6edf3;margin-top:6px}
-.gd-vs{font-size:12px;color:#484f58;font-weight:700;padding:0 12px}
+.gd-vs{font-size:12px;color:#484f58;font-weight:700;padding:0 12px;flex-shrink:0}
 .gd-time{text-align:center;font-size:11px;color:#8b949e;margin-bottom:6px;font-weight:600}
 .gd-section-label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:1.5px;color:#58a6ff;text-align:center;padding:10px 0 6px;border-top:1px solid #21262d;border-bottom:1px solid #21262d;margin-top:8px}
 .gd-rec-header{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;font-weight:800}
@@ -634,7 +634,7 @@ function load() {
     nflBuildStrip();
     nflRender(nflWeek);
     setTimeout(initStripScaling, 300);
-    document.getElementById('status').textContent='v30 | Updated: '+new Date().toLocaleString();
+    document.getElementById('status').textContent='v1.0 | Updated: '+new Date().toLocaleString();
   })
   .catch(function(e){document.getElementById('status').textContent='Could not load file';});
 }
