@@ -1673,47 +1673,15 @@ function renderSched(){
         
         o+='<div class="mu" onclick="showMatchupDetail('+s.wk+','+n1+','+n2+')" style="padding:10px 12px">';
         
-        // Header: names with records and scores
-        o+='<div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:6px;border-bottom:1px solid #21262d;margin-bottom:6px">';
-        o+='<div style="flex:1;text-align:left"><span class="mu-picks-name">'+short1+'</span><span class="mu-picks-rec"> ('+rec1+')</span></div>';
-        o+='<div style="display:flex;gap:6px;align-items:center;flex-shrink:0">';
-        o+='<span class="mu-sc '+c1+'" style="font-size:16px">'+sc1+'</span>';
-        o+='<span style="font-size:10px;color:#6e7681;font-weight:700">-</span>';
-        o+='<span class="mu-sc '+c2+'" style="font-size:16px">'+sc2+'</span>';
+        // Condensed: Player1 (record) score - score Player2 (record)
+        o+='<div class="mu-player">';
+        o+='<span class="mu-name">'+short1+' <span style="font-size:11px;color:#6e7681;font-weight:500">('+rec1+')</span></span>';
+        o+='<span class="mu-sc '+c1+'">'+sc1+'</span>';
         o+='</div>';
-        o+='<div style="flex:1;text-align:right"><span class="mu-picks-rec">('+rec2+') </span><span class="mu-picks-name">'+short2+'</span></div>';
+        o+='<div class="mu-player">';
+        o+='<span class="mu-name">'+short2+' <span style="font-size:11px;color:#6e7681;font-weight:500">('+rec2+')</span></span>';
+        o+='<span class="mu-sc '+c2+'">'+sc2+'</span>';
         o+='</div>';
-        
-        // Game-by-game picks
-        if(wkGames.length > 0){
-          for(var g=0;g<wkGames.length;g++){
-            var gm=wkGames[g];
-            var pick1=gm.picks[n1]||'';
-            var pick2=gm.picks[n2]||'';
-            var atsWinner=gm.ats;
-            
-            // Determine pick result classes
-            var cls1='mu-pick-pending', cls2='mu-pick-pending';
-            if(pick1 && atsWinner){
-              if(atsWinner==='PUSH'){cls1='mu-pick-push';}
-              else if(pick1===atsWinner){cls1='mu-pick-correct';}
-              else{cls1='mu-pick-wrong';}
-            }
-            if(pick2 && atsWinner){
-              if(atsWinner==='PUSH'){cls2='mu-pick-push';}
-              else if(pick2===atsWinner){cls2='mu-pick-correct';}
-              else{cls2='mu-pick-wrong';}
-            }
-            
-            o+='<div class="mu-pick-row">';
-            o+='<div class="mu-pick-team '+cls1+'">'+(pick1||'—')+'</div>';
-            o+='<div class="mu-pick-game">'+gm.away+' vs '+gm.home+'</div>';
-            o+='<div class="mu-pick-team '+cls2+'">'+(pick2||'—')+'</div>';
-            o+='</div>';
-          }
-        } else {
-          o+='<div style="text-align:center;font-size:11px;color:#484f58;padding:8px 0">No picks entered</div>';
-        }
         
         if(isFinal) o+='<div class="mu-final">Final</div>';
         o+='</div>';
@@ -2704,8 +2672,8 @@ function initStripScaling(){
 function showMatchupDetail(wk, n1, n2){
   var overlay = document.getElementById('gameDetailOverlay');
   var pm={};for(var i=0;i<P.length;i++)pm[P[i].num]=P[i];
-  var p1=pm[n1]||{name:'Player '+n1,t1:0,t2:0,p3:0,h1:0,h2:0,w3:0,l3:0};
-  var p2=pm[n2]||{name:'Player '+n2,t1:0,t2:0,p3:0,h1:0,h2:0,w3:0,l3:0};
+  var p1=pm[n1]||{name:'Player '+n1};
+  var p2=pm[n2]||{name:'Player '+n2};
   
   var sc1=picks[wk]?picks[wk][n1]:0;
   var sc2=picks[wk]?picks[wk][n2]:0;
@@ -2713,35 +2681,30 @@ function showMatchupDetail(wk, n1, n2){
   if(sc2===undefined||sc2===null)sc2=0;
   var isFinal = weekPlayed[wk] && currentWeek > wk;
   
-  // Only count records from completed weeks (before currentWeek)
+  // Compute season overall record for parenthetical display
   var cw = currentWeek;
-  // Seg1 stats only if seg1 done
-  var s1done = cw > 6;
-  var s2done = cw > 12;
-  var s3done = cw > 18;
-  
-  // Compute H2H record between these two from completed weeks only
-  var h2h1=0, h2h2=0, h2hT=0;
   var sched=window._sched||[];
-  for(var i=0;i<sched.length;i++){
-    var s=sched[i];
-    if(s.playoff||s.wk>=cw)continue;
-    if(!weekPlayed[s.wk])continue;
-    for(var j=0;j<s.mu.length;j++){
-      var m=s.mu[j];
-      if((m[0]===n1&&m[1]===n2)||(m[0]===n2&&m[1]===n1)){
-        var sa=picks[s.wk]?picks[s.wk][n1]:0;
-        var sb=picks[s.wk]?picks[s.wk][n2]:0;
-        if(sa>sb)h2h1++;else if(sb>sa)h2h2++;else h2hT++;
+  function getSeasonRec(pnum){
+    var wins=0,losses=0,ties=0;
+    for(var i=0;i<sched.length;i++){
+      var sw=sched[i];
+      if(sw.playoff||sw.wk>=cw)continue;
+      if(!weekPlayed[sw.wk])continue;
+      for(var j=0;j<sw.mu.length;j++){
+        var m=sw.mu[j];
+        if(m[0]===pnum||m[1]===pnum){
+          var opp=m[0]===pnum?m[1]:m[0];
+          var myS=picks[sw.wk]?picks[sw.wk][pnum]:0;
+          var opS=picks[sw.wk]?picks[sw.wk][opp]:0;
+          if(myS>opS)wins++;else if(opS>myS)losses++;else ties++;
+        }
       }
     }
+    return {w:wins,l:losses,t:ties};
   }
-  
-  // Overall records - only show completed segment data
-  var ow1=0,ol1=0,ow2=0,ol2=0,tp1=0,tp2=0;
-  if(s1done){ow1+=(p1.h1||0);ol1+=(6-(p1.h1||0));ow2+=(p2.h1||0);ol2+=(6-(p2.h1||0));tp1+=p1.t1;tp2+=p2.t1;}
-  if(s2done){ow1+=(p1.h2||0);ol1+=(6-(p1.h2||0));ow2+=(p2.h2||0);ol2+=(6-(p2.h2||0));tp1+=p1.t2;tp2+=p2.t2;}
-  if(s3done){ow1+=(p1.w3||0);ol1+=(p1.l3||0);ow2+=(p2.w3||0);ol2+=(p2.l3||0);tp1+=p1.p3;tp2+=p2.p3;}
+  var r1=getSeasonRec(n1), r2=getSeasonRec(n2);
+  var rec1=r1.w+'-'+r1.l+(r1.t>0?'-'+r1.t:'');
+  var rec2=r2.w+'-'+r2.l+(r2.t>0?'-'+r2.t:'');
   
   var c1='',c2='';
   if(sc1>0||sc2>0){c1='style="color:#e6edf3"';c2='style="color:#e6edf3"';}
@@ -2752,43 +2715,54 @@ function showMatchupDetail(wk, n1, n2){
   h+='<div style="text-align:center;font-size:14px;color:#8b949e;font-weight:800;margin-bottom:4px">Week '+wk+'</div>';
   if(isFinal) h+='<div style="text-align:center;font-size:10px;font-weight:800;color:#3fb950;text-transform:uppercase;letter-spacing:2px;margin-bottom:6px">Final</div>';
   
-  // Players side by side
+  // Players side by side with overall record
   h+='<div class="gd-teams">';
   h+='<div class="gd-team">';
-  h+='<div class="gd-team-name" style="font-size:16px;font-weight:900">'+p1.name+'</div>';
+  h+='<div class="gd-team-name" style="font-size:16px;font-weight:900">'+p1.name+' <span style="font-size:11px;color:#6e7681;font-weight:500">('+rec1+')</span></div>';
   h+='<div class="gd-score" '+c1+'>'+sc1+'</div>';
   h+='</div>';
   h+='<div class="gd-vs">vs</div>';
   h+='<div class="gd-team">';
-  h+='<div class="gd-team-name" style="font-size:16px;font-weight:900">'+p2.name+'</div>';
+  h+='<div class="gd-team-name" style="font-size:16px;font-weight:900">'+p2.name+' <span style="font-size:11px;color:#6e7681;font-weight:500">('+rec2+')</span></div>';
   h+='<div class="gd-score" '+c2+'>'+sc2+'</div>';
   h+='</div>';
   h+='</div>';
   
-  // Overall - no player names in ribbon
-  h+='<div class="gd-section-label">Overall</div>';
-  h+='<div class="gd-rec-row"><span class="gd-rec-away">'+ow1+'-'+ol1+'</span><span class="gd-rec-label">Record</span><span class="gd-rec-home">'+ow2+'-'+ol2+'</span></div>';
-  h+='<div class="gd-rec-row"><span class="gd-rec-away">'+tp1+'</span><span class="gd-rec-label">Total Points</span><span class="gd-rec-home">'+tp2+'</span></div>';
-  
-  // Segment 1 - blue
-  h+='<div class="gd-section-label" style="color:#58a6ff">Segment 1</div>';
-  h+='<div class="gd-rec-row"><span class="gd-rec-away">'+(s1done?(p1.h1||0)+'-'+(6-(p1.h1||0)):'0-0')+'</span><span class="gd-rec-label">Record</span><span class="gd-rec-home">'+(s1done?(p2.h1||0)+'-'+(6-(p2.h1||0)):'0-0')+'</span></div>';
-  h+='<div class="gd-rec-row"><span class="gd-rec-away">'+(s1done?p1.t1:0)+'</span><span class="gd-rec-label">Points</span><span class="gd-rec-home">'+(s1done?p2.t1:0)+'</span></div>';
-  
-  // Segment 2 - purple
-  h+='<div class="gd-section-label" style="color:#bc8cff">Segment 2</div>';
-  h+='<div class="gd-rec-row"><span class="gd-rec-away">'+(s2done?(p1.h2||0)+'-'+(6-(p1.h2||0)):'0-0')+'</span><span class="gd-rec-label">Record</span><span class="gd-rec-home">'+(s2done?(p2.h2||0)+'-'+(6-(p2.h2||0)):'0-0')+'</span></div>';
-  h+='<div class="gd-rec-row"><span class="gd-rec-away">'+(s2done?p1.t2:0)+'</span><span class="gd-rec-label">Points</span><span class="gd-rec-home">'+(s2done?p2.t2:0)+'</span></div>';
-  
-  // Segment 3 - gold
-  h+='<div class="gd-section-label" style="color:#d29922">Segment 3</div>';
-  h+='<div class="gd-rec-row"><span class="gd-rec-away">'+(s3done?(p1.w3||0)+'-'+(p1.l3||0):'0-0')+'</span><span class="gd-rec-label">Record</span><span class="gd-rec-home">'+(s3done?(p2.w3||0)+'-'+(p2.l3||0):'0-0')+'</span></div>';
-  h+='<div class="gd-rec-row"><span class="gd-rec-away">'+(s3done?p1.p3:0)+'</span><span class="gd-rec-label">Picks Correct</span><span class="gd-rec-home">'+(s3done?p2.p3:0)+'</span></div>';
-  
-  // H2H - green
-  h+='<div class="gd-section-label" style="color:#3fb950">Head-to-Head</div>';
-  h+='<div class="gd-rec-row"><span class="gd-rec-away" style="font-size:16px;font-weight:900">'+h2h1+'</span><span class="gd-rec-label">Wins</span><span class="gd-rec-home" style="font-size:16px;font-weight:900">'+h2h2+'</span></div>';
-  if(h2hT>0) h+='<div class="gd-rec-row"><span class="gd-rec-away">'+h2hT+'</span><span class="gd-rec-label">Ties</span><span class="gd-rec-home">'+h2hT+'</span></div>';
+  // Game-by-game picks
+  var wkGames = picksDetail[wk] || [];
+  if(wkGames.length > 0){
+    h+='<div style="padding:0 16px 12px">';
+    h+='<div style="display:flex;justify-content:space-between;padding:8px 0 6px;border-bottom:1px solid #21262d;margin-bottom:4px">';
+    h+='<span style="flex:1;text-align:center;font-size:10px;font-weight:700;color:#8b949e;text-transform:uppercase">'+p1.name.split(' ')[0]+'</span>';
+    h+='<span style="flex:1.2;text-align:center;font-size:10px;font-weight:700;color:#8b949e;text-transform:uppercase">Game</span>';
+    h+='<span style="flex:1;text-align:center;font-size:10px;font-weight:700;color:#8b949e;text-transform:uppercase">'+p2.name.split(' ')[0]+'</span>';
+    h+='</div>';
+    for(var g=0;g<wkGames.length;g++){
+      var gm=wkGames[g];
+      var pick1=gm.picks[n1]||'';
+      var pick2=gm.picks[n2]||'';
+      var atsWinner=gm.ats;
+      var cls1='mu-pick-pending',cls2='mu-pick-pending';
+      if(pick1 && atsWinner){
+        if(atsWinner==='PUSH'){cls1='mu-pick-push';}
+        else if(pick1===atsWinner){cls1='mu-pick-correct';}
+        else{cls1='mu-pick-wrong';}
+      }
+      if(pick2 && atsWinner){
+        if(atsWinner==='PUSH'){cls2='mu-pick-push';}
+        else if(pick2===atsWinner){cls2='mu-pick-correct';}
+        else{cls2='mu-pick-wrong';}
+      }
+      h+='<div class="mu-pick-row">';
+      h+='<div class="mu-pick-team '+cls1+'">'+(pick1||'—')+'</div>';
+      h+='<div class="mu-pick-game">'+gm.away+' @ '+gm.home+'</div>';
+      h+='<div class="mu-pick-team '+cls2+'">'+(pick2||'—')+'</div>';
+      h+='</div>';
+    }
+    h+='</div>';
+  } else {
+    h+='<div style="text-align:center;font-size:11px;color:#484f58;padding:12px 0">No picks entered</div>';
+  }
   
   h+='</div>';
   overlay.innerHTML=h;
