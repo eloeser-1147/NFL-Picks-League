@@ -702,6 +702,29 @@ function readPicks(wb) {
 // Structure: picksDetail[week] = [{away,home,ats,picks:{playerNum:teamPicked}}]
 var picksDetail = {};
 var tiebreakers = {}; // tiebreakers[week] = {actual: number, guesses: {playerNum: number}}
+
+// Resolve H2H matchup: returns 1 if p1 wins, -1 if p2 wins, 0 if true tie
+function h2hResult(wk, p1Num, p2Num){
+  var s1 = picks[wk] ? picks[wk][p1Num] : 0;
+  var s2 = picks[wk] ? picks[wk][p2Num] : 0;
+  if(s1===undefined||s1===null) s1=0;
+  if(s2===undefined||s2===null) s2=0;
+  if(s1 > s2) return 1;
+  if(s2 > s1) return -1;
+  // Tied on picks — check tiebreaker
+  var tb = tiebreakers[wk];
+  if(tb && tb.actual !== null){
+    var g1 = tb.guesses[p1Num];
+    var g2 = tb.guesses[p2Num];
+    if(g1 !== undefined && g2 !== undefined){
+      var d1 = Math.abs(g1 - tb.actual);
+      var d2 = Math.abs(g2 - tb.actual);
+      if(d1 < d2) return 1;
+      if(d2 < d1) return -1;
+    }
+  }
+  return 0; // still tied
+}
 function readPicksDetail(wb) {
   picksDetail = {};
   tiebreakers = {};
@@ -1648,9 +1671,8 @@ function renderSched(){
             var m=sw.mu[mi];
             if(m[0]===pnum||m[1]===pnum){
               var opp=m[0]===pnum?m[1]:m[0];
-              var myS=picks[sw.wk]?picks[sw.wk][pnum]:0;
-              var opS=picks[sw.wk]?picks[sw.wk][opp]:0;
-              if(myS>opS)wins++;else if(opS>myS)losses++;else ties++;
+              var res=h2hResult(sw.wk,pnum,opp);
+              if(res>0)wins++;else if(res<0)losses++;else ties++;
             }
           }
         }
@@ -1674,8 +1696,9 @@ function renderSched(){
         var c1='',c2='';
         var isFinal = weekPlayed[s.wk] && currentWeek > s.wk;
         if(sc1>0||sc2>0){
-          if(sc1>sc2){c1='mw';c2='ml';}
-          else if(sc2>sc1){c2='mw';c1='ml';}
+          var muRes = h2hResult(s.wk, n1, n2);
+          if(muRes > 0){c1='mw';c2='ml';}
+          else if(muRes < 0){c2='mw';c1='ml';}
           else{c1='mt';c2='mt';}
         }
         
@@ -2743,9 +2766,8 @@ function showMatchupDetail(wk, n1, n2){
         var m=sw.mu[j];
         if(m[0]===pnum||m[1]===pnum){
           var opp=m[0]===pnum?m[1]:m[0];
-          var myS=picks[sw.wk]?picks[sw.wk][pnum]:0;
-          var opS=picks[sw.wk]?picks[sw.wk][opp]:0;
-          if(myS>opS)wins++;else if(opS>myS)losses++;else ties++;
+          var res=h2hResult(sw.wk,pnum,opp);
+          if(res>0)wins++;else if(res<0)losses++;else ties++;
         }
       }
     }
@@ -3108,8 +3130,9 @@ function showPlayerSched(playerNum, el) {
     var result = '-';
     var resultClass = 'wk';
     if (myPicks > 0 || oppPicks > 0) {
-      if (myPicks > oppPicks) { result = 'W'; resultClass = 'w'; }
-      else if (oppPicks > myPicks) { result = 'L'; resultClass = 'l'; }
+      var res = h2hResult(wk.wk, playerNum, oppNum);
+      if (res > 0) { result = 'W'; resultClass = 'w'; }
+      else if (res < 0) { result = 'L'; resultClass = 'l'; }
       else { result = 'T'; resultClass = 't'; }
     }
     
