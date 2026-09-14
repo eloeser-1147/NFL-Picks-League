@@ -663,9 +663,11 @@ function v3(s,r){var c=s[r];return c?String(c.v):'-';}
 
 // Raw picks storage: picks[weekNumber][playerNumber] = correct picks
 var picks = {};
+var excelH2H = {}; // excelH2H[week][playerNum] = "W"/"L"/"T"/"-"
 
 function readPicks(wb) {
   picks = {};
+  excelH2H = {};
   var sheets = ['Wk 1-6 Input','Wk 7-12 Input','Wk 13-18 Input'];
   for (var s = 0; s < sheets.length; s++) {
     var ws = wb.Sheets[sheets[s]];
@@ -682,6 +684,7 @@ function readPicks(wb) {
       if (typeof av === 'string' && av.toUpperCase().indexOf('WEEK ') === 0) {
         curWeek = parseInt(av.replace(/\D/g,''));
         if (!picks[curWeek]) picks[curWeek] = {};
+        if (!excelH2H[curWeek]) excelH2H[curWeek] = {};
         continue;
       }
       // Detect player row
@@ -693,6 +696,9 @@ function readPicks(wb) {
           else if (typeof cc.v === 'string') val = parseInt(cc.v) || 0;
         }
         picks[curWeek][av] = val;
+        // Read H2H Result from col F
+        var hc = ws[XLSX.utils.encode_cell({r:r,c:5})];
+        if (hc && hc.v) excelH2H[curWeek][av] = String(hc.v).trim().toUpperCase();
       }
     }
   }
@@ -704,26 +710,23 @@ var picksDetail = {};
 var tiebreakers = {}; // tiebreakers[week] = {actual: number, guesses: {playerNum: number}}
 
 // Resolve H2H matchup: returns 1 if p1 wins, -1 if p2 wins, 0 if true tie
+// Uses Excel's H2H Result (which includes tiebreaker logic) as source of truth
 function h2hResult(wk, p1Num, p2Num){
+  var wkH2H = excelH2H[wk];
+  if(wkH2H){
+    var r1 = wkH2H[p1Num];
+    if(r1 === 'W') return 1;
+    if(r1 === 'L') return -1;
+    if(r1 === 'T') return 0;
+  }
+  // Fallback: compare raw picks if Excel data not available
   var s1 = picks[wk] ? picks[wk][p1Num] : 0;
   var s2 = picks[wk] ? picks[wk][p2Num] : 0;
   if(s1===undefined||s1===null) s1=0;
   if(s2===undefined||s2===null) s2=0;
   if(s1 > s2) return 1;
   if(s2 > s1) return -1;
-  // Tied on picks — check tiebreaker
-  var tb = tiebreakers[wk];
-  if(tb && tb.actual !== null){
-    var g1 = tb.guesses[p1Num];
-    var g2 = tb.guesses[p2Num];
-    if(g1 !== undefined && g2 !== undefined){
-      var d1 = Math.abs(g1 - tb.actual);
-      var d2 = Math.abs(g2 - tb.actual);
-      if(d1 < d2) return 1;
-      if(d2 < d1) return -1;
-    }
-  }
-  return 0; // still tied
+  return 0;
 }
 function readPicksDetail(wb) {
   picksDetail = {};
