@@ -1697,36 +1697,39 @@ function renderSched(){
         var dn1 = cardShort(name1, rec1);
         var dn2 = cardShort(name2, rec2);
         
+        // Pre-compute tiebreaker data for this matchup
+        var tb = tiebreakers[s.wk];
+        var showTB = false, g1, g2, tc1, tc2, tbActual;
+        if(sc1===sc2 && sc1>0 && tb && tb.actual!==null){
+          g1 = tb.guesses[n1];
+          g2 = tb.guesses[n2];
+          if(g1!==undefined && g2!==undefined){
+            showTB = true;
+            tbActual = tb.actual;
+            var diff1 = Math.abs(g1 - tbActual);
+            var diff2 = Math.abs(g2 - tbActual);
+            tc1 = diff1 < diff2 ? '#3fb950' : diff2 < diff1 ? '#f85149' : '#d29922';
+            tc2 = diff2 < diff1 ? '#3fb950' : diff1 < diff2 ? '#f85149' : '#d29922';
+          }
+        }
+        
         o+='<div class="mu" onclick="showMatchupDetail('+s.wk+','+n1+','+n2+')">';
         
         o+='<div class="mu-player">';
-        o+='<span class="mu-name">'+dn1+' <span class="mu-rec">('+rec1+')</span></span>';
+        o+='<span class="mu-name">'+dn1+' <span class="mu-rec">('+rec1+')</span>';
+        if(showTB) o+=' <span style="color:'+tc1+';font-size:10px;font-weight:700">TB: '+g1+'</span>';
+        o+='</span>';
         o+='<span class="mu-sc '+c1+'">'+sc1+'</span>';
         o+='</div>';
         o+='<div class="mu-player">';
-        o+='<span class="mu-name">'+dn2+' <span class="mu-rec">('+rec2+')</span></span>';
+        o+='<span class="mu-name">'+dn2+' <span class="mu-rec">('+rec2+')</span>';
+        if(showTB) o+=' <span style="color:'+tc2+';font-size:10px;font-weight:700">TB: '+g2+'</span>';
+        o+='</span>';
         o+='<span class="mu-sc '+c2+'">'+sc2+'</span>';
         o+='</div>';
         
-        // Tiebreaker: show only when scores are tied and actual total exists
-        var tb = tiebreakers[s.wk];
-        if(sc1===sc2 && sc1>0 && tb && tb.actual!==null){
-          var g1 = tb.guesses[n1];
-          var g2 = tb.guesses[n2];
-          if(g1!==undefined && g2!==undefined){
-            var diff1 = Math.abs(g1 - tb.actual);
-            var diff2 = Math.abs(g2 - tb.actual);
-            var tbWin1 = diff1 < diff2;
-            var tbWin2 = diff2 < diff1;
-            var tbTie = diff1 === diff2;
-            var tc1 = tbWin1 ? '#3fb950' : tbWin2 ? '#f85149' : '#d29922';
-            var tc2 = tbWin2 ? '#3fb950' : tbWin1 ? '#f85149' : '#d29922';
-            o+='<div style="display:flex;justify-content:space-between;font-size:10px;padding:4px 0 0;margin-top:4px;border-top:1px solid #21262d">';
-            o+='<span style="color:'+tc1+';font-weight:700">TB: '+g1+'</span>';
-            o+='<span style="font-size:9px;color:#6e7681;font-weight:600">Actual: '+tb.actual+'</span>';
-            o+='<span style="color:'+tc2+';font-weight:700">TB: '+g2+'</span>';
-            o+='</div>';
-          }
+        if(showTB){
+          o+='<div style="text-align:center;font-size:9px;color:#6e7681;font-weight:600;padding:4px 0 0;margin-top:4px;border-top:1px solid #21262d">Actual TB: '+tbActual+'</div>';
         }
         
         if(isFinal) o+='<div class="mu-final">Final</div>';
