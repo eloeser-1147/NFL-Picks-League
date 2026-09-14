@@ -701,8 +701,10 @@ function readPicks(wb) {
 // Read individual game picks from "Picks Detail" sheet
 // Structure: picksDetail[week] = [{away,home,ats,picks:{playerNum:teamPicked}}]
 var picksDetail = {};
+var tiebreakers = {}; // tiebreakers[week] = {actual: number, guesses: {playerNum: number}}
 function readPicksDetail(wb) {
   picksDetail = {};
+  tiebreakers = {};
   var ws = wb.Sheets['Picks Detail'];
   if (!ws) return;
   
@@ -743,6 +745,21 @@ function readPicksDetail(wb) {
           if (nameToNum[hName]) playerCols[c] = nameToNum[hName];
         }
       }
+      continue;
+    }
+    
+    // Detect tiebreaker row (TB in col A)
+    if (av.toUpperCase() === 'TB' && curWeek > 0) {
+      var actualCell = ws[XLSX.utils.encode_cell({r:r, c:4})]; // col E = actual total
+      var actual = (actualCell && typeof actualCell.v === 'number') ? actualCell.v : null;
+      var guesses = {};
+      for (var c in playerCols) {
+        var gCell = ws[XLSX.utils.encode_cell({r:r, c:parseInt(c)})];
+        if (gCell && typeof gCell.v === 'number') {
+          guesses[playerCols[c]] = gCell.v;
+        }
+      }
+      tiebreakers[curWeek] = {actual: actual, guesses: guesses};
       continue;
     }
     
@@ -1668,28 +1685,49 @@ function renderSched(){
         var rec1=r1.w+'-'+r1.l+(r1.t>0?'-'+r1.t:'');
         var rec2=r2.w+'-'+r2.l+(r2.t>0?'-'+r2.t:'');
         
-        // Smart name: full name + (record) — if combined string too long, shorten last name to initial
-        function cardName(full, rec){
-          var display = full + ' (' + rec + ')';
-          if(display.length > 16){
+        // Smart name: full name — if too long with record, shorten last name to initial
+        function cardShort(full, rec){
+          var test = full + ' (' + rec + ')';
+          if(test.length > 16){
             var parts = full.split(' ');
-            if(parts.length >= 2) display = parts[0] + ' ' + parts[parts.length-1].charAt(0) + '. (' + rec + ')';
+            if(parts.length >= 2) return parts[0] + ' ' + parts[parts.length-1].charAt(0) + '.';
           }
-          return display;
+          return full;
         }
-        var disp1 = cardName(name1, rec1);
-        var disp2 = cardName(name2, rec2);
+        var dn1 = cardShort(name1, rec1);
+        var dn2 = cardShort(name2, rec2);
         
         o+='<div class="mu" onclick="showMatchupDetail('+s.wk+','+n1+','+n2+')">';
         
         o+='<div class="mu-player">';
-        o+='<span class="mu-name">'+disp1+'</span>';
+        o+='<span class="mu-name">'+dn1+' <span class="mu-rec">('+rec1+')</span></span>';
         o+='<span class="mu-sc '+c1+'">'+sc1+'</span>';
         o+='</div>';
         o+='<div class="mu-player">';
-        o+='<span class="mu-name">'+disp2+'</span>';
+        o+='<span class="mu-name">'+dn2+' <span class="mu-rec">('+rec2+')</span></span>';
         o+='<span class="mu-sc '+c2+'">'+sc2+'</span>';
         o+='</div>';
+        
+        // Tiebreaker: show only when scores are tied and actual total exists
+        var tb = tiebreakers[s.wk];
+        if(sc1===sc2 && sc1>0 && tb && tb.actual!==null){
+          var g1 = tb.guesses[n1];
+          var g2 = tb.guesses[n2];
+          if(g1!==undefined && g2!==undefined){
+            var diff1 = Math.abs(g1 - tb.actual);
+            var diff2 = Math.abs(g2 - tb.actual);
+            var tbWin1 = diff1 < diff2;
+            var tbWin2 = diff2 < diff1;
+            var tbTie = diff1 === diff2;
+            var tc1 = tbWin1 ? '#3fb950' : tbWin2 ? '#f85149' : '#d29922';
+            var tc2 = tbWin2 ? '#3fb950' : tbWin1 ? '#f85149' : '#d29922';
+            o+='<div style="display:flex;justify-content:space-between;font-size:10px;padding:4px 0 0;margin-top:4px;border-top:1px solid #21262d">';
+            o+='<span style="color:'+tc1+';font-weight:700">TB: '+g1+'</span>';
+            o+='<span style="font-size:9px;color:#6e7681;font-weight:600">Actual: '+tb.actual+'</span>';
+            o+='<span style="color:'+tc2+';font-weight:700">TB: '+g2+'</span>';
+            o+='</div>';
+          }
+        }
         
         if(isFinal) o+='<div class="mu-final">Final</div>';
         o+='</div>';
