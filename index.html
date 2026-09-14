@@ -93,6 +93,16 @@ tr:last-child td{border-bottom:none}
 .mu-final{font-size:8px;font-weight:800;color:#3fb950;text-transform:uppercase;letter-spacing:1.5px;text-align:center;padding:4px 0;margin-top:6px;border-top:1px solid #21262d}
 .mu-meta{font-size:10px;color:#6e7681;margin-top:2px;font-weight:500}
 .mu-meta .mu-seed{font-weight:700;color:#8b949e}
+.mu-picks-header{display:flex;justify-content:space-between;align-items:baseline;padding:0 0 6px;border-bottom:1px solid #21262d;margin-bottom:6px}
+.mu-picks-name{font-size:14px;font-weight:800;color:#e6edf3;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:40%}
+.mu-picks-rec{font-size:10px;font-weight:600;color:#6e7681;margin-left:2px}
+.mu-pick-row{display:flex;align-items:center;padding:3px 0;font-size:11px}
+.mu-pick-team{flex:1;text-align:center;font-weight:700;border-radius:4px;padding:2px 4px;margin:0 1px}
+.mu-pick-game{flex:1.2;text-align:center;color:#8b949e;font-weight:600;font-size:10px;white-space:nowrap}
+.mu-pick-correct{background:rgba(63,185,80,.15);color:#3fb950}
+.mu-pick-wrong{background:rgba(248,81,73,.12);color:#f85149}
+.mu-pick-pending{color:#6e7681}
+.mu-pick-push{background:rgba(210,153,34,.12);color:#d29922}
 /* Rules dropdown */
 .rule-dd-wrap{position:relative;display:inline-block;margin-bottom:16px}
 .rule-dd-btn{background:none;border:none;color:#e6edf3;font-size:15px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;padding:0;display:flex;align-items:center;gap:6px}
@@ -168,7 +178,7 @@ tr:last-child td{border-bottom:none}
 .champ-other-earn{color:#3fb950;font-weight:700}
 .confetti-piece{position:fixed;width:10px;height:10px;z-index:10000;pointer-events:none;animation:confetti-fall linear forwards}
 @keyframes confetti-fall{0%{opacity:1;transform:translateY(0) rotate(0deg)}100%{opacity:0;transform:translateY(100vh) rotate(720deg)}}
-@media(max-width:480px){.mu-grid{gap:8px;padding:0 6px}.mu{padding:10px 12px}.mu-name{font-size:13px}.mu-sc{font-size:16px}.po-name{font-size:16px}.po-pts{font-size:22px}.champ-popup{padding:28px 18px 20px}.champ-pod.first .champ-pod-name{font-size:22px}.champ-pod.first .champ-pod-earn{font-size:18px}}
+@media(max-width:480px){.mu-grid{gap:8px;padding:0 6px;grid-template-columns:1fr}.mu{padding:10px 12px}.mu-name{font-size:13px}.mu-sc{font-size:16px}.po-name{font-size:16px}.po-pts{font-size:22px}.champ-popup{padding:28px 18px 20px}.champ-pod.first .champ-pod-name{font-size:22px}.champ-pod.first .champ-pod-earn{font-size:18px}.mu-picks-name{font-size:13px}.mu-pick-row{font-size:10px}}
 @media(max-width:640px){.card-scroll{margin:0 -2px}.card-scroll::-webkit-scrollbar{height:4px}.card-scroll::-webkit-scrollbar-thumb{background:#30363d;border-radius:4px}.header h1{font-size:24px}.qg{grid-template-columns:1fr}td,th{padding:6px 8px;font-size:11px}.seg-tab{font-size:12px}.seg-tabs{gap:12px}}
 @media (max-width: 640px) {
   .wk-col { display: none !important; }
@@ -620,6 +630,7 @@ function load() {
     
     // Read raw picks from input sheets
     readPicks(wb);
+    readPicksDetail(wb);
     readPlayoffs(wb);
     readPlayoffPicture(wb);
     readEarnings(wb);
@@ -682,6 +693,84 @@ function readPicks(wb) {
         }
         picks[curWeek][av] = val;
       }
+    }
+  }
+}
+
+// Read individual game picks from "Picks Detail" sheet
+// Structure: picksDetail[week] = [{away,home,ats,picks:{playerNum:teamPicked}}]
+var picksDetail = {};
+function readPicksDetail(wb) {
+  picksDetail = {};
+  var ws = wb.Sheets['Picks Detail'];
+  if (!ws) return;
+  
+  // Read roster names to map column headers to player numbers
+  var roster = wb.Sheets['Roster'];
+  var nameToNum = {};
+  if (roster) {
+    for (var i = 3; i <= 14; i++) {
+      var c = roster[XLSX.utils.encode_cell({r:i-1, c:1})];
+      if (c) nameToNum[String(c.v).trim()] = i - 2;
+    }
+  }
+  
+  var range = XLSX.utils.decode_range(ws['!ref'] || 'A1');
+  var curWeek = 0;
+  var playerCols = {}; // col index -> player number
+  
+  for (var r = 0; r <= range.e.r; r++) {
+    var a = ws[XLSX.utils.encode_cell({r:r, c:0})];
+    if (!a) continue;
+    var av = String(a.v || '').trim();
+    
+    // Detect week header
+    if (av.toUpperCase().indexOf('WEEK ') === 0) {
+      curWeek = parseInt(av.replace(/\D/g, ''));
+      if (!picksDetail[curWeek]) picksDetail[curWeek] = [];
+      playerCols = {};
+      continue;
+    }
+    
+    // Detect column header row (has "#" in col A)
+    if (av === '#' && curWeek > 0) {
+      // Map columns F-Q (index 5-16) to player numbers
+      for (var c = 5; c <= 16; c++) {
+        var hdr = ws[XLSX.utils.encode_cell({r:r, c:c})];
+        if (hdr) {
+          var hName = String(hdr.v || '').trim();
+          if (nameToNum[hName]) playerCols[c] = nameToNum[hName];
+        }
+      }
+      continue;
+    }
+    
+    // Detect game row (numeric game #)
+    if (curWeek > 0 && !isNaN(parseInt(av)) && parseInt(av) >= 1) {
+      var awayCell = ws[XLSX.utils.encode_cell({r:r, c:1})];
+      var homeCell = ws[XLSX.utils.encode_cell({r:r, c:3})];
+      var atsCell = ws[XLSX.utils.encode_cell({r:r, c:4})];
+      
+      var away = awayCell ? String(awayCell.v || '').trim().toUpperCase() : '';
+      var home = homeCell ? String(homeCell.v || '').trim().toUpperCase() : '';
+      var ats = atsCell ? String(atsCell.v || '').trim().toUpperCase() : '';
+      
+      if (!away || !home) continue;
+      
+      var gamePicks = {};
+      for (var c in playerCols) {
+        var pCell = ws[XLSX.utils.encode_cell({r:r, c:parseInt(c)})];
+        if (pCell && pCell.v) {
+          gamePicks[playerCols[c]] = String(pCell.v).trim().toUpperCase();
+        }
+      }
+      
+      picksDetail[curWeek].push({
+        away: away,
+        home: home,
+        ats: ats,
+        picks: gamePicks
+      });
     }
   }
 }
@@ -1526,7 +1615,32 @@ function renderSched(){
         }
       }
     } else {
-      // Regular week: CBS-style matchup cards
+      // Regular week: matchup cards with individual game picks
+      // Compute each player's season H2H record from completed weeks
+      var seasonRec = {};
+      var cw = currentWeek;
+      for(var pi=0;pi<P.length;pi++){
+        var pnum = P[pi].num;
+        var wins=0, losses=0, ties=0;
+        for(var si=0;si<sched.length;si++){
+          var sw=sched[si];
+          if(sw.playoff||sw.wk>=cw)continue;
+          if(!weekPlayed[sw.wk])continue;
+          for(var mi=0;mi<sw.mu.length;mi++){
+            var m=sw.mu[mi];
+            if(m[0]===pnum||m[1]===pnum){
+              var opp=m[0]===pnum?m[1]:m[0];
+              var myS=picks[sw.wk]?picks[sw.wk][pnum]:0;
+              var opS=picks[sw.wk]?picks[sw.wk][opp]:0;
+              if(myS>opS)wins++;else if(opS>myS)losses++;else ties++;
+            }
+          }
+        }
+        seasonRec[pnum]={w:wins,l:losses,t:ties};
+      }
+      
+      var wkGames = picksDetail[s.wk] || [];
+      
       o+='<div class="mu-grid">';
       for(var j=0;j<s.mu.length;j++){
         var n1=s.mu[j][0],n2=s.mu[j][1];
@@ -1534,8 +1648,8 @@ function renderSched(){
         var name1=p1?p1.name:'Player '+n1;
         var name2=p2?p2.name:'Player '+n2;
         
-        var sc1=picks[s.wk]?picks[s.wk][n1]:'';
-        var sc2=picks[s.wk]?picks[s.wk][n2]:'';
+        var sc1=picks[s.wk]?picks[s.wk][n1]:0;
+        var sc2=picks[s.wk]?picks[s.wk][n2]:0;
         if(sc1===undefined||sc1===null)sc1=0;
         if(sc2===undefined||sc2===null)sc2=0;
         
@@ -1547,9 +1661,60 @@ function renderSched(){
           else{c1='mt';c2='mt';}
         }
         
-        o+='<div class="mu" onclick="showMatchupDetail('+s.wk+','+n1+','+n2+')">';
-        o+='<div class="mu-player"><span class="mu-name">'+name1+'</span><span class="mu-sc '+c1+'">'+sc1+'</span></div>';
-        o+='<div class="mu-player"><span class="mu-name">'+name2+'</span><span class="mu-sc '+c2+'">'+sc2+'</span></div>';
+        // Season record strings
+        var r1=seasonRec[n1]||{w:0,l:0,t:0};
+        var r2=seasonRec[n2]||{w:0,l:0,t:0};
+        var rec1=r1.w+'-'+r1.l+(r1.t>0?'-'+r1.t:'');
+        var rec2=r2.w+'-'+r2.l+(r2.t>0?'-'+r2.t:'');
+        
+        // First name only for compact display
+        var short1 = name1.split(' ')[0];
+        var short2 = name2.split(' ')[0];
+        
+        o+='<div class="mu" onclick="showMatchupDetail('+s.wk+','+n1+','+n2+')" style="padding:10px 12px">';
+        
+        // Header: names with records and scores
+        o+='<div style="display:flex;justify-content:space-between;align-items:center;padding-bottom:6px;border-bottom:1px solid #21262d;margin-bottom:6px">';
+        o+='<div style="flex:1;text-align:left"><span class="mu-picks-name">'+short1+'</span><span class="mu-picks-rec"> ('+rec1+')</span></div>';
+        o+='<div style="display:flex;gap:6px;align-items:center;flex-shrink:0">';
+        o+='<span class="mu-sc '+c1+'" style="font-size:16px">'+sc1+'</span>';
+        o+='<span style="font-size:10px;color:#6e7681;font-weight:700">-</span>';
+        o+='<span class="mu-sc '+c2+'" style="font-size:16px">'+sc2+'</span>';
+        o+='</div>';
+        o+='<div style="flex:1;text-align:right"><span class="mu-picks-rec">('+rec2+') </span><span class="mu-picks-name">'+short2+'</span></div>';
+        o+='</div>';
+        
+        // Game-by-game picks
+        if(wkGames.length > 0){
+          for(var g=0;g<wkGames.length;g++){
+            var gm=wkGames[g];
+            var pick1=gm.picks[n1]||'';
+            var pick2=gm.picks[n2]||'';
+            var atsWinner=gm.ats;
+            
+            // Determine pick result classes
+            var cls1='mu-pick-pending', cls2='mu-pick-pending';
+            if(pick1 && atsWinner){
+              if(atsWinner==='PUSH'){cls1='mu-pick-push';}
+              else if(pick1===atsWinner){cls1='mu-pick-correct';}
+              else{cls1='mu-pick-wrong';}
+            }
+            if(pick2 && atsWinner){
+              if(atsWinner==='PUSH'){cls2='mu-pick-push';}
+              else if(pick2===atsWinner){cls2='mu-pick-correct';}
+              else{cls2='mu-pick-wrong';}
+            }
+            
+            o+='<div class="mu-pick-row">';
+            o+='<div class="mu-pick-team '+cls1+'">'+(pick1||'—')+'</div>';
+            o+='<div class="mu-pick-game">'+gm.away+' vs '+gm.home+'</div>';
+            o+='<div class="mu-pick-team '+cls2+'">'+(pick2||'—')+'</div>';
+            o+='</div>';
+          }
+        } else {
+          o+='<div style="text-align:center;font-size:11px;color:#484f58;padding:8px 0">No picks entered</div>';
+        }
+        
         if(isFinal) o+='<div class="mu-final">Final</div>';
         o+='</div>';
       }
