@@ -1948,6 +1948,10 @@ function renderAll(){
   }
 
   var filtered = standings.filter(function(p){return !removeSet[p.name];});
+  // Rank dynamically: most total points first; ties fall back to Excel rank, then name
+  filtered.sort(function(a,b){
+    return (b.total-a.total) || ((a.rank||999)-(b.rank||999)) || a.name.localeCompare(b.name);
+  });
 
   var wcDone = cw >= 19;
   var o='<div class="card"><div class="card-scroll"><table><tr><th>#</th><th style="text-align:left">Player</th><th>Seg 1</th><th>Seg 2</th><th>Seg 3</th><th>Total</th></tr>';
