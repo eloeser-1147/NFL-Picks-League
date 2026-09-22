@@ -469,6 +469,18 @@ tr:last-child td{border-bottom:none}
 </div>
 <div id="status" style="text-align:center;padding:40px 24px 20px;font-size:10px;color:#30363d">Loading...</div>
 <script>
+var BUILD = 'v2.3';
+// Stale-cache guard: if a newer index.html is live, load it fresh
+(function(){
+  try{
+    fetch('./index.html?t='+Date.now(),{cache:'no-store'}).then(function(r){return r.text();}).then(function(t){
+      var m=t.match(/var BUILD = '([^']+)'/);
+      if(m && m[1]!==BUILD && location.search.indexOf('v='+m[1])<0){
+        location.replace(location.pathname+'?v='+encodeURIComponent(m[1]));
+      }
+    }).catch(function(){});
+  }catch(e){}
+})();
 var P = []; // all players
 var currentWeek = 1;
 var playoffData = {};
@@ -653,7 +665,7 @@ function load() {
       // Re-render current view without rebuilding strip or scrolling
       nflRenderGrid(nflWeek);
     }
-    document.getElementById('status').textContent='v2.2 | Updated: '+new Date().toLocaleString();
+    document.getElementById('status').textContent=BUILD+' | Updated: '+new Date().toLocaleString();
   })
   .catch(function(e){document.getElementById('status').textContent='Could not load file';});
 }
@@ -1955,11 +1967,14 @@ function renderAll(){
 
   var wcDone = cw >= 19;
   var o='<div class="card"><div class="card-scroll"><table><tr><th>#</th><th style="text-align:left">Player</th><th>Seg 1</th><th>Seg 2</th><th>Seg 3</th><th>Total</th></tr>';
+  var place=0;
   for(var i=0;i<filtered.length;i++){
     var p=filtered[i];
+    // Ties share a place (20,20,20 → 5,5,5 → next is 8)
+    if(i===0 || p.total!==filtered[i-1].total) place=i+1;
     var isWC = wcDone && wcNames[p.name];
     var nameStyle = isWC ? 'color:#3fb950;' : '';
-    o+='<tr><td class="'+rc(i)+'">'+(i+1)+'</td><td class="nm" style="'+nameStyle+'">'+p.name+'</td><td class="wk">'+p.s1+'</td><td class="wk">'+p.s2+'</td><td class="wk">'+p.s3+'</td><td class="tot">'+p.total+'</td></tr>';}
+    o+='<tr><td class="'+rc(place-1)+'">'+place+'</td><td class="nm" style="'+nameStyle+'">'+p.name+'</td><td class="wk">'+p.s1+'</td><td class="wk">'+p.s2+'</td><td class="wk">'+p.s3+'</td><td class="tot">'+p.total+'</td></tr>';}
   o+='</table></div></div>';document.getElementById('all').innerHTML=o;
 }
 function renderPS() {
