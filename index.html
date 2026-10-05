@@ -64,7 +64,7 @@ tr:last-child td{border-bottom:none}
 .w{color:#3fb950;font-weight:600}
 .l{color:#f85149;font-weight:600}
 .t{color:#d29922;font-weight:600}
-.s3-tbl{table-layout:fixed;min-width:560px}.s3-tbl td.nm{overflow:hidden;text-overflow:ellipsis}
+.s3-tbl{table-layout:fixed}.s3-tbl td.nm{overflow:hidden;text-overflow:ellipsis}
 .dl{padding:8px 16px;width:100%;box-sizing:border-box;font-size:12px;font-weight:700;color:#f0883e;background:#1c2128;border-bottom:1px solid #30363d;text-transform:uppercase;letter-spacing:.5px}
 .qg{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px}
 .qc{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:14px 16px;border-left:3px solid #58a6ff}
@@ -191,6 +191,10 @@ tr:last-child td{border-bottom:none}
   td, th { padding: 6px 6px; font-size: 11px; }
   .nm { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; padding-right: 8px; }
   .tot { font-size: 13px; }
+  .s3-tbl { table-layout: fixed !important; }
+  .s3-tbl th { padding: 6px 2px; font-size: 9px; letter-spacing: 0; }
+  .s3-tbl td { padding: 6px 2px; }
+  .s3-tbl td.nm { max-width: none; padding-left: 4px; }
   .seg-tabs { gap: 8px; }
   .seg-tab { font-size: 12px; padding: 6px 2px; }
   .ps-table td { font-size: 11px; padding: 6px 4px; }
@@ -560,8 +564,10 @@ function tabTo(id, btn, idx) {
   positionSlider(btn);
   if(id==='sched'){
     setTimeout(function(){
-      var sidx=_lastSbCenter>=0?_lastSbCenter:(window._sbDefaultIdx||0);
+      // Always snap to the current league week when Scores is opened
+      var sidx=window._sbDefaultIdx||0;
       sbCenterInstant(sidx);
+      pickWk(sidx);
     },280);
   }
 }
@@ -1928,7 +1934,7 @@ function renderS3(){
   var o='<div class="card"><div class="card-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">';
   for(var d=0;d<divs.length;d++){
     var s=divs[d].p.slice().sort(function(a,b){return b.w3-a.w3||b.p3-a.p3;});
-    o+='<div class="dl">'+divs[d].n+'</div><table class="s3-tbl"><colgroup><col style="width:6%"><col style="width:24%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:7%"><col style="width:7%"><col style="width:8%"></colgroup><tr><th>#</th><th style="text-align:left">Player</th>';
+    o+='<div class="dl">'+divs[d].n+'</div><table class="s3-tbl"><colgroup><col style="width:6%"><col style="width:25%"><col style="width:7.5%"><col style="width:7.5%"><col style="width:7.5%"><col style="width:7.5%"><col style="width:7.5%"><col style="width:7.5%"><col style="width:7%"><col style="width:7%"><col style="width:10%"></colgroup><tr><th>#</th><th style="text-align:left">Player</th>';
     for(var i=0;i<6;i++)o+='<th>'+wn[i]+'</th>';
     o+='<th>W</th><th>L</th><th>Picks</th></tr>';
     var s3done = currentWeek >= 19;
