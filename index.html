@@ -64,6 +64,7 @@ tr:last-child td{border-bottom:none}
 .w{color:#3fb950;font-weight:600}
 .l{color:#f85149;font-weight:600}
 .t{color:#d29922;font-weight:600}
+.s3-tbl{table-layout:fixed;min-width:560px}.s3-tbl td.nm{overflow:hidden;text-overflow:ellipsis}
 .dl{padding:8px 16px;width:100%;box-sizing:border-box;font-size:12px;font-weight:700;color:#f0883e;background:#1c2128;border-bottom:1px solid #30363d;text-transform:uppercase;letter-spacing:.5px}
 .qg{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:10px}
 .qc{background:#161b22;border:1px solid #30363d;border-radius:8px;padding:14px 16px;border-left:3px solid #58a6ff}
@@ -559,10 +560,8 @@ function tabTo(id, btn, idx) {
   positionSlider(btn);
   if(id==='sched'){
     setTimeout(function(){
-      var sidx=window._sbDefaultIdx||0;
-      var strip=document.getElementById('sbStrip');
-      var b=strip&&strip.querySelector('[data-sb="'+sidx+'"]');
-      if(b)b.scrollIntoView({behavior:'auto',inline:'center',block:'nearest'});
+      var sidx=_lastSbCenter>=0?_lastSbCenter:(window._sbDefaultIdx||0);
+      sbCenterInstant(sidx);
     },280);
   }
 }
@@ -1589,6 +1588,9 @@ function renderSched(){
   window._sched = sched;
   var targetWk = currentWeek > 22 ? 22 : currentWeek;
   var defaultIdx=0;for(var i=0;i<sched.length;i++){if(sched[i].wk===targetWk){defaultIdx=i;break;}}
+  var _curDefault=defaultIdx;
+  if(window._sbLastCw===currentWeek && _lastSbCenter>=0 && _lastSbCenter<sched.length) defaultIdx=_lastSbCenter;
+  window._sbLastCw=currentWeek;
   
   var o='<div class="nfl-week-strip" id="sbStrip">';
   o+='<div class="nfl-week-spacer"></div>';
@@ -1780,7 +1782,9 @@ function renderSched(){
   o+='<div id="scoresBlurb"></div>';
   document.getElementById('sched').innerHTML=o;
   pickWk(defaultIdx);
-  window._sbDefaultIdx = defaultIdx;
+  bindSbStrip(document.getElementById('sbStrip'));
+  sbCenterInstant(defaultIdx);
+  window._sbDefaultIdx = _curDefault;
 }
 
 function updateScoresBlurb(weekNum){
@@ -1924,7 +1928,7 @@ function renderS3(){
   var o='<div class="card"><div class="card-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">';
   for(var d=0;d<divs.length;d++){
     var s=divs[d].p.slice().sort(function(a,b){return b.w3-a.w3||b.p3-a.p3;});
-    o+='<div class="dl">'+divs[d].n+'</div><table><tr><th>#</th><th style="text-align:left">Player</th>';
+    o+='<div class="dl">'+divs[d].n+'</div><table class="s3-tbl"><colgroup><col style="width:6%"><col style="width:24%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:8%"><col style="width:7%"><col style="width:7%"><col style="width:8%"></colgroup><tr><th>#</th><th style="text-align:left">Player</th>';
     for(var i=0;i<6;i++)o+='<th>'+wn[i]+'</th>';
     o+='<th>W</th><th>L</th><th>Picks</th></tr>';
     var s3done = currentWeek >= 19;
@@ -2731,7 +2735,14 @@ function initStripScaling(){
     setTimeout(function(){ applyStripScale(nflStrip); snapToCenter(nflStrip); }, 300);
   }
   
-  if(sbStrip){
+  bindSbStrip(sbStrip);
+}
+
+
+// Scores strip listener — re-bound every time renderSched() rebuilds the strip
+function bindSbStrip(sbStrip){
+  if(!sbStrip || sbStrip._sbBound) return;
+  sbStrip._sbBound = true;
     sbStrip.addEventListener('scroll', function(){
       applyStripScale(sbStrip);
       var btn = getCenteredBtn(sbStrip);
@@ -2758,10 +2769,19 @@ function initStripScaling(){
       clearTimeout(_sbSettleTimer);
       _sbSettleTimer = setTimeout(function(){ snapToCenter(sbStrip); }, 80);
     });
-    setTimeout(function(){ applyStripScale(sbStrip); snapToCenter(sbStrip); }, 300);
-  }
 }
 
+// Center a Scores week without a smooth sweep (avoids flicking through weeks)
+function sbCenterInstant(idx){
+  var strip=document.getElementById('sbStrip');
+  if(!strip) return;
+  var b=strip.querySelector('[data-sb="'+idx+'"]');
+  if(!b) return;
+  var sr=strip.getBoundingClientRect(), br=b.getBoundingClientRect();
+  if(sr.width===0) return; // panel hidden; tabTo re-centers on open
+  strip.scrollLeft += (br.left+br.width/2)-(sr.left+sr.width/2);
+  setTimeout(function(){ applyStripScale(strip); }, 30);
+}
 
 function showMatchupDetail(wk, n1, n2){
   var overlay = document.getElementById('gameDetailOverlay');
