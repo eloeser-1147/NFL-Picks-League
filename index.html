@@ -369,9 +369,11 @@ tr:last-child td{border-bottom:none}
       <p>• Highest total points across Weeks 1–6</p></div>
     <div class="rule-prize">Segment winner → auto playoff entry + <span style="color:#3fb950;font-weight:800;">$25</span></div>
     <div class="rule-tb"><div class="rule-sec-title" style="color:#8b949e">Tiebreakers</div>
-      <p>1. H2H record between tied players</p>
-      <p>2. Highest single-week score within Weeks 1–6</p>
-      <p>3. Most H2H wins across Weeks 1–6</p></div>
+      <p>1. H2H record between tied players (only if they played in Weeks 1–6)</p>
+      <p style="padding-left:14px">• 3+ way tie: a player who beat every other tied player wins the tiebreak</p>
+      <p>2. Most picks correct in any single week within Weeks 1–6 (no H2H bonus)</p>
+      <p>3. Most H2H wins across Weeks 1–6</p>
+      <p>4. Most picks correct in Week 6, then Week 5, and so on back to Week 1</p></div>
   </div>
 
   <div class="rule-content" id="rSeg2" style="display:none">
@@ -390,9 +392,11 @@ tr:last-child td{border-bottom:none}
       <p>• Highest total weighted points across Weeks 7–12</p></div>
     <div class="rule-prize">Segment winner → auto playoff entry + <span style="color:#3fb950;font-weight:800;">$25</span></div>
     <div class="rule-tb"><div class="rule-sec-title" style="color:#8b949e">Tiebreakers</div>
-      <p>1. H2H record between tied players</p>
-      <p>2. Highest single-week score within Weeks 7–12</p>
-      <p>3. Most H2H wins across Weeks 7–12</p></div>
+      <p>1. H2H record between tied players (only if they played in Weeks 7–12)</p>
+      <p style="padding-left:14px">• 3+ way tie: a player who beat every other tied player wins the tiebreak</p>
+      <p>2. Most picks correct in any single week within Weeks 7–12 (no H2H bonus)</p>
+      <p>3. Most H2H wins across Weeks 7–12</p>
+      <p>4. Most picks correct in Week 12, then Week 11, and so on back to Week 7</p></div>
   </div>
 
   <div class="rule-content" id="rSeg3" style="display:none">
@@ -474,7 +478,7 @@ tr:last-child td{border-bottom:none}
 </div>
 <div id="status" style="text-align:center;padding:40px 24px 20px;font-size:10px;color:#30363d">Loading...</div>
 <script>
-var BUILD = 'v2.3';
+var BUILD = 'v2.4';
 // Stale-cache guard: if a newer index.html is live, load it fresh
 (function(){
   try{
@@ -681,10 +685,12 @@ function v3(s,r){var c=s[r];return c?String(c.v):'-';}
 // Raw picks storage: picks[weekNumber][playerNumber] = correct picks
 var picks = {};
 var excelH2H = {}; // excelH2H[week][playerNum] = "W"/"L"/"T"/"-"
+var excelOpp = {}; // excelOpp[week][playerNum] = opponent player number
 
 function readPicks(wb) {
   picks = {};
   excelH2H = {};
+  excelOpp = {};
   var sheets = ['Wk 1-6 Input','Wk 7-12 Input','Wk 13-18 Input'];
   for (var s = 0; s < sheets.length; s++) {
     var ws = wb.Sheets[sheets[s]];
@@ -702,6 +708,7 @@ function readPicks(wb) {
         curWeek = parseInt(av.replace(/\D/g,''));
         if (!picks[curWeek]) picks[curWeek] = {};
         if (!excelH2H[curWeek]) excelH2H[curWeek] = {};
+        if (!excelOpp[curWeek]) excelOpp[curWeek] = {};
         continue;
       }
       // Detect player row
@@ -716,6 +723,9 @@ function readPicks(wb) {
         // Read H2H Result from col F
         var hc = ws[XLSX.utils.encode_cell({r:r,c:5})];
         if (hc && hc.v) excelH2H[curWeek][av] = String(hc.v).trim().toUpperCase();
+        // Read H2H Opponent from col D
+        var oc = ws[XLSX.utils.encode_cell({r:r,c:3})];
+        if (oc && typeof oc.v === 'number') excelOpp[curWeek][av] = oc.v;
       }
     }
   }
@@ -1818,11 +1828,11 @@ function updateScoresBlurb(weekNum){
     if(seg===1){
       subtitle='H2H + Points';
       body='• More correct picks = H2H win<br>• H2H win = <strong style="color:#3fb950">+6 bonus points</strong><br>• H2H tie = <strong style="color:#d29922">+3 points each</strong>';
-      body+='<div style="margin-top:8px;padding-top:6px;border-top:1px solid #30363d;font-size:11px;color:#8b949e"><strong style="color:#d29922">Tiebreakers:</strong> 1) H2H record between tied 2) Highest single-week score 3) Most H2H wins across Wks 1–6</div>';
+      body+='<div style="margin-top:8px;padding-top:6px;border-top:1px solid #30363d;font-size:11px;color:#8b949e"><strong style="color:#d29922">Tiebreakers:</strong> 1) H2H record between tied (3+ way: must beat all tied) 2) Most picks correct in one week 3) Most H2H wins across Wks 1–6 4) Most picks correct Wk 6, then each prior week</div>';
     } else if(seg===2){
       subtitle='H2H + Weighted Confidence';
       body='• More weighted points = H2H win<br>• H2H win = <strong style="color:#3fb950">+10 bonus points</strong><br>• H2H tie = <strong style="color:#d29922">+5 points each</strong>';
-      body+='<div style="margin-top:8px;padding-top:6px;border-top:1px solid #30363d;font-size:11px;color:#8b949e"><strong style="color:#d29922">Tiebreakers:</strong> 1) H2H record between tied 2) Highest single-week score 3) Most H2H wins across Wks 7–12</div>';
+      body+='<div style="margin-top:8px;padding-top:6px;border-top:1px solid #30363d;font-size:11px;color:#8b949e"><strong style="color:#d29922">Tiebreakers:</strong> 1) H2H record between tied (3+ way: must beat all tied) 2) Most picks correct in one week 3) Most H2H wins across Wks 7–12 4) Most picks correct Wk 12, then each prior week</div>';
     } else {
       subtitle='Divisional Round-Robin';
       body='• More correct picks = H2H win<br>• H2H win = <strong style="color:#3fb950">+1 win</strong> to divisional record<br>• H2H tie = <strong style="color:#d29922">+.5 W / .5 L each</strong>';
@@ -1870,6 +1880,117 @@ function pickWk(i){
 }
 
 // ===== STANDINGS =====
+// ===== SEGMENT TIEBREAKERS =====
+// A week counts toward H2H tiebreakers only once it is complete (currentWeek has moved past it)
+function tbCompletedWeeks(w0,w1){var a=[];for(var w=w0;w<=w1;w++){if(w<currentWeek)a.push(w);}return a;}
+// H2H games among a tied group: [{wk,a,b,res}] where res is from a's view (W/L/T)
+function tbGroupGames(group, weeks){
+  var inG={};for(var i=0;i<group.length;i++)inG[group[i].num]=true;
+  var g=[];
+  for(var k=0;k<weeks.length;k++){var w=weeks[k],op=excelOpp[w]||{},rs=excelH2H[w]||{};
+    for(var i=0;i<group.length;i++){var a=group[i].num,b=op[a];
+      if(b&&inG[b]&&a<b){var r=rs[a];
+        // If one side shows '-' (e.g. no picks entered), take the result from the opponent's row
+        if(r!=='W'&&r!=='L'&&r!=='T'){var rb=rs[b];r=rb==='W'?'L':rb==='L'?'W':rb==='T'?'T':'';}
+        if(r)g.push({wk:w,a:a,b:b,res:r});}}}
+  return g;
+}
+// H2H steps apply only if every tied player has faced every other tied player in this segment
+function tbAllMet(group, games){
+  var met={};for(var i=0;i<games.length;i++){met[games[i].a+'-'+games[i].b]=1;met[games[i].b+'-'+games[i].a]=1;}
+  for(var i=0;i<group.length;i++)for(var j=i+1;j<group.length;j++)if(!met[group[i].num+'-'+group[j].num])return false;
+  return true;
+}
+function tbH2HRecord(weeks){
+  return function(group){
+    var g=tbGroupGames(group,weeks);if(!tbAllMet(group,g))return null;
+    var pts={},gp={};for(var i=0;i<group.length;i++){pts[group[i].num]=0;gp[group[i].num]=0;}
+    for(var i=0;i<g.length;i++){var x=g[i];gp[x.a]++;gp[x.b]++;
+      if(x.res==='W')pts[x.a]+=1;else if(x.res==='L')pts[x.b]+=1;else{pts[x.a]+=.5;pts[x.b]+=.5;}}
+    var v={};for(var n in pts)v[n]=gp[n]?pts[n]/gp[n]:0;return v;
+  };
+}
+// Correct picks scored in H2H games vs tied players (mode 'sum' or 'max')
+function tbPicksVsTied(weeks, mode){
+  return function(group){
+    var g=tbGroupGames(group,weeks);if(!tbAllMet(group,g))return null;
+    var v={};for(var i=0;i<group.length;i++)v[group[i].num]=0;
+    for(var i=0;i<g.length;i++){var x=g[i],pw=picks[x.wk]||{};
+      var pa=pw[x.a]||0,pb=pw[x.b]||0;
+      if(mode==='max'){v[x.a]=Math.max(v[x.a],pa);v[x.b]=Math.max(v[x.b],pb);}else{v[x.a]+=pa;v[x.b]+=pb;}}
+    return v;
+  };
+}
+function tbByValue(fn){return function(group){var v={};for(var i=0;i<group.length;i++)v[group[i].num]=fn(group[i]);return v;};}
+// Resolve a tied group: apply steps in order; when a step splits the group, any sub-group still tied restarts at step 1
+function tbBreak(group, steps, si, log){
+  if(group.length<2||si>=steps.length)return group;
+  var vals=steps[si].fn(group);
+  if(!vals)return tbBreak(group,steps,si+1,log);
+  var buckets={},keys=[];
+  for(var i=0;i<group.length;i++){var k=Math.round(vals[group[i].num]*1000)/1000;if(!buckets[k]){buckets[k]=[];keys.push(k);}buckets[k].push(group[i]);}
+  if(keys.length===1)return tbBreak(group,steps,si+1,log);
+  keys.sort(function(a,b){return b-a;});
+  log.push({order:keys.map(function(k){return buckets[k].map(function(p){return p.name;}).join(' / ');}),why:steps[si].label});
+  var out=[];
+  for(var i=0;i<keys.length;i++)out=out.concat(tbBreak(buckets[keys[i]],steps,0,log));
+  return out;
+}
+// sorted: list already sorted by the primary key; keyFn returns the primary value used to detect ties
+function tbApply(sorted, keyFn, steps, log){
+  var out=[],i=0;
+  while(i<sorted.length){var j=i+1;while(j<sorted.length&&keyFn(sorted[j])===keyFn(sorted[i]))j++;
+    var grp=sorted.slice(i,j);
+    // Ignore ties before anyone has scored
+    out=out.concat(grp.length>1&&keyFn(grp[0])!=='0'?tbBreak(grp,steps,0,log):grp);i=j;}
+  return out;
+}
+function tbNote(log){
+  if(!log.length)return '';
+  var o='<div style="padding:8px 12px 10px;font-size:10px;color:#8b949e;line-height:1.6;border-top:1px solid #21262d">';
+  for(var i=0;i<log.length;i++)o+='<div><span style="color:#d29922;font-weight:700">Tiebreak:</span> '+log[i].order.join(' &gt; ')+' <span style="color:#6e7681">('+log[i].why+')</span></div>';
+  return o+'</div>';
+}
+// Seg 1/2 H2H: 2-way applies if they met; 3+ way applies only if one player beat every other tied player
+function tbH2HSeg(weeks){
+  return function(group){
+    var g=tbGroupGames(group,weeks);
+    if(group.length===2)return tbH2HRecord(weeks)(group);
+    // net[a][b] > 0 means a has the better H2H record vs b
+    var net={};for(var i=0;i<group.length;i++)net[group[i].num]={};
+    for(var i=0;i<g.length;i++){var x=g[i],d=x.res==='W'?1:x.res==='L'?-1:0;
+      net[x.a][x.b]=(net[x.a][x.b]||0)+d;net[x.b][x.a]=(net[x.b][x.a]||0)-d;}
+    for(var i=0;i<group.length;i++){var a=group[i].num,swept=true;
+      for(var j=0;j<group.length;j++){var b=group[j].num;if(a!==b&&!(net[a][b]>0)){swept=false;break;}}
+      if(swept){var v={};for(var k=0;k<group.length;k++)v[group[k].num]=group[k].num===a?1:0;return v;}}
+    return null;
+  };
+}
+function tbSegSteps(w0,w1,wkKey,h2hKey,ptsKey){
+  var wks=tbCompletedWeeks(w0,w1);
+  return [
+    {label:'H2H record',fn:tbH2HSeg(wks)},
+    {label:'Most picks correct in one week',fn:tbByValue(function(p){var n=(p[wkKey]||[]).filter(function(x){return typeof x==='number';});return n.length?Math.max.apply(null,n):0;})},
+    {label:'Most H2H wins Wks '+w0+'–'+w1,fn:tbByValue(function(p){return p[h2hKey];})}
+  ].concat(tbWeekPtsSteps(w0,w1,wkKey));
+}
+// Most picks correct in the last week of the segment, then each prior week, until the tie breaks
+function tbWeekPtsSteps(w0,w1,ptsKey){
+  var st=[];
+  for(var w=w1;w>=w0;w--)(function(idx,wk){st.push({label:'Most picks correct Wk '+wk,fn:tbByValue(function(p){var x=(p[ptsKey]||[])[idx];return typeof x==='number'?x:0;})});})(w-w0,w);
+  return st;
+}
+function tbSeg3Steps(){
+  var wks=tbCompletedWeeks(13,18);
+  return [
+    {label:'H2H record vs tied',fn:tbH2HRecord(wks)},
+    {label:'Most correct picks in H2H vs tied',fn:tbPicksVsTied(wks,'sum')},
+    {label:'Highest picks in one week vs tied',fn:tbPicksVsTied(wks,'max')},
+    {label:'Most correct picks Wks 13–18',fn:tbByValue(function(p){return p.p3;})},
+    {label:'Best single-week score',fn:tbByValue(function(p){var m=0;for(var w=13;w<=18;w++){if(weekPlayed[w]){var x=(picks[w]&&picks[w][p.num])||0;if(x>m)m=x;}}return m;})}
+  ];
+}
+
 function renderS1(){
   for(var i=0;i<P.length;i++){
     P[i].rp1=[];var rpTotal=0;
@@ -1881,7 +2002,8 @@ function renderS1(){
     }
     P[i].rp1Total=rpTotal;
   }
-  var s=P.slice().sort(function(a,b){return b.t1-a.t1||b.h1-a.h1;});
+  var tbLog1=[];
+  var s=tbApply(P.slice().sort(function(a,b){return b.t1-a.t1||a.num-b.num;}),function(p){return String(p.t1);},tbSegSteps(1,6,'rp1','h1','w1'),tbLog1);
   var wn=['Wk 1','Wk 2','Wk 3','Wk 4','Wk 5','Wk 6'];
   var o='<div class="card"><div class="card-scroll"><table><tr><th>#</th><th style="text-align:left">Player</th>';
   for(var i=0;i<6;i++)o+='<th class="wk-col">'+wn[i]+'</th>';
@@ -1897,7 +2019,7 @@ function renderS1(){
     var bw=nums.length>0?Math.max.apply(null,nums):'-';
     o+='<td>'+s[i].h1+'</td><td class="wk-col">'+bw+'</td><td class="tot">'+s[i].t1+'</td></tr>';
   }
-  o+='</table></div></div>';document.getElementById('s1').innerHTML=o;
+  o+='</table></div>'+tbNote(tbLog1)+'</div>';document.getElementById('s1').innerHTML=o;
 }
 function renderS2(){
   for(var i=0;i<P.length;i++){
@@ -1910,7 +2032,8 @@ function renderS2(){
     }
     P[i].rp2Total=rpTotal;
   }
-  var s=P.slice().sort(function(a,b){return b.t2-a.t2||b.h2-a.h2;});
+  var tbLog2=[];
+  var s=tbApply(P.slice().sort(function(a,b){return b.t2-a.t2||a.num-b.num;}),function(p){return String(p.t2);},tbSegSteps(7,12,'rp2','h2','w2'),tbLog2);
   var wn=['Wk 7','Wk 8','Wk 9','Wk 10','Wk 11','Wk 12'];
   var o='<div class="card"><div class="card-scroll"><table><tr><th>#</th><th style="text-align:left">Player</th>';
   for(var i=0;i<6;i++)o+='<th class="wk-col">'+wn[i]+'</th>';
@@ -1926,14 +2049,15 @@ function renderS2(){
     var bw=nums.length>0?Math.max.apply(null,nums):'-';
     o+='<td>'+s[i].h2+'</td><td class="wk-col">'+bw+'</td><td class="tot">'+s[i].t2+'</td></tr>';
   }
-  o+='</table></div></div>';document.getElementById('s2').innerHTML=o;
+  o+='</table></div>'+tbNote(tbLog2)+'</div>';document.getElementById('s2').innerHTML=o;
 }
 function renderS3(){
   var divs=[{n:'Division A',p:P.filter(function(x){return x.num<=4})},{n:'Division B',p:P.filter(function(x){return x.num>=5&&x.num<=8})},{n:'Division C',p:P.filter(function(x){return x.num>=9})}];
   var wn=['W13','W14','W15','W16','W17','W18'];
   var o='<div class="card"><div class="card-scroll" style="overflow-x:auto;-webkit-overflow-scrolling:touch;">';
   for(var d=0;d<divs.length;d++){
-    var s=divs[d].p.slice().sort(function(a,b){return b.w3-a.w3||b.p3-a.p3;});
+    var tbLog3=[];
+    var s=tbApply(divs[d].p.slice().sort(function(a,b){return b.w3-a.w3||a.l3-b.l3||a.num-b.num;}),function(p){return (p.w3||p.l3)?p.w3+'-'+p.l3:'0';},tbSeg3Steps(),tbLog3);
     o+='<div class="dl">'+divs[d].n+'</div><table class="s3-tbl"><colgroup><col style="width:6%"><col style="width:25%"><col style="width:7.5%"><col style="width:7.5%"><col style="width:7.5%"><col style="width:7.5%"><col style="width:7.5%"><col style="width:7.5%"><col style="width:7%"><col style="width:7%"><col style="width:10%"></colgroup><tr><th>#</th><th style="text-align:left">Player</th>';
     for(var i=0;i<6;i++)o+='<th>'+wn[i]+'</th>';
     o+='<th>W</th><th>L</th><th>Picks</th></tr>';
@@ -1947,7 +2071,7 @@ function renderS3(){
       o+='<tr><td class="'+rc(i)+'">'+(i+1)+'</td><td class="nm"'+nameStyle+'>'+s[i].name+(isDivWinner?' <span style="font-size:9px;color:#d29922;font-weight:700">★</span>':'')+'</td>';
       for(var w=0;w<6;w++){var r=s[i].r3[w];var cl=r==='W'?'w':r==='L'?'l':r==='T'?'t':'wk';o+='<td class="'+cl+'">'+r+'</td>';}
       o+='<td class="w">'+s[i].w3+'</td><td class="l">'+s[i].l3+'</td><td>'+s[i].p3+'</td></tr>';
-    }o+='</table>';
+    }o+='</table>'+tbNote(tbLog3);
   }
   o+='</div></div>';document.getElementById('s3').innerHTML=o;
 }
@@ -2617,11 +2741,11 @@ function getNflBlurb(wk){
     if(seg===1){
       subtitle='H2H + Points';
       body='• Pick every game against the spread<br>• Each correct pick = <b>1 point</b><br>• H2H win = <b>6 bonus points</b> · tie = 3 each<br>• Max <b>22 pts/week</b>';
-      body+='<div style="margin-top:8px;padding-top:6px;border-top:1px solid #30363d;font-size:11px;color:#8b949e"><b style="color:#d29922">Tiebreakers:</b> 1) H2H record between tied 2) Highest single-week score 3) Most H2H wins across Wks 1–6</div>';
+      body+='<div style="margin-top:8px;padding-top:6px;border-top:1px solid #30363d;font-size:11px;color:#8b949e"><b style="color:#d29922">Tiebreakers:</b> 1) H2H record between tied (3+ way: must beat all tied) 2) Most picks correct in one week 3) Most H2H wins across Wks 1–6 4) Most picks correct Wk 6, then each prior week</div>';
     } else if(seg===2){
       subtitle='H2H + Weighted Confidence';
       body='• Choose <b>8 games</b> against the spread<br>• Rank confidence <b>8</b> (most) down to <b>1</b> (least)<br>• Correct picks earn their weighted value<br>• H2H win = <b>10 bonus points</b> · tie = 5 each<br>• Max <b>46 pts/week</b>';
-      body+='<div style="margin-top:8px;padding-top:6px;border-top:1px solid #30363d;font-size:11px;color:#8b949e"><b style="color:#d29922">Tiebreakers:</b> 1) H2H record between tied 2) Highest single-week score 3) Most H2H wins across Wks 7–12</div>';
+      body+='<div style="margin-top:8px;padding-top:6px;border-top:1px solid #30363d;font-size:11px;color:#8b949e"><b style="color:#d29922">Tiebreakers:</b> 1) H2H record between tied (3+ way: must beat all tied) 2) Most picks correct in one week 3) Most H2H wins across Wks 7–12 4) Most picks correct Wk 12, then each prior week</div>';
     } else {
       subtitle='Divisional Round-Robin';
       body='• Pick every game against the spread<br>• Most correct picks <b>wins the H2H matchup</b><br>• Divisional round-robin — face each opponent <b>twice</b><br>• Standings by <b>win-loss record</b>';
