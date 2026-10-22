@@ -1258,10 +1258,20 @@ function render(){
     try { popupAllowed = !localStorage.getItem('nflPicksHideUpdates'); } catch(e){}
     if(popupAllowed){
       if(currentWeek === 0) showPoolsPopup();
-      else if([7,13,19,20,21,22].indexOf(currentWeek) >= 0) showTransitionPopup();
+      // Transition popup only until the first game of the new segment/round goes final
+      else if([7,13,19,20,21,22].indexOf(currentWeek) >= 0 && !weekHasFinal(currentWeek)) showTransitionPopup();
       else showUpdatesPopup();
     }
   }
+}
+
+// True once any game in the given week has a final score entered
+function weekHasFinal(wk){
+  var sc = window._nflScores || {};
+  for(var key in sc){
+    if(parseInt(key.split('-')[0]) === wk && sc[key].aSc !== null && sc[key].hSc !== null) return true;
+  }
+  return false;
 }
 
 function showTransitionPopup(){
