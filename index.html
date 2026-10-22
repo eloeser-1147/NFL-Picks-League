@@ -488,7 +488,7 @@ tr:last-child td{border-bottom:none}
 </div>
 <div id="status" style="text-align:center;padding:40px 24px 20px;font-size:10px;color:#30363d">Loading...</div>
 <script>
-var BUILD = 'v2.4';
+var BUILD = 'v2.5';
 // Stale-cache guard: if a newer index.html is live, load it fresh
 (function(){
   try{
@@ -1055,6 +1055,14 @@ function readPlayoffWeeks(wb) {
   }
 }
 
+// Score cell -> number, or null if blank (also accepts scores typed in as text)
+function scoreVal(cell){
+  if(!cell) return null;
+  if(typeof cell.v==='number') return cell.v;
+  var s=String(cell.v==null?'':cell.v).trim();
+  return (s!=='' && !isNaN(s)) ? Number(s) : null;
+}
+
 function readNFLSchedule(wb) {
   var ws = wb.Sheets['NFL Schedule'];
   window._nflScores = {}; // keyed by 'wk-AWAY-HOME'
@@ -1085,8 +1093,8 @@ function readNFLSchedule(wb) {
     var dayCell = ws[XLSX.utils.encode_cell({r:r,c:1})];
     var timeCell = ws[XLSX.utils.encode_cell({r:r,c:2})];
     
-    var aSc = aScCell&&typeof aScCell.v==='number'?aScCell.v:null;
-    var hSc = hScCell&&typeof hScCell.v==='number'?hScCell.v:null;
+    var aSc = scoreVal(aScCell);
+    var hSc = scoreVal(hScCell);
     var spread = spreadCell&&typeof spreadCell.v==='number'?spreadCell.v:null;
     var day = dayCell?String(dayCell.v||''):'';
     // Handle time - could be Date object from XLSX
@@ -1259,7 +1267,12 @@ function render(){
     if(popupAllowed){
       if(currentWeek === 0) showPoolsPopup();
       // Transition popup only until the first game of the new segment/round goes final
-      else if([7,13,19,20,21,22].indexOf(currentWeek) >= 0 && !weekHasFinal(currentWeek)) showTransitionPopup();
+      else if([7,13,19,20,21,22].indexOf(currentWeek) >= 0){
+        // Segment/round winner popup only until the first game of the new week goes final,
+        // then show that game's final score
+        if(weekHasFinal(currentWeek)) showLatestFinalPopup();
+        else showTransitionPopup();
+      }
       else showUpdatesPopup();
     }
   }
