@@ -105,6 +105,9 @@ tr:last-child td{border-bottom:none}
 .mu-pick-wrong{color:#f85149}
 .mu-pick-pending{color:#6e7681}
 .mu-pick-push{color:#d29922}
+.gd-max{font-size:11px;color:#8b949e;font-weight:600;margin-top:2px}
+.gd-max b{color:#e6edf3;font-weight:800}
+.mu-pick-wt{display:inline-block;min-width:14px;margin-left:5px;padding:0 4px;border:1px solid currentColor;border-radius:4px;font-size:10px;font-weight:800;line-height:14px;vertical-align:1px}
 /* Rules dropdown */
 .rule-dd-wrap{position:relative;display:inline-block;margin-bottom:16px}
 .rule-dd-btn{background:none;border:none;color:#e6edf3;font-size:15px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;padding:0;display:flex;align-items:center;gap:6px}
@@ -488,7 +491,7 @@ tr:last-child td{border-bottom:none}
 </div>
 <div id="status" style="text-align:center;padding:40px 24px 20px;font-size:10px;color:#30363d">Loading...</div>
 <script>
-var BUILD = 'v2.5';
+var BUILD = 'v2.8';
 // Stale-cache guard: if a newer index.html is live, load it fresh
 (function(){
   try{
@@ -838,19 +841,27 @@ function readPicksDetail(wb) {
       
       if (!away || !home) continue;
       
-      var gamePicks = {};
+      var gamePicks = {}, gameWeights = {};
       for (var c in playerCols) {
         var pCell = ws[XLSX.utils.encode_cell({r:r, c:parseInt(c)})];
         if (pCell && pCell.v) {
           gamePicks[playerCols[c]] = String(pCell.v).trim().toUpperCase();
         }
+        // Weighted weeks (7-12): point values sit 13 columns right (F-Q -> S-AD)
+        if (curWeek >= 7 && curWeek <= 12) {
+          var wCell = ws[XLSX.utils.encode_cell({r:r, c:parseInt(c) + 13})];
+          if (wCell && wCell.v !== '' && wCell.v !== null && !isNaN(parseInt(wCell.v))) {
+            gameWeights[playerCols[c]] = parseInt(wCell.v);
+          }
+        }
       }
-      
+
       picksDetail[curWeek].push({
         away: away,
         home: home,
         ats: ats,
-        picks: gamePicks
+        picks: gamePicks,
+        weights: gameWeights
       });
     }
   }
@@ -2997,7 +3008,23 @@ function showMatchupDetail(wk, n1, n2){
   
   var c1='',c2='';
   if(sc1>0||sc2>0){c1='style="color:#e6edf3"';c2='style="color:#e6edf3"';}
-  
+
+  // Max points (weighted weeks 7-12): 36 minus weights on picks already lost.
+  // Pushes count as wins; blank picks/weights never deduct.
+  var maxLine1='',maxLine2='';
+  if(wk>=7 && wk<=12){
+    var mx1=36,mx2=36,mg=picksDetail[wk]||[];
+    for(var mi=0;mi<mg.length;mi++){
+      var mgm=mg[mi],mw=mgm.weights||{};
+      if(!mgm.ats || mgm.ats==='PUSH') continue;
+      var mp1=mgm.picks[n1],mp2=mgm.picks[n2];
+      if(mp1 && mp1!==mgm.ats && mw[n1]) mx1-=mw[n1];
+      if(mp2 && mp2!==mgm.ats && mw[n2]) mx2-=mw[n2];
+    }
+    maxLine1='<div class="gd-max">Max Points: <b>'+mx1+'</b></div>';
+    maxLine2='<div class="gd-max">Max Points: <b>'+mx2+'</b></div>';
+  }
+
   var h='<div class="gd-popup" style="max-width:420px">';
   h+='<button class="gd-close" onclick="document.getElementById(\'gameDetailOverlay\').style.display=\'none\'">&times;</button>';
   
@@ -3009,12 +3036,14 @@ function showMatchupDetail(wk, n1, n2){
   h+='<div style="flex:1;text-align:center;min-width:0">';
   h+='<div style="font-size:16px;font-weight:900;color:#e6edf3;white-space:nowrap">'+dn1+'</div>';
   h+='<div style="font-size:11px;color:#6e7681;font-weight:500">('+rec1+')</div>';
+  h+=maxLine1;
   h+='<div class="gd-score" '+c1+'>'+sc1+'</div>';
   h+='</div>';
   h+='<div style="font-size:12px;color:#484f58;font-weight:700;padding:0 10px;flex-shrink:0">vs</div>';
   h+='<div style="flex:1;text-align:center;min-width:0">';
   h+='<div style="font-size:16px;font-weight:900;color:#e6edf3;white-space:nowrap">'+dn2+'</div>';
   h+='<div style="font-size:11px;color:#6e7681;font-weight:500">('+rec2+')</div>';
+  h+=maxLine2;
   h+='<div class="gd-score" '+c2+'>'+sc2+'</div>';
   h+='</div>';
   h+='</div>';
@@ -3044,10 +3073,14 @@ function showMatchupDetail(wk, n1, n2){
         else if(pick2===atsWinner){cls2='mu-pick-correct';}
         else{cls2='mu-pick-wrong';}
       }
+      var wt1=(gm.weights&&pick1)?gm.weights[n1]:null;
+      var wt2=(gm.weights&&pick2)?gm.weights[n2]:null;
+      var badge1=wt1?'<span class="mu-pick-wt">'+wt1+'</span>':'';
+      var badge2=wt2?'<span class="mu-pick-wt">'+wt2+'</span>':'';
       h+='<div class="mu-pick-row">';
-      h+='<div class="mu-pick-team '+cls1+'">'+(pick1||'—')+'</div>';
+      h+='<div class="mu-pick-team '+cls1+'">'+(pick1||'—')+badge1+'</div>';
       h+='<div class="mu-pick-game">'+gm.away+' @ '+gm.home+'</div>';
-      h+='<div class="mu-pick-team '+cls2+'">'+(pick2||'—')+'</div>';
+      h+='<div class="mu-pick-team '+cls2+'">'+(pick2||'—')+badge2+'</div>';
       h+='</div>';
     }
     h+='</div>';
