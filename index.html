@@ -105,9 +105,8 @@ tr:last-child td{border-bottom:none}
 .mu-pick-wrong{color:#f85149}
 .mu-pick-pending{color:#6e7681}
 .mu-pick-push{color:#d29922}
-.gd-max{font-size:11px;color:#8b949e;font-weight:600;margin-top:2px}
-.gd-max b{color:#e6edf3;font-weight:800}
-.mu-pick-wt{display:inline-block;min-width:14px;margin-left:5px;padding:0 4px;border:1px solid currentColor;border-radius:4px;font-size:10px;font-weight:800;line-height:14px;vertical-align:1px}
+.mu-wt-col{flex:0 0 26px;text-align:center}
+.mu-pick-wt{display:inline-block;min-width:14px;padding:0 4px;border:1px solid currentColor;border-radius:4px;font-size:10px;font-weight:800;line-height:14px;vertical-align:1px}
 /* Rules dropdown */
 .rule-dd-wrap{position:relative;display:inline-block;margin-bottom:16px}
 .rule-dd-btn{background:none;border:none;color:#e6edf3;font-size:15px;font-weight:700;font-family:'Inter',sans-serif;cursor:pointer;padding:0;display:flex;align-items:center;gap:6px}
@@ -491,7 +490,7 @@ tr:last-child td{border-bottom:none}
 </div>
 <div id="status" style="text-align:center;padding:40px 24px 20px;font-size:10px;color:#30363d">Loading...</div>
 <script>
-var BUILD = 'v2.8';
+var BUILD = 'v2.9';
 // Stale-cache guard: if a newer index.html is live, load it fresh
 (function(){
   try{
@@ -3021,8 +3020,7 @@ function showMatchupDetail(wk, n1, n2){
       if(mp1 && mp1!==mgm.ats && mw[n1]) mx1-=mw[n1];
       if(mp2 && mp2!==mgm.ats && mw[n2]) mx2-=mw[n2];
     }
-    maxLine1='<div class="gd-max">Max Points: <b>'+mx1+'</b></div>';
-    maxLine2='<div class="gd-max">Max Points: <b>'+mx2+'</b></div>';
+    maxLine1=mx1; maxLine2=mx2;
   }
 
   var h='<div class="gd-popup" style="max-width:420px">';
@@ -3036,14 +3034,12 @@ function showMatchupDetail(wk, n1, n2){
   h+='<div style="flex:1;text-align:center;min-width:0">';
   h+='<div style="font-size:16px;font-weight:900;color:#e6edf3;white-space:nowrap">'+dn1+'</div>';
   h+='<div style="font-size:11px;color:#6e7681;font-weight:500">('+rec1+')</div>';
-  h+=maxLine1;
   h+='<div class="gd-score" '+c1+'>'+sc1+'</div>';
   h+='</div>';
   h+='<div style="font-size:12px;color:#484f58;font-weight:700;padding:0 10px;flex-shrink:0">vs</div>';
   h+='<div style="flex:1;text-align:center;min-width:0">';
   h+='<div style="font-size:16px;font-weight:900;color:#e6edf3;white-space:nowrap">'+dn2+'</div>';
   h+='<div style="font-size:11px;color:#6e7681;font-weight:500">('+rec2+')</div>';
-  h+=maxLine2;
   h+='<div class="gd-score" '+c2+'>'+sc2+'</div>';
   h+='</div>';
   h+='</div>';
@@ -3053,9 +3049,12 @@ function showMatchupDetail(wk, n1, n2){
   if(wkGames.length > 0){
     h+='<div style="padding:0 16px 12px">';
     h+='<div style="display:flex;justify-content:space-between;padding:8px 0 6px;border-bottom:1px solid #21262d;margin-bottom:4px">';
+    var isWtd = wk>=7 && wk<=12;
+    if(isWtd) h+='<span class="mu-wt-col"></span>';
     h+='<span style="flex:1;text-align:center;font-size:10px;font-weight:700;color:#8b949e;text-transform:uppercase">'+p1.name.split(' ')[0]+'</span>';
     h+='<span style="flex:1.2;text-align:center;font-size:10px;font-weight:700;color:#8b949e;text-transform:uppercase">Game</span>';
     h+='<span style="flex:1;text-align:center;font-size:10px;font-weight:700;color:#8b949e;text-transform:uppercase">'+p2.name.split(' ')[0]+'</span>';
+    if(isWtd) h+='<span class="mu-wt-col"></span>';
     h+='</div>';
     for(var g=0;g<wkGames.length;g++){
       var gm=wkGames[g];
@@ -3078,9 +3077,11 @@ function showMatchupDetail(wk, n1, n2){
       var badge1=wt1?'<span class="mu-pick-wt">'+wt1+'</span>':'';
       var badge2=wt2?'<span class="mu-pick-wt">'+wt2+'</span>':'';
       h+='<div class="mu-pick-row">';
-      h+='<div class="mu-pick-team '+cls1+'">'+(pick1||'—')+badge1+'</div>';
+      if(isWtd) h+='<div class="mu-wt-col '+cls1+'">'+badge1+'</div>';
+      h+='<div class="mu-pick-team '+cls1+'">'+(pick1||'—')+'</div>';
       h+='<div class="mu-pick-game">'+gm.away+' @ '+gm.home+'</div>';
-      h+='<div class="mu-pick-team '+cls2+'">'+(pick2||'—')+badge2+'</div>';
+      h+='<div class="mu-pick-team '+cls2+'">'+(pick2||'—')+'</div>';
+      if(isWtd) h+='<div class="mu-wt-col '+cls2+'">'+badge2+'</div>';
       h+='</div>';
     }
     h+='</div>';
@@ -3107,6 +3108,17 @@ function showMatchupDetail(wk, n1, n2){
       h+='</div>';
       h+='</div>';
     }
+  }
+  
+  // Max Points — bottom of card, below tiebreaker
+  if(maxLine1!==''){
+    h+='<div style="padding:10px 16px;border-top:1px solid #21262d;margin-top:4px">';
+    h+='<div style="display:flex;justify-content:space-between;align-items:center">';
+    h+='<span style="color:#e6edf3;font-size:16px;font-weight:800">'+maxLine1+'</span>';
+    h+='<span style="font-size:10px;font-weight:700;color:#8b949e;text-transform:uppercase;letter-spacing:1px">Max Points</span>';
+    h+='<span style="color:#e6edf3;font-size:16px;font-weight:800">'+maxLine2+'</span>';
+    h+='</div>';
+    h+='</div>';
   }
   
   h+='</div>';
